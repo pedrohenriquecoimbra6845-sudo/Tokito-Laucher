@@ -134,6 +134,7 @@
     <!-- PolyJav Laucher: animation shown while Minecraft is starting -->
     <string name="prestigie_launch_starting">Starting Minecraft…</string>
     <!-- Option of the theme color setting in launcher settings -->
+    <string name="theme_color_polyjav">PolyJav Cyan</string>
     <string name="theme_color_oneclient">OneClient</string>
     <!-- Option of the theme color setting in launcher settings -->
     <string name="theme_color_dynamic">Dynamic (Android 12+)</string>

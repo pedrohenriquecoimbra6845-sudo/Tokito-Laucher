@@ -174,6 +174,7 @@ fun LauncherSettingsScreen(
                         },
                         getRadioText = { enum ->
                             when (enum) {
+                                ColorThemeType.POLYJAV -> stringResource(R.string.theme_color_polyjav)
                                 ColorThemeType.ONECLIENT -> stringResource(R.string.theme_color_oneclient)
                                 ColorThemeType.DYNAMIC -> stringResource(R.string.theme_color_dynamic)
                                 ColorThemeType.EMBERMIRE -> stringResource(R.string.theme_color_embermire)

@@ -61,6 +61,7 @@
     <string name="prestigie_card_oneclient">Tema visual inspirado no OneClient, da Polyfrost.</string>
     <string name="prestigie_card_oneclient_link">Conhecer o OneClient</string>
     <string name="prestigie_launch_starting">Iniciando o Minecraft…</string>
+    <string name="theme_color_polyjav">PolyJav Ciano</string>
     <string name="theme_color_oneclient">OneClient</string>
     <string name="theme_color_dynamic">Dinâmico (Requer Android 12+)</string>
     <string name="theme_color_embermire">Embermire</string>

@@ -622,6 +622,7 @@ fun ZalithLauncherTheme(
             }
 
             darkTheme -> when (colorTheme) {
+                ColorThemeType.POLYJAV -> polyJavDark
                 ColorThemeType.ONECLIENT -> oneClientDark
                 ColorThemeType.EMBERMIRE -> embermireDark
                 ColorThemeType.VELVET_ROSE -> velvetRoseDark
@@ -638,6 +639,7 @@ fun ZalithLauncherTheme(
             }
 
             else -> when (colorTheme) {
+                ColorThemeType.POLYJAV -> polyJavLight
                 ColorThemeType.ONECLIENT -> oneClientLight
                 ColorThemeType.EMBERMIRE -> embermireLight
                 ColorThemeType.VELVET_ROSE -> velvetRoseLight
@@ -681,6 +683,7 @@ fun ZalithLauncherTheme(
     ) {
         MaterialExpressiveTheme(
             colorScheme = currentDisplayScheme,
+            shapes = PolyJavShapes,
             motionScheme = MotionScheme.expressive(),
             typography = AppTypography,
             content = content

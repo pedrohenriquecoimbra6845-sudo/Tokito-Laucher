@@ -34,6 +34,10 @@ enum class ColorThemeType {
     /**
      * PolyJav Laucher default: OneClient-inspired blue/dark look
      */
+    /**
+     * PolyJav Laucher default: original cyan theme
+     */
+    POLYJAV,
     ONECLIENT,
     DYNAMIC,
     EMBERMIRE,

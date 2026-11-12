@@ -126,6 +126,15 @@
     <string name="launcher_version_debug_warning">You are using a test version of %s! This version may be unstable and is primarily intended for feature testing and early access. It is not recommended for long-term use! If you encounter any issues during testing, please report them to us via GitHub and we will address them as soon as possible.</string>
     <!-- Caption on the test build warning card explaining it cannot be dismissed -->
     <string name="launcher_version_debug_warning_cant_close">This warning cannot be dismissed</string>
+    <!-- Prestigie Laucher: home card shown on the main tab -->
+    <string name="prestigie_card_title">Prestigie Laucher</string>
+    <string name="prestigie_card_unofficial">Unofficial Modified Version of Zalith Launcher 2. It is not affiliated with, or endorsed by, the Zalith Launcher developers.</string>
+    <string name="prestigie_card_oneclient">Visual theme inspired by OneClient, by Polyfrost.</string>
+    <string name="prestigie_card_oneclient_link">Visit OneClient</string>
+    <!-- Prestigie Laucher: animation shown while Minecraft is starting -->
+    <string name="prestigie_launch_starting">Starting Minecraft…</string>
+    <!-- Option of the theme color setting in launcher settings -->
+    <string name="theme_color_oneclient">OneClient</string>
     <!-- Option of the theme color setting in launcher settings -->
     <string name="theme_color_dynamic">Dynamic (Android 12+)</string>
     <!-- Option of the theme color setting in launcher settings -->

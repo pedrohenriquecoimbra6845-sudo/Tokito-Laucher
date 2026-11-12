@@ -622,6 +622,7 @@ fun ZalithLauncherTheme(
             }
 
             darkTheme -> when (colorTheme) {
+                ColorThemeType.ONECLIENT -> oneClientDark
                 ColorThemeType.EMBERMIRE -> embermireDark
                 ColorThemeType.VELVET_ROSE -> velvetRoseDark
                 ColorThemeType.MISTWAVE -> mistwaveDark
@@ -637,6 +638,7 @@ fun ZalithLauncherTheme(
             }
 
             else -> when (colorTheme) {
+                ColorThemeType.ONECLIENT -> oneClientLight
                 ColorThemeType.EMBERMIRE -> embermireLight
                 ColorThemeType.VELVET_ROSE -> velvetRoseLight
                 ColorThemeType.MISTWAVE -> mistwaveLight

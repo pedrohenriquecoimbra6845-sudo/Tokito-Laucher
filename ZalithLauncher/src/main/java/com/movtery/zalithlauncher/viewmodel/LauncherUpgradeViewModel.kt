@@ -81,6 +81,12 @@ sealed interface LauncherUpgradeOperation {
  * 最新版本的信息获取源
  */
 private const val LATEST_VERSION = "latest_version_md.json"
+/**
+ * Prestigie Laucher is an unofficial modified version of Zalith Launcher 2.
+ * The upstream update feed must not be used to update this app.
+ */
+private const val UPSTREAM_UPDATE_CHECK_ENABLED = false
+
 private const val LATEST_API_URL = "$URL_PROJECT_INFO/$LATEST_VERSION"
 private const val LATEST_API_CHINESE_URL = "https://repo.miawa.cn/zalith-info/v2/$LATEST_VERSION"
 
@@ -124,6 +130,10 @@ class LauncherUpgradeViewModel: ViewModel() {
         onIsLatest: suspend () -> Unit = {}
     ) {
         viewModelScope.launch {
+            //Prestigie Laucher: the upstream release feed belongs to Zalith Launcher 2,
+            //so update checks are disabled to avoid offering the official app as an "update".
+            if (!UPSTREAM_UPDATE_CHECK_ENABLED) return@launch
+
             if (
                 isWithinRateLimit(
                     time = TimeUnit.HOURS.toMillis(1L),
@@ -160,6 +170,11 @@ class LauncherUpgradeViewModel: ViewModel() {
         onIsLatest: suspend () -> Unit = {}
     ): Boolean {
         return checkMutex.withLock {
+            if (!UPSTREAM_UPDATE_CHECK_ENABLED) {
+                onIsLatest()
+                return@withLock true
+            }
+
             if (
                 isWithinRateLimit(
                     time = TimeUnit.SECONDS.toMillis(5L),

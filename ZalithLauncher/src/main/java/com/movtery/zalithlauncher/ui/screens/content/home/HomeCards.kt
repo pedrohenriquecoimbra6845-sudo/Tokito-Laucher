@@ -25,10 +25,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -97,8 +99,48 @@ object HomeCards {
 
     /** 系统卡片（不可变更） */
     fun systemCards(): List<SystemCard> = buildList {
+        add(prestigieInfoCard())
         if (BuildConfig.DEBUG) {
             add(debugWarningCard())
+        }
+    }
+
+    /**
+     * Prestigie Laucher: card pinned to the main tab.
+     * - Shows the mandatory "Unofficial Modified Version" notice required by the Zalith Launcher 2 license terms.
+     * - Credits OneClient (Polyfrost), which inspired the visual theme.
+     */
+    private fun prestigieInfoCard() = SystemCard(id = "system_prestigie_info") {
+        val uriHandler = LocalUriHandler.current
+        BackgroundCard(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.extraLarge
+        ) {
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.prestigie_card_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = stringResource(R.string.prestigie_card_unofficial),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = stringResource(R.string.prestigie_card_oneclient),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                TextButton(
+                    modifier = Modifier.align(Alignment.End),
+                    onClick = { uriHandler.openUri("https://polyfrost.org/projects/oneclient") }
+                ) {
+                    Text(text = stringResource(R.string.prestigie_card_oneclient_link))
+                }
+            }
         }
     }
 

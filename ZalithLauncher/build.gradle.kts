@@ -129,8 +129,9 @@ android {
     }
 
     defaultConfig {
-        applicationId = zalithPackageName
-        applicationIdSuffix = ".v2"
+        //Prestigie Laucher: own application id, so it installs next to the official apps.
+        //The Kotlin/JNI package (namespace) stays unchanged on purpose.
+        applicationId = "com.prestigie.laucher"
         minSdk = 26
         targetSdk = 34
         versionCode = launcherVersionCode

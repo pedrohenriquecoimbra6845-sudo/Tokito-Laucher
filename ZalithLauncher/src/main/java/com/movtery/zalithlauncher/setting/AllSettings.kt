@@ -383,7 +383,7 @@ object AllSettings : SettingsRegistry() {
      */
     val launcherColorTheme = enumSetting(
         "launcherColorTheme",
-        //Prestigie Laucher: OneClient-inspired theme by default on every Android version
+        //PolyJav Laucher: OneClient-inspired theme by default on every Android version
         ColorThemeType.ONECLIENT
     )
 

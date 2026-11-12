@@ -32,7 +32,7 @@ data class ColorTheme(
 
 enum class ColorThemeType {
     /**
-     * Prestigie Laucher default: OneClient-inspired blue/dark look
+     * PolyJav Laucher default: OneClient-inspired blue/dark look
      */
     ONECLIENT,
     DYNAMIC,

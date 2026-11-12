@@ -1,7 +1,7 @@
 /*
- * Prestigie Laucher - unofficial modified version of Zalith Launcher 2
+ * PolyJav Laucher - unofficial modified version of Zalith Launcher 2
  * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors (Zalith Launcher 2)
- * Modifications Copyright (C) 2026 Prestigie Laucher contributors
+ * Modifications Copyright (C) 2026 PolyJav Laucher contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
 /**
- * Colors of the "OneClient" look used by Prestigie Laucher.
+ * Colors of the "OneClient" look used by PolyJav Laucher.
  *
  * The base values (page, card, text and the blue accent) follow the "PolyGlass" theme
  * of OneClient by Polyfrost (https://polyfrost.org/projects/oneclient, GPL-3.0):

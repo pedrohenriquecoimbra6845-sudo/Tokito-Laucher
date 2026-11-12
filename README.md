@@ -1,4 +1,4 @@
-# Prestigie Laucher
+# PolyJav Laucher
 
 Launcher de **Minecraft: Java Edition para Android** (motor PojavLauncher), com visual inspirado no **OneClient** e uma animação ao abrir o Minecraft.
 
@@ -7,7 +7,7 @@ Launcher de **Minecraft: Java Edition para Android** (motor PojavLauncher), com 
 
 ## O que muda em relação ao Zalith Launcher 2
 
-- **Nome e identidade:** Prestigie Laucher (`applicationId` próprio: `com.prestigie.laucher`).
+- **Nome e identidade:** PolyJav Laucher (`applicationId` próprio: `com.polyjav.laucher`).
 - **Tema OneClient (padrão):** cores baseadas no tema "PolyGlass" do OneClient (escuro `#11171C` / `#1A2229`, texto `#D5DBFF`, destaque azul `#2B4BFF`), com variante clara. Em *Configurações > Launcher* ainda dá para trocar para os temas do Zalith.
 - **Aba principal:** card fixo com o aviso "Versão Modificada Não Oficial" e o crédito ao OneClient (Polyfrost), com link.
 - **Animação ao abrir o Minecraft:** tela cheia com anel girando, brilho pulsando e barra de progresso. A lista de tarefas e o botão de cancelar continuam por cima.

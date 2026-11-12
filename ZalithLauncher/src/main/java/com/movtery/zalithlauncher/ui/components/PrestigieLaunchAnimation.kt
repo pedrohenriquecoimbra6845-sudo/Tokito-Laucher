@@ -1,7 +1,7 @@
 /*
- * Prestigie Laucher - unofficial modified version of Zalith Launcher 2
+ * PolyJav Laucher - unofficial modified version of Zalith Launcher 2
  * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors (Zalith Launcher 2)
- * Modifications Copyright (C) 2026 Prestigie Laucher contributors
+ * Modifications Copyright (C) 2026 PolyJav Laucher contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ import com.movtery.zalithlauncher.R
 import kotlinx.coroutines.delay
 
 /**
- * Prestigie Laucher: full-screen animation shown while Minecraft is being opened.
+ * PolyJav Laucher: full-screen animation shown while Minecraft is being opened.
  *
  * It fades in as soon as the launch flow starts, keeps a rotating ring, a breathing glow and an
  * indeterminate progress bar running, and fades out shortly after the flow ends.

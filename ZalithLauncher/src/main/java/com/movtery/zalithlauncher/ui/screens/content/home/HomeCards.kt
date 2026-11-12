@@ -106,7 +106,7 @@ object HomeCards {
     }
 
     /**
-     * Prestigie Laucher: card pinned to the main tab.
+     * PolyJav Laucher: card pinned to the main tab.
      * - Shows the mandatory "Unofficial Modified Version" notice required by the Zalith Launcher 2 license terms.
      * - Credits OneClient (Polyfrost), which inspired the visual theme.
      */

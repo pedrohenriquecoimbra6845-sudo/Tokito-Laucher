@@ -622,6 +622,7 @@ fun ZalithLauncherTheme(
             }
 
             darkTheme -> when (colorTheme) {
+                ColorThemeType.TOKITO -> tokitoDark
                 ColorThemeType.POLYJAV -> polyJavDark
                 ColorThemeType.ONECLIENT -> oneClientDark
                 ColorThemeType.EMBERMIRE -> embermireDark
@@ -639,6 +640,7 @@ fun ZalithLauncherTheme(
             }
 
             else -> when (colorTheme) {
+                ColorThemeType.TOKITO -> tokitoLight
                 ColorThemeType.POLYJAV -> polyJavLight
                 ColorThemeType.ONECLIENT -> oneClientLight
                 ColorThemeType.EMBERMIRE -> embermireLight

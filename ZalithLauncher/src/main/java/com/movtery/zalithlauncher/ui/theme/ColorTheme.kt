@@ -32,10 +32,11 @@ data class ColorTheme(
 
 enum class ColorThemeType {
     /**
-     * PolyJav Laucher default: OneClient-inspired blue/dark look
+     * Tokito Laucher default: plum background with red, pink and purple accents
      */
+    TOKITO,
     /**
-     * PolyJav Laucher default: original cyan theme
+     * Original cyan theme (previous default)
      */
     POLYJAV,
     ONECLIENT,

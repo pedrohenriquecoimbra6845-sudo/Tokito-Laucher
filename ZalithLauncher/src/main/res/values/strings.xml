@@ -126,15 +126,17 @@
     <string name="launcher_version_debug_warning">You are using a test version of %s! This version may be unstable and is primarily intended for feature testing and early access. It is not recommended for long-term use! If you encounter any issues during testing, please report them to us via GitHub and we will address them as soon as possible.</string>
     <!-- Caption on the test build warning card explaining it cannot be dismissed -->
     <string name="launcher_version_debug_warning_cant_close">This warning cannot be dismissed</string>
-    <!-- PolyJav Laucher: home card shown on the main tab -->
-    <string name="prestigie_card_title">PolyJav Laucher</string>
+    <!-- Tokito Laucher: home card shown on the main tab -->
+    <string name="prestigie_card_title">Tokito Laucher</string>
     <string name="prestigie_card_unofficial">Unofficial Modified Version of Zalith Launcher 2. It is not affiliated with, or endorsed by, the Zalith Launcher developers.</string>
     <string name="prestigie_card_oneclient">Visual theme inspired by OneClient, by Polyfrost.</string>
     <string name="prestigie_card_oneclient_link">Visit OneClient</string>
-    <!-- PolyJav Laucher: animation shown while Minecraft is starting -->
+    <!-- Tokito Laucher: animation shown while Minecraft is starting -->
     <string name="prestigie_launch_starting">Starting Minecraft…</string>
+    <!-- Tokito Laucher: home cards -->
     <!-- Option of the theme color setting in launcher settings -->
-    <string name="theme_color_polyjav">PolyJav Cyan</string>
+    <string name="theme_color_polyjav">Cyan</string>
+    <string name="theme_color_tokito">Tokito Rose</string>
     <string name="theme_color_oneclient">OneClient</string>
     <!-- Option of the theme color setting in launcher settings -->
     <string name="theme_color_dynamic">Dynamic (Android 12+)</string>
@@ -3082,4 +3084,31 @@
     <string name="guide_joystick_events_events_text1">The triggerable events are the same as those of regular buttons, so you have plenty of freedom here</string>
     <!-- Closing line of the guide card about editing actual key bindings in the Key section -->
     <string name="guide_joystick_events_events_text2">If you only want to control the game, just edit the actual key bindings in the \"Key\" section</string>
+
+    <!-- Tokito Laucher: side rail, news panel, entry screen and Rust Edition -->
+    <string name="tokito_rail_home">Home</string>
+    <string name="tokito_rail_versions">Versions</string>
+    <string name="tokito_rail_download">Download</string>
+    <string name="tokito_rail_mods">Mods</string>
+    <string name="tokito_rail_textures">Textures</string>
+    <string name="tokito_rail_modpacks">Modpacks</string>
+    <string name="tokito_rail_rust">Rust</string>
+    <string name="tokito_rail_settings">Settings</string>
+    <string name="tokito_news_title">News</string>
+    <string name="tokito_play">PLAY</string>
+    <string name="tokito_library_title">Library</string>
+    <string name="tokito_entry_welcome">Welcome to %1$s</string>
+    <string name="tokito_entry_welcome_back">Welcome back, %1$s</string>
+    <string name="tokito_entry_tap">Tap to enter</string>
+    <string name="tokito_entry_microsoft">Sign in with Microsoft</string>
+    <string name="tokito_entry_other">Other ways to sign in</string>
+    <string name="tokito_entry_skip">Enter without an account</string>
+    <string name="tokito_lib_shaders">Shaders</string>
+    <string name="tokito_lib_worlds">Worlds</string>
+    <string name="tokito_rust_title">Minecraft Rust Edition</string>
+    <string name="tokito_rust_desc">A native port of Minecraft: Java Edition written in Rust (Starling, formerly Horizon Android). It is a separate, free and open source app, not affiliated with Mojang or Microsoft, and you need your own copy of Minecraft: Java Edition.</string>
+    <string name="tokito_rust_open">Open</string>
+    <string name="tokito_rust_download">Download</string>
+    <string name="tokito_rust_missing_title">Rust Edition is not installed</string>
+    <string name="tokito_rust_missing_text">Minecraft Rust Edition is a separate app. Open its download page to install it?</string>
 </resources>

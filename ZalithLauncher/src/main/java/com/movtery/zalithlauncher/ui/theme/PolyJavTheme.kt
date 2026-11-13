@@ -1,7 +1,7 @@
 /*
- * PolyJav Laucher - unofficial modified version of Zalith Launcher 2
+ * Tokito Laucher - unofficial modified version of Zalith Launcher 2
  * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors (Zalith Launcher 2)
- * Modifications Copyright (C) 2026 PolyJav Laucher contributors
+ * Modifications Copyright (C) 2026 Tokito Laucher contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

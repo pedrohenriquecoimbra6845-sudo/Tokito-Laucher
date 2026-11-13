@@ -129,9 +129,9 @@ android {
     }
 
     defaultConfig {
-        //PolyJav Laucher: own application id, so it installs next to the official apps.
+        //Tokito Laucher: own application id, so it installs next to the official apps.
         //The Kotlin/JNI package (namespace) stays unchanged on purpose.
-        applicationId = "com.polyjav.laucher"
+        applicationId = "com.tokito.laucher"
         minSdk = 26
         targetSdk = 34
         versionCode = launcherVersionCode

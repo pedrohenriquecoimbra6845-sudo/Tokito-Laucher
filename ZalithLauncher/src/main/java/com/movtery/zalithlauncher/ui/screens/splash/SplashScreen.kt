@@ -22,18 +22,24 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.LinearWavyProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
+import com.movtery.zalithlauncher.BuildConfig
+import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.components.InstallableItem
 import com.movtery.zalithlauncher.legal.AvailableAgreement
@@ -143,11 +149,28 @@ private fun LoadingScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Image(
-                    modifier = Modifier.size(58.dp),
-                    painter = painterResource(R.drawable.img_launcher),
-                    contentDescription = stringResource(R.string.generic_loading)
-                )
+                //Tokito Laucher: app icon with the name and version on its right side
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Image(
+                        modifier = Modifier.size(58.dp),
+                        painter = painterResource(R.drawable.img_launcher),
+                        contentDescription = stringResource(R.string.generic_loading)
+                    )
+                    Column {
+                        Text(
+                            text = BuildKeys.LAUNCHER_NAME,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "v" + BuildConfig.VERSION_NAME.substringBefore("-"),
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+                }
                 LinearWavyProgressIndicator(
                     modifier = Modifier.width(128.dp),
                     wavelength = 32.dp

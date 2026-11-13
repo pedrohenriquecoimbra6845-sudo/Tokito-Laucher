@@ -1,7 +1,7 @@
 /*
- * PolyJav Laucher - unofficial modified version of Zalith Launcher 2
+ * Tokito Laucher - unofficial modified version of Zalith Launcher 2
  * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors (Zalith Launcher 2)
- * Modifications Copyright (C) 2026 PolyJav Laucher contributors
+ * Modifications Copyright (C) 2026 Tokito Laucher contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,6 +58,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -68,7 +70,7 @@ import com.movtery.zalithlauncher.R
 import kotlinx.coroutines.delay
 
 /**
- * PolyJav Laucher: full-screen animation shown while Minecraft is being opened.
+ * Tokito Laucher: full-screen animation shown while Minecraft is being opened.
  *
  * It fades in as soon as the launch flow starts, keeps a rotating ring, a breathing glow and an
  * indeterminate progress bar running, and fades out shortly after the flow ends.
@@ -196,15 +198,15 @@ fun PrestigieLaunchAnimation(visible: Boolean) {
                     }
 
                     //simple monogram in the middle (original, no third-party artwork)
-                    Text(
-                        modifier = Modifier.graphicsLayer {
-                            scaleX = breathe
-                            scaleY = breathe
-                        },
-                        text = "P",
-                        fontSize = 64.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
+                    Image(
+                        modifier = Modifier
+                            .size(112.dp)
+                            .graphicsLayer {
+                                scaleX = breathe
+                                scaleY = breathe
+                            },
+                        painter = painterResource(R.drawable.tokito_logo),
+                        contentDescription = null
                     )
                 }
 

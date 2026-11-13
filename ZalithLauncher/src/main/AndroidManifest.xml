@@ -224,6 +224,10 @@
     </application>
     <queries>
         <package android:name="net.kdt.pojavlaunch.ffmpeg"/>
+        <package android:name="io.github.juanluci.starling"/>
+        <package android:name="io.github.juanluci.starling.preview"/>
+        <package android:name="io.github.juanluci.starling.dev"/>
+        <package android:name="dev.horizon.android"/>
         <intent>
             <action android:name="android.intent.action.MAIN" />
         </intent>

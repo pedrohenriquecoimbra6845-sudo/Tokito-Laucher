@@ -99,6 +99,8 @@ object HomeCards {
 
     /** 系统卡片（不可变更） */
     fun systemCards(): List<SystemCard> = buildList {
+        add(SystemCard(id = "system_tokito_library") { TokitoLibraryCard() })
+        add(SystemCard(id = "system_tokito_rust_edition") { TokitoRustEditionCard() })
         add(prestigieInfoCard())
         if (BuildConfig.DEBUG) {
             add(debugWarningCard())
@@ -106,7 +108,7 @@ object HomeCards {
     }
 
     /**
-     * PolyJav Laucher: card pinned to the main tab.
+     * Tokito Laucher: card pinned to the main tab.
      * - Shows the mandatory "Unofficial Modified Version" notice required by the Zalith Launcher 2 license terms.
      * - Credits OneClient (Polyfrost), which inspired the visual theme.
      */

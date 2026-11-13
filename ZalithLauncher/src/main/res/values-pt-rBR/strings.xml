@@ -56,12 +56,13 @@
     <string name="generic_no_matching_items">Nenhum item correspondente</string>
     <string name="generic_follow_system">Siga o Sistema</string>
     <string name="unit_day">Dia</string>
-    <string name="prestigie_card_title">PolyJav Laucher</string>
+    <string name="prestigie_card_title">Tokito Laucher</string>
     <string name="prestigie_card_unofficial">Versão Modificada Não Oficial do Zalith Launcher 2. Não é afiliada nem endossada pelos desenvolvedores do Zalith Launcher.</string>
     <string name="prestigie_card_oneclient">Tema visual inspirado no OneClient, da Polyfrost.</string>
     <string name="prestigie_card_oneclient_link">Conhecer o OneClient</string>
     <string name="prestigie_launch_starting">Iniciando o Minecraft…</string>
-    <string name="theme_color_polyjav">PolyJav Ciano</string>
+    <string name="theme_color_polyjav">Ciano</string>
+    <string name="theme_color_tokito">Tokito Rosa</string>
     <string name="theme_color_oneclient">OneClient</string>
     <string name="theme_color_dynamic">Dinâmico (Requer Android 12+)</string>
     <string name="theme_color_embermire">Embermire</string>
@@ -1554,4 +1555,31 @@
     <string name="settings_renderer_sfpew_plugin_layer_title">Camada de compatibilidade SFPEW (plugins de renderização)</string>
     <string name="settings_renderer_sfpew_plugin_layer_summary">Adiciona SimpleFPEWrapper ao renderizador plugins sem suporte a pipeline de função fixa para renderização legado da OpenGL 1.x/2.1</string>
     <string name="generic_retry">Tentar novamente</string>
+
+    <!-- Tokito Laucher: barra lateral, painel de novidades, tela de entrada e Rust Edition -->
+    <string name="tokito_rail_home">Início</string>
+    <string name="tokito_rail_versions">Versões</string>
+    <string name="tokito_rail_download">Baixar</string>
+    <string name="tokito_rail_mods">Mods</string>
+    <string name="tokito_rail_textures">Texturas</string>
+    <string name="tokito_rail_modpacks">Modpacks</string>
+    <string name="tokito_rail_rust">Rust</string>
+    <string name="tokito_rail_settings">Ajustes</string>
+    <string name="tokito_news_title">Novidades</string>
+    <string name="tokito_play">JOGAR</string>
+    <string name="tokito_library_title">Biblioteca</string>
+    <string name="tokito_entry_welcome">Bem-vindo ao %1$s</string>
+    <string name="tokito_entry_welcome_back">Bem-vindo de volta, %1$s</string>
+    <string name="tokito_entry_tap">Toque para entrar</string>
+    <string name="tokito_entry_microsoft">Entrar com Microsoft</string>
+    <string name="tokito_entry_other">Outras formas de entrar</string>
+    <string name="tokito_entry_skip">Entrar sem conta</string>
+    <string name="tokito_lib_shaders">Shaders</string>
+    <string name="tokito_lib_worlds">Mundos</string>
+    <string name="tokito_rust_title">Minecraft Rust Edition</string>
+    <string name="tokito_rust_desc">Um port nativo do Minecraft: Java Edition escrito em Rust (Starling, antigo Horizon Android). É um app separado, gratuito e de código aberto, sem ligação com a Mojang ou a Microsoft, e você precisa da sua própria cópia do Minecraft: Java Edition.</string>
+    <string name="tokito_rust_open">Abrir</string>
+    <string name="tokito_rust_download">Baixar</string>
+    <string name="tokito_rust_missing_title">Rust Edition não está instalado</string>
+    <string name="tokito_rust_missing_text">O Minecraft Rust Edition é um app separado. Abrir a página de download para instalar?</string>
 </resources>

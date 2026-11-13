@@ -63,6 +63,8 @@ import com.movtery.zalithlauncher.ui.base.BaseAppCompatActivity
 import com.movtery.zalithlauncher.ui.base.ObserveFullScreenSetting
 import com.movtery.zalithlauncher.ui.buildAppendedText
 import com.movtery.zalithlauncher.ui.components.PrestigieLaunchAnimation
+import com.movtery.zalithlauncher.ui.components.TokitoEntryOverlay
+import com.movtery.zalithlauncher.ui.screens.content.FirstLoginMenu
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.ui.guide.GuideKeys
 import com.movtery.zalithlauncher.ui.guide.GuideProgress
@@ -359,6 +361,20 @@ class MainActivity : BaseAppCompatActivity() {
                         }
                     )
 
+                    //Tokito Laucher: entry screen shown every time the launcher opens
+                    TokitoEntryOverlay(
+                        onLoginMicrosoft = {
+                            screenBackStackModel.mainScreen.navigateTo(
+                                screenKey = NormalNavKey.AccountManager(FirstLoginMenu.MICROSOFT)
+                            )
+                        },
+                        onLoginOther = {
+                            screenBackStackModel.mainScreen.navigateTo(
+                                screenKey = NormalNavKey.AccountManager(FirstLoginMenu.NORMAL)
+                            )
+                        }
+                    )
+
                     //节日彩蛋效果层
                     FestivalEffects(
                         modifier = Modifier.fillMaxSize(),
@@ -402,7 +418,7 @@ class MainActivity : BaseAppCompatActivity() {
                     //启动游戏流程展示
                     val launchFlow by launchGameViewModel.launchFlow.collectAsStateWithLifecycle()
                     val flow = launchFlow
-                    //PolyJav Laucher: animation while Minecraft is opening.
+                    //Tokito Laucher: animation while Minecraft is opening.
                     //Composed before the task dialog so the task list/cancel button stay on top.
                     PrestigieLaunchAnimation(visible = flow != null)
                     if (flow != null) {

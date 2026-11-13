@@ -27,6 +27,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -64,6 +65,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -84,6 +86,7 @@ import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.components.BackgroundCard
 import com.movtery.zalithlauncher.ui.components.CardTitleLayout
+import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.ui.components.TextRailItem
 import com.movtery.zalithlauncher.ui.guide.sendStartGuideOnce
 import com.movtery.zalithlauncher.ui.screens.BackStackNavKey
@@ -95,6 +98,7 @@ import com.movtery.zalithlauncher.ui.screens.TitledNavKey
 import com.movtery.zalithlauncher.ui.screens.content.AccountManageScreen
 import com.movtery.zalithlauncher.ui.screens.content.DownloadScreen
 import com.movtery.zalithlauncher.ui.screens.content.FileSelectorScreen
+import com.movtery.zalithlauncher.ui.screens.content.FirstLoginMenu
 import com.movtery.zalithlauncher.ui.screens.content.LauncherScreen
 import com.movtery.zalithlauncher.ui.screens.content.LicenseScreen
 import com.movtery.zalithlauncher.ui.screens.content.LogViewScreen
@@ -105,6 +109,7 @@ import com.movtery.zalithlauncher.ui.screens.content.VersionSettingsScreen
 import com.movtery.zalithlauncher.ui.screens.content.VersionsManageScreen
 import com.movtery.zalithlauncher.ui.screens.content.WebViewScreen
 import com.movtery.zalithlauncher.ui.screens.content.addoninfo.AddonInfoScreen
+import com.movtery.zalithlauncher.ui.screens.content.home.RustEdition
 import com.movtery.zalithlauncher.ui.screens.content.navigateToDownload
 import com.movtery.zalithlauncher.ui.screens.navigateTo
 import com.movtery.zalithlauncher.ui.screens.onBack
@@ -125,6 +130,7 @@ import com.movtery.zalithlauncher.viewmodel.ModpackImportViewModel
 import com.movtery.zalithlauncher.viewmodel.ScreenBackStackViewModel
 import com.movtery.zalithlauncher.viewmodel.sendKeepScreen
 import com.movtery.zalithlauncher.viewmodel.sendToast
+import kotlin.reflect.KClass
 
 @Composable
 fun MainScreen(
@@ -165,84 +171,171 @@ fun MainScreen(
         backgroundColor().copy(alpha = launcherBackgroundOpacity)
     } else backgroundColor()
 
+    val context = LocalContext.current
+    var showRustMissing by remember { mutableStateOf(false) }
+    //Tokito Laucher: the side rail item that matches the screen that is open
+    val selectedDestination = tokitoDestinationOf(mainScreenKey)
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = backgroundColor,
         contentColor = onBackgroundColor()
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            TopBar(
+        Row(modifier = Modifier.fillMaxSize()) {
+            //left rail: app icon, home, versions, downloads, mods, textures, modpacks, Rust Edition, settings
+            TokitoSideRail(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(40.dp),
-                mainScreenKey = mainScreenKey,
-                inLauncherScreen = inLauncherScreen,
-                taskRunning = taskRunning,
-                isTasksExpanded = isTaskMenuExpanded,
-                contentColor = onBackgroundColor(),
-                onScreenBack = {
-                    screenBackStackModel.mainScreen.backStack.removeFirstOrNull()
-                },
-                toMainScreen = toMainScreen,
-                toSettingsScreen = {
-                    screenBackStackModel.mainScreen.removeAndNavigateTo(
-                        removes = screenBackStackModel.clearBeforeNavKeys,
-                        screenKey = screenBackStackModel.settingsScreen
-                    )
-                },
-                toDownloadScreen = {
-                    screenBackStackModel.navigateToDownload()
-                },
-                toMultiplayerScreen = {
-                    screenBackStackModel.mainScreen.removeAndNavigateTo(
-                        removes = screenBackStackModel.clearBeforeNavKeys,
-                        screenKey = NormalNavKey.Multiplayer
-                    )
-                },
-                openFileManager = {
-                    eventViewModel.sendEvent(
-                        EventViewModel.Event.OpenFileManager(
-                            rootPath = PathManager.DIR_FILES_EXTERNAL.absolutePath
-                        )
-                    )
-                },
-                changeExpandedState = {
-                    changeTasksExpandedState()
-                },
+                    .fillMaxHeight()
+                    .width(72.dp),
+                selected = selectedDestination,
+                onSelect = { destination ->
+                    when (destination) {
+                        TokitoDestination.HOME -> {
+                            if (!inLauncherScreen) toMainScreen()
+                        }
+                        TokitoDestination.VERSIONS -> {
+                            if (selectedDestination != TokitoDestination.VERSIONS) {
+                                val removes: List<KClass<*>> =
+                                    screenBackStackModel.clearBeforeNavKeys + NestedNavKey.VersionSettings::class
+                                screenBackStackModel.mainScreen.removeAndNavigateTo(
+                                    removes = removes,
+                                    screenKey = NormalNavKey.VersionsManager
+                                )
+                            }
+                        }
+                        TokitoDestination.DOWNLOAD -> {
+                            if (selectedDestination != TokitoDestination.DOWNLOAD) {
+                                screenBackStackModel.navigateToDownload()
+                            }
+                        }
+                        TokitoDestination.MODS -> {
+                            if (selectedDestination != TokitoDestination.MODS) {
+                                screenBackStackModel.navigateToDownload(screenBackStackModel.downloadModScreen)
+                            }
+                        }
+                        TokitoDestination.TEXTURES -> {
+                            if (selectedDestination != TokitoDestination.TEXTURES) {
+                                screenBackStackModel.navigateToDownload(screenBackStackModel.downloadResourcePackScreen)
+                            }
+                        }
+                        TokitoDestination.MODPACKS -> {
+                            if (selectedDestination != TokitoDestination.MODPACKS) {
+                                screenBackStackModel.navigateToDownload(screenBackStackModel.downloadModPackScreen)
+                            }
+                        }
+                        TokitoDestination.RUST -> {
+                            //Minecraft Rust Edition is a separate app: open it, or offer its download page
+                            if (!RustEdition.open(context)) showRustMissing = true
+                        }
+                        TokitoDestination.SETTINGS -> {
+                            if (selectedDestination != TokitoDestination.SETTINGS) {
+                                screenBackStackModel.mainScreen.removeAndNavigateTo(
+                                    removes = screenBackStackModel.clearBeforeNavKeys,
+                                    screenKey = screenBackStackModel.settingsScreen
+                                )
+                            }
+                        }
+                    }
+                }
             )
 
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            ) {
-                NavStateHost(rootKey = screenBackStackModel.mainScreen) {
-                    NavigationUI(
-                        modifier = Modifier.fillMaxSize(),
-                        screenBackStackModel = screenBackStackModel,
-                        toMainScreen = toMainScreen,
-                        eventViewModel = eventViewModel,
-                        modpackImportViewModel = modpackImportViewModel,
-                        modifyVersionViewModel = modifyVersionViewModel,
-                        submitError = submitError
-                    )
-                }
+                    .fillMaxHeight()
+                    .width(1.dp)
+                    .background(MaterialTheme.colorScheme.outlineVariant)
+            )
 
-                TaskMenu(
-                    isExpanded = isTaskMenuExpanded,
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            ) {
+                TokitoTopBar(
                     modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(0.3f)
-                        .align(Alignment.CenterStart)
-                        .padding(all = 6.dp)
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    mainScreenKey = mainScreenKey,
+                    inLauncherScreen = inLauncherScreen,
+                    taskRunning = taskRunning,
+                    isTasksExpanded = isTaskMenuExpanded,
+                    onScreenBack = {
+                        screenBackStackModel.mainScreen.backStack.removeFirstOrNull()
+                    },
+                    toAccountScreen = {
+                        screenBackStackModel.mainScreen.navigateTo(
+                            screenKey = NormalNavKey.AccountManager(FirstLoginMenu.NONE)
+                        )
+                    },
+                    toVersionsScreen = {
+                        val removes: List<KClass<*>> =
+                            screenBackStackModel.clearBeforeNavKeys + NestedNavKey.VersionSettings::class
+                        screenBackStackModel.mainScreen.removeAndNavigateTo(
+                            removes = removes,
+                            screenKey = NormalNavKey.VersionsManager
+                        )
+                    },
+                    toMultiplayerScreen = {
+                        screenBackStackModel.mainScreen.removeAndNavigateTo(
+                            removes = screenBackStackModel.clearBeforeNavKeys,
+                            screenKey = NormalNavKey.Multiplayer
+                        )
+                    },
+                    openFileManager = {
+                        eventViewModel.sendEvent(
+                            EventViewModel.Event.OpenFileManager(
+                                rootPath = PathManager.DIR_FILES_EXTERNAL.absolutePath
+                            )
+                        )
+                    },
+                    changeExpandedState = {
+                        changeTasksExpandedState()
+                    },
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
                 ) {
-                    changeTasksExpandedState()
+                    NavStateHost(rootKey = screenBackStackModel.mainScreen) {
+                        NavigationUI(
+                            modifier = Modifier.fillMaxSize(),
+                            screenBackStackModel = screenBackStackModel,
+                            toMainScreen = toMainScreen,
+                            eventViewModel = eventViewModel,
+                            modpackImportViewModel = modpackImportViewModel,
+                            modifyVersionViewModel = modifyVersionViewModel,
+                            submitError = submitError
+                        )
+                    }
+
+                    TaskMenu(
+                        isExpanded = isTaskMenuExpanded,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .fillMaxWidth(0.3f)
+                            .align(Alignment.CenterStart)
+                            .padding(all = 6.dp)
+                    ) {
+                        changeTasksExpandedState()
+                    }
                 }
             }
         }
+    }
+
+    if (showRustMissing) {
+        SimpleAlertDialog(
+            title = stringResource(R.string.tokito_rust_missing_title),
+            text = stringResource(R.string.tokito_rust_missing_text),
+            confirmText = stringResource(R.string.tokito_rust_download),
+            onConfirm = {
+                showRustMissing = false
+                eventViewModel.sendEvent(EventViewModel.Event.OpenLink(RustEdition.RELEASES_URL))
+            },
+            onDismiss = { showRustMissing = false }
+        )
     }
 }
 

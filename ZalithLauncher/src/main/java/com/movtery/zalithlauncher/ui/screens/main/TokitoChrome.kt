@@ -132,21 +132,21 @@ internal fun TokitoSideRail(
         //the app icon; the app name is written on its right side, in the top bar
         Image(
             modifier = Modifier
-                .size(46.dp)
-                .clip(RoundedCornerShape(14.dp))
+                .size(40.dp)
+                .clip(RoundedCornerShape(12.dp))
                 .clickable { onSelect(TokitoDestination.HOME) },
             painter = painterResource(R.drawable.tokito_logo),
             contentDescription = BuildKeys.LAUNCHER_NAME
         )
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         Column(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(3.dp)
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             middle.forEach { destination ->
                 TokitoRailEntry(
@@ -208,12 +208,12 @@ private fun TokitoRailEntry(
                 if (isSelected) Modifier.border(width = 1.5.dp, color = accent, shape = shape) else Modifier
             )
             .clickable { onSelect(destination) }
-            .padding(vertical = 6.dp),
+            .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp)
+        verticalArrangement = Arrangement.spacedBy(1.dp)
     ) {
         Icon(
-            modifier = Modifier.size(22.dp),
+            modifier = Modifier.size(20.dp),
             painter = painterResource(iconRes),
             contentDescription = null,
             tint = contentColor
@@ -222,6 +222,7 @@ private fun TokitoRailEntry(
             text = stringResource(labelRes),
             style = MaterialTheme.typography.labelSmall,
             fontSize = 10.sp,
+            lineHeight = 12.sp,
             color = contentColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis

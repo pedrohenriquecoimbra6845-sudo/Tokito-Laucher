@@ -79,6 +79,7 @@ import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.coroutine.TaskSystem
 import com.movtery.zalithlauncher.game.version.installed.Version
+import com.movtery.zalithlauncher.game.rust.RustEdition
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.path.PathManager
 import com.movtery.zalithlauncher.setting.AllSettings
@@ -109,7 +110,6 @@ import com.movtery.zalithlauncher.ui.screens.content.VersionSettingsScreen
 import com.movtery.zalithlauncher.ui.screens.content.VersionsManageScreen
 import com.movtery.zalithlauncher.ui.screens.content.WebViewScreen
 import com.movtery.zalithlauncher.ui.screens.content.addoninfo.AddonInfoScreen
-import com.movtery.zalithlauncher.ui.screens.content.home.RustEdition
 import com.movtery.zalithlauncher.ui.screens.content.navigateToDownload
 import com.movtery.zalithlauncher.ui.screens.navigateTo
 import com.movtery.zalithlauncher.ui.screens.onBack
@@ -176,12 +176,19 @@ fun MainScreen(
     //Tokito Laucher: the side rail item that matches the screen that is open
     val selectedDestination = tokitoDestinationOf(mainScreenKey)
 
+    //Tokito Laucher: Liquid Glass, Transparent, Neon and Minecraft use floating panels with gaps between them
+    val floatingPanels = AllSettings.launcherStyle.state.isFloating
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = backgroundColor,
         contentColor = onBackgroundColor()
     ) {
-        Row(modifier = Modifier.fillMaxSize()) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .then(if (floatingPanels) Modifier.padding(8.dp) else Modifier)
+        ) {
             //left rail: app icon, home, versions, downloads, mods, textures, modpacks, Rust Edition, settings
             TokitoSideRail(
                 modifier = Modifier
@@ -239,12 +246,16 @@ fun MainScreen(
                 }
             )
 
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(1.dp)
-                    .background(MaterialTheme.colorScheme.outlineVariant)
-            )
+            if (floatingPanels) {
+                Spacer(modifier = Modifier.width(8.dp))
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(1.dp)
+                        .background(MaterialTheme.colorScheme.outlineVariant)
+                )
+            }
 
             Column(
                 modifier = Modifier
@@ -293,6 +304,8 @@ fun MainScreen(
                     },
                 )
 
+                if (floatingPanels) Spacer(modifier = Modifier.height(8.dp))
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -332,7 +345,8 @@ fun MainScreen(
             confirmText = stringResource(R.string.tokito_rust_download),
             onConfirm = {
                 showRustMissing = false
-                eventViewModel.sendEvent(EventViewModel.Event.OpenLink(RustEdition.RELEASES_URL))
+                //downloads the app from its official site into the Tokito folder and opens the installer
+                RustEdition.downloadAndInstall(context)
             },
             onDismiss = { showRustMissing = false }
         )

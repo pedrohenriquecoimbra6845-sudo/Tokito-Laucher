@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.setting.AllSettings
+import com.movtery.zalithlauncher.ui.theme.forcedDarkTheme
 
 /**
  * 启动器UI深色主题
@@ -44,8 +45,10 @@ enum class DarkMode(val textRes: Int) {
 @Composable
 fun isLauncherInDarkTheme(): Boolean {
     val value = AllSettings.launcherDarkMode.state
-    return key(value) {
-        when (value) {
+    //Tokito Laucher: Liquid Glass "Leve" is always light and "Frio" always dark
+    val forced = forcedDarkTheme(AllSettings.launcherStyle.state, AllSettings.liquidGlassMode.state)
+    return key(value, forced) {
+        forced ?: when (value) {
             DarkMode.Enable -> true
             DarkMode.Disable -> false
             DarkMode.FollowSystem -> isSystemInDarkTheme()

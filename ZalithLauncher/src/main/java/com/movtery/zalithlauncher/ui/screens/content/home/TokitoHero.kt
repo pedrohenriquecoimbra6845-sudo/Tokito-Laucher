@@ -61,8 +61,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -82,10 +85,15 @@ import com.movtery.zalithlauncher.game.account.getAccountTypeName
 import com.movtery.zalithlauncher.game.account.wardrobe.toArmModel
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
+import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.components.PetModelView
 import com.movtery.zalithlauncher.ui.guide.GuideKeys
 import com.movtery.zalithlauncher.ui.screens.content.elements.CommonVersionInfoLayout
 import com.movtery.zalithlauncher.ui.screens.content.elements.PlayerFace
+import com.movtery.zalithlauncher.ui.theme.LauncherStyle
+import com.movtery.zalithlauncher.ui.theme.tokitoButtonFrame
+import com.movtery.zalithlauncher.ui.theme.tokitoPanel
+import com.movtery.zalithlauncher.viewmodel.backgroundVisible
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -110,15 +118,25 @@ fun TokitoHero(
     val version by VersionsManager.currentVersion.collectAsStateWithLifecycle()
     val isRefreshing by VersionsManager.isRefreshing.collectAsStateWithLifecycle()
 
-    val shape = RoundedCornerShape(28.dp)
+    val style = AllSettings.launcherStyle.state
+    //Modo PVP: o boneco da tela de jogar fica menor
+    val pvp = AllSettings.launcherPvpMode.state
+    //tela inicial mais leve e suave: com as animações desligadas o boneco fica parado e a grade não se move
+    val animated = AllSettings.homeAnimations.state
+    val backgroundShown = backgroundVisible()
+    val shape = RoundedCornerShape(style.panelCornerDp.dp)
 
     BoxWithConstraints(
-        modifier = modifier
-            .clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
-            .border(width = 1.dp, color = MaterialTheme.colorScheme.outlineVariant, shape = shape)
+        modifier = modifier.tokitoPanel(
+            shape = shape,
+            tint = MaterialTheme.colorScheme.surfaceContainerLow
+        )
     ) {
-        TokitoGridBackdrop(modifier = Modifier.fillMaxSize())
+        TokitoGridBackdrop(
+            modifier = Modifier.fillMaxSize(),
+            style = style,
+            backgroundShown = backgroundShown
+        )
 
         //with little height the 3D model would be tiny: show the face instead
         val showModel = maxHeight >= 250.dp
@@ -131,10 +149,19 @@ fun TokitoHero(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            TokitoPlayerChip(
-                account = currentAccount,
-                onClick = toAccountManageScreen
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                TokitoPlayerChip(
+                    account = currentAccount,
+                    onClick = toAccountManageScreen
+                )
+                TokitoPvpChip(
+                    enabled = pvp,
+                    onClick = { AllSettings.launcherPvpMode.save(!pvp) }
+                )
+            }
 
             Box(
                 modifier = Modifier
@@ -160,19 +187,21 @@ fun TokitoHero(
                     }
 
                     PetModelView(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = if (pvp) Modifier.fillMaxSize(PVP_CHARACTER_SCALE) else Modifier.fillMaxSize(),
                         skin = skinBytes,
                         cape = capeBytes,
                         arm = armModel,
                         yaw = Math.toRadians(-28.0).toFloat(),
-                        animation = PetAnimation.Idle,
+                        animation = if (animated) PetAnimation.Idle else null,
+                        animationSpeed = HOME_IDLE_SPEED,
                         tapReaction = PetTapReaction.Interact,
-                        dragYaw = true
+                        dragYaw = true,
+                        gazeEnabled = animated
                     )
                 } else if (currentAccount != null) {
                     PlayerFace(
                         account = currentAccount,
-                        avatarSize = 72.dp
+                        avatarSize = if (pvp) 52.dp else 72.dp
                     )
                 }
             }
@@ -195,7 +224,7 @@ private fun TokitoPlayerChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(50)
+    val shape = MaterialTheme.shapes.large
     Row(
         modifier = modifier
             .guideNode(
@@ -241,6 +270,46 @@ private fun TokitoPlayerChip(
     }
 }
 
+/** Size of the 3D character (fraction of its box) while the PVP mode is on */
+private const val PVP_CHARACTER_SCALE = 0.62f
+
+/** The idle animation of the character on the home screen plays a little slower, for a softer feel */
+private const val HOME_IDLE_SPEED = 0.85f
+
+/** Milliseconds the floor lines take to glide from one row to the next (slow on purpose) */
+private const val GRID_PERIOD_MS = 9000
+
+/** Number of lines running across the floor */
+private const val GRID_ROWS = 6
+
+/** Quick switch of the PVP mode: lit when it is on, tap to turn it on or off */
+@Composable
+private fun TokitoPvpChip(
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = MaterialTheme.colorScheme
+    val shape = MaterialTheme.shapes.large
+    Row(
+        modifier = modifier
+            .clip(shape)
+            .background(if (enabled) colors.tertiary else colors.surfaceContainerHigh.copy(alpha = 0.85f))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.tokito_pvp_chip),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.ExtraBold,
+            letterSpacing = 1.sp,
+            color = if (enabled) colors.onTertiary else colors.onSurfaceVariant,
+            maxLines = 1
+        )
+    }
+}
+
 /**
  * Big PLAY button: [ PLAY + version name | v ] followed by the version settings button.
  * The arrow opens the list of installed versions.
@@ -259,7 +328,7 @@ private fun TokitoLaunchBar(
 
     val primary = MaterialTheme.colorScheme.primary
     val onPrimary = MaterialTheme.colorScheme.onPrimary
-    val buttonShape = RoundedCornerShape(22.dp)
+    val buttonShape = RoundedCornerShape(AllSettings.launcherStyle.state.buttonCornerDp.dp)
     val canOpenSettings = !isRefreshing && version?.isValid() == true
 
     Row(
@@ -282,6 +351,7 @@ private fun TokitoLaunchBar(
                         )
                     )
                 )
+                .tokitoButtonFrame(buttonShape)
         ) {
             Column(
                 modifier = Modifier
@@ -414,88 +484,245 @@ private fun TokitoLaunchBar(
 }
 
 /**
- * Backdrop of the hero: a plum sky, a glow behind the character and a pink/purple perspective grid
- * on the floor that slowly moves towards the viewer.
+ * Backdrop of the hero. Tokito: a plum sky, a glow behind the character and a pink/purple perspective
+ * grid on the floor that glides slowly towards the viewer. The other styles adapt it: faint and see-through
+ * (Liquid Glass, Transparent), strong neon lines (Neon), a grass and dirt floor (Minecraft) or only the
+ * sky and the glow (Zalith).
+ *
+ * Light and smooth: everything that stands still (sky, glow, lines into the distance, horizon) is drawn once
+ * in its own layer, and only the few lines that move are redrawn, in a layer of their own, so the rest of the
+ * home screen is not redrawn on every frame. With the home animations turned off nothing moves at all.
  */
 @Composable
-private fun TokitoGridBackdrop(modifier: Modifier = Modifier) {
+private fun TokitoGridBackdrop(
+    style: LauncherStyle,
+    backgroundShown: Boolean,
+    modifier: Modifier = Modifier
+) {
     val primary = MaterialTheme.colorScheme.primary
     val secondary = MaterialTheme.colorScheme.secondary
     val top = MaterialTheme.colorScheme.background
     val bottom = MaterialTheme.colorScheme.surfaceContainer
+    val animated = AllSettings.homeAnimations.state
 
+    //how much of the wallpaper the sky hides (1 = all of it)
+    val skyAlpha = if (!backgroundShown) {
+        1f
+    } else {
+        when (style) {
+            LauncherStyle.LIQUID_GLASS -> 0.30f
+            LauncherStyle.TRANSPARENT -> 0.06f
+            LauncherStyle.NEON, LauncherStyle.MINECRAFT -> 0.85f
+            else -> 1f
+        }
+    }
+    val gridAlpha = when (style) {
+        LauncherStyle.LIQUID_GLASS -> 0.40f
+        LauncherStyle.TRANSPARENT -> 0.26f
+        LauncherStyle.NEON -> 1.2f
+        else -> 0.85f
+    }
+    val glowAlpha = if (style == LauncherStyle.ZALITH) 0.12f else 0.24f
+    val hasGrid = style != LauncherStyle.ZALITH && style != LauncherStyle.MINECRAFT
+
+    Box(modifier = modifier.clipToBounds()) {
+        //still layer
+        Canvas(modifier = Modifier.fillMaxSize().graphicsLayer { }) {
+            val w = size.width
+            val h = size.height
+            val horizon = h * HORIZON
+
+            //sky
+            drawRect(
+                brush = Brush.verticalGradient(
+                    colors = listOf(top.copy(alpha = skyAlpha), bottom.copy(alpha = skyAlpha)),
+                    startY = 0f,
+                    endY = h
+                )
+            )
+
+            //glow behind the character
+            drawRect(
+                brush = Brush.radialGradient(
+                    colors = listOf(primary.copy(alpha = glowAlpha), Color.Transparent),
+                    center = Offset(w / 2f, horizon),
+                    radius = w * 0.60f
+                )
+            )
+
+            when (style) {
+                LauncherStyle.ZALITH -> Unit
+                LauncherStyle.MINECRAFT -> drawBlockFloor(
+                    grass = primary,
+                    dirt = secondary,
+                    horizon = horizon
+                )
+                else -> drawGridStill(
+                    primary = primary,
+                    secondary = secondary,
+                    horizon = horizon,
+                    alphaScale = gridAlpha
+                )
+            }
+        }
+
+        //moving layer: the lines running across the floor
+        if (hasGrid) {
+            if (animated) {
+                MovingGridRows(
+                    modifier = Modifier.fillMaxSize(),
+                    color = primary,
+                    alphaScale = gridAlpha
+                )
+            } else {
+                Canvas(modifier = Modifier.fillMaxSize().graphicsLayer { }) {
+                    drawGridRows(
+                        color = primary,
+                        scroll = STILL_SCROLL,
+                        horizon = size.height * HORIZON,
+                        alphaScale = gridAlpha
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Where the floor starts (fraction of the height of the hero) */
+private const val HORIZON = 0.56f
+
+/** Position of the floor lines when they do not move */
+private const val STILL_SCROLL = 0.35f
+
+/** The lines running across the floor, gliding towards the viewer. Only this small layer is redrawn per frame. */
+@Composable
+private fun MovingGridRows(
+    color: Color,
+    alphaScale: Float,
+    modifier: Modifier = Modifier
+) {
     val transition = rememberInfiniteTransition(label = "tokito_grid")
     val scroll by transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 5000, easing = LinearEasing)
+            animation = tween(durationMillis = GRID_PERIOD_MS, easing = LinearEasing)
         ),
         label = "tokito_grid_scroll"
     )
 
-    Canvas(modifier = modifier.clipToBounds()) {
-        val w = size.width
-        val h = size.height
-        val cx = w / 2f
-        val horizon = h * 0.56f
-        val floor = h - horizon
-        val strokeWidth = 1.2.dp.toPx()
-
-        //sky
-        drawRect(
-            brush = Brush.verticalGradient(
-                colors = listOf(top, bottom),
-                startY = 0f,
-                endY = h
-            )
+    Canvas(modifier = modifier.graphicsLayer { }) {
+        //the value is read while drawing: only this layer is drawn again on each frame
+        drawGridRows(
+            color = color,
+            scroll = scroll,
+            horizon = size.height * HORIZON,
+            alphaScale = alphaScale
         )
+    }
+}
 
-        //glow behind the character
-        drawRect(
-            brush = Brush.radialGradient(
-                colors = listOf(primary.copy(alpha = 0.30f), Color.Transparent),
-                center = Offset(cx, horizon),
-                radius = w * 0.55f
-            )
-        )
+/** Lines running across the floor (they get closer together towards the horizon and fade out there) */
+private fun DrawScope.drawGridRows(
+    color: Color,
+    scroll: Float,
+    horizon: Float,
+    alphaScale: Float
+) {
+    val w = size.width
+    val floor = size.height - horizon
+    val strokeWidth = 1.dp.toPx()
 
-        //floor: lines running across (they move towards the viewer)
-        val rows = 8
-        for (k in 0 until rows) {
-            val t = (k + scroll) / rows
-            val y = horizon + floor * t * t
-            drawLine(
-                color = primary.copy(alpha = 0.55f * t),
-                start = Offset(0f, y),
-                end = Offset(w, y),
-                strokeWidth = strokeWidth
-            )
-        }
-
-        //floor: lines running into the distance
-        val spacing = w / 9f
-        for (i in -14..14) {
-            drawLine(
-                brush = Brush.verticalGradient(
-                    colors = listOf(Color.Transparent, secondary.copy(alpha = 0.5f)),
-                    startY = horizon,
-                    endY = h
-                ),
-                start = Offset(cx + i * spacing * 0.22f, horizon),
-                end = Offset(cx + i * spacing, h),
-                strokeWidth = strokeWidth
-            )
-        }
-
-        //horizon glow
+    for (k in 0 until GRID_ROWS) {
+        val t = (k + scroll) / GRID_ROWS
+        val y = horizon + floor * t * t
         drawLine(
-            brush = Brush.horizontalGradient(
-                colors = listOf(Color.Transparent, primary.copy(alpha = 0.8f), Color.Transparent)
-            ),
-            start = Offset(0f, horizon),
-            end = Offset(w, horizon),
-            strokeWidth = strokeWidth * 1.5f
+            color = color.copy(alpha = (0.42f * t * alphaScale).coerceIn(0f, 1f)),
+            start = Offset(0f, y),
+            end = Offset(w, y),
+            strokeWidth = strokeWidth
         )
+    }
+}
+
+/** The part of the perspective grid that never moves: lines into the distance and the glow of the horizon */
+private fun DrawScope.drawGridStill(
+    primary: Color,
+    secondary: Color,
+    horizon: Float,
+    alphaScale: Float
+) {
+    val w = size.width
+    val h = size.height
+    val cx = w / 2f
+    val strokeWidth = 1.dp.toPx()
+
+    //floor: lines running into the distance (one brush for all of them: they fade the same way)
+    val fade = Brush.verticalGradient(
+        colors = listOf(
+            Color.Transparent,
+            secondary.copy(alpha = (0.34f * alphaScale).coerceIn(0f, 1f))
+        ),
+        startY = horizon,
+        endY = h
+    )
+    val spacing = w / 9f
+    for (i in -10..10) {
+        drawLine(
+            brush = fade,
+            start = Offset(cx + i * spacing * 0.22f, horizon),
+            end = Offset(cx + i * spacing, h),
+            strokeWidth = strokeWidth
+        )
+    }
+
+    //horizon glow
+    drawLine(
+        brush = Brush.horizontalGradient(
+            colors = listOf(
+                Color.Transparent,
+                primary.copy(alpha = (0.55f * alphaScale).coerceIn(0f, 1f)),
+                Color.Transparent
+            )
+        ),
+        start = Offset(0f, horizon),
+        end = Offset(w, horizon),
+        strokeWidth = strokeWidth * 1.5f
+    )
+}
+
+/** Minecraft floor: a strip of grass on top of a checkerboard of dirt blocks */
+private fun DrawScope.drawBlockFloor(
+    grass: Color,
+    dirt: Color,
+    horizon: Float
+) {
+    val w = size.width
+    val h = size.height
+    val tile = 20.dp.toPx()
+
+    drawRect(
+        color = grass.copy(alpha = 0.9f),
+        topLeft = Offset(0f, horizon),
+        size = Size(w, tile * 0.5f)
+    )
+
+    var y = horizon + tile * 0.5f
+    var row = 0
+    while (y < h) {
+        var x = 0f
+        var col = 0
+        while (x < w) {
+            val shade = if ((row + col) % 2 == 0) 0.42f else 0.30f
+            drawRect(
+                color = dirt.copy(alpha = shade),
+                topLeft = Offset(x, y),
+                size = Size(tile, tile)
+            )
+            x += tile
+            col += 1
+        }
+        y += tile
+        row += 1
     }
 }

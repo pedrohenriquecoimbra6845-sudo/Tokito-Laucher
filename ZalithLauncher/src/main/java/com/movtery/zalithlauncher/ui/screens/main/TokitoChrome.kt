@@ -66,6 +66,7 @@ import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.account.AccountsManager
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
+import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.screens.BackStackNavKey
@@ -74,6 +75,7 @@ import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
 import com.movtery.zalithlauncher.ui.screens.content.elements.PlayerFace
 import com.movtery.zalithlauncher.ui.screens.content.elements.VersionIconImage
+import com.movtery.zalithlauncher.ui.theme.tokitoPanel
 
 /** Places that can be opened from the Tokito side rail */
 internal enum class TokitoDestination {
@@ -123,9 +125,21 @@ internal fun TokitoSideRail(
         TokitoDestination.RUST
     )
 
+    val style = AllSettings.launcherStyle.state
+
     Column(
         modifier = modifier
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .then(
+                if (style.isFloating) {
+                    //Liquid Glass, Transparent, Neon and Minecraft: the rail floats as its own panel
+                    Modifier.tokitoPanel(
+                        shape = RoundedCornerShape(style.panelCornerDp.dp),
+                        tint = MaterialTheme.colorScheme.surfaceContainerLow
+                    )
+                } else {
+                    Modifier.background(MaterialTheme.colorScheme.surfaceContainerLow)
+                }
+            )
             .padding(horizontal = 6.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -197,7 +211,7 @@ private fun TokitoRailEntry(
     val isSelected = destination == selected
     val accent = MaterialTheme.colorScheme.primary
     val contentColor = if (isSelected) accent else MaterialTheme.colorScheme.onSurfaceVariant
-    val shape = RoundedCornerShape(16.dp)
+    val shape = MaterialTheme.shapes.small
 
     Column(
         modifier = Modifier
@@ -236,7 +250,7 @@ private fun TokitoPill(
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit
 ) {
-    val shape = RoundedCornerShape(50)
+    val shape = MaterialTheme.shapes.medium
     Row(
         modifier = modifier
             .height(36.dp)
@@ -273,9 +287,21 @@ internal fun TokitoTopBar(
     val version by VersionsManager.currentVersion.collectAsStateWithLifecycle()
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val inMultiplayerScreen = mainScreenKey is NormalNavKey.Multiplayer
+    val style = AllSettings.launcherStyle.state
 
     Row(
-        modifier = modifier.padding(horizontal = 10.dp),
+        modifier = modifier
+            .then(
+                if (style.isFloating) {
+                    Modifier.tokitoPanel(
+                        shape = RoundedCornerShape(style.panelCornerDp.dp),
+                        tint = MaterialTheme.colorScheme.surfaceContainerLow
+                    )
+                } else {
+                    Modifier
+                }
+            )
+            .padding(horizontal = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {

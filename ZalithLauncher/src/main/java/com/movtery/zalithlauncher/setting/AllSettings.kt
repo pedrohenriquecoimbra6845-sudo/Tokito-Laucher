@@ -45,6 +45,8 @@ import com.movtery.zalithlauncher.ui.control.mouse.CENTER_HOTSPOT
 import com.movtery.zalithlauncher.ui.control.mouse.CursorHotspot
 import com.movtery.zalithlauncher.ui.control.mouse.LEFT_TOP_HOTSPOT
 import com.movtery.zalithlauncher.ui.theme.ColorThemeType
+import com.movtery.zalithlauncher.ui.theme.GlassMode
+import com.movtery.zalithlauncher.ui.theme.LauncherStyle
 
 
 object AllSettings : SettingsRegistry() {
@@ -386,6 +388,45 @@ object AllSettings : SettingsRegistry() {
         //Tokito Laucher: plum/pink/purple theme by default on every Android version
         ColorThemeType.TOKITO
     )
+
+    /**
+     * Tokito Laucher: visual style of the launcher
+     * (Tokito, Liquid Glass, Transparent, Neon, Minecraft or Zalith)
+     */
+    val launcherStyle = enumSetting("launcherStyle", LauncherStyle.TOKITO)
+
+    /**
+     * Tokito Laucher: PVP mode. Locks the game FPS, lowers the launcher DPI a little
+     * and shrinks the character on the home screen.
+     */
+    val launcherPvpMode = boolSetting("launcherPvpMode", false)
+
+    /**
+     * Tokito Laucher: the in-game on-screen controls use the colors of the launcher style
+     */
+    val controlsFollowLauncherStyle = boolSetting("controlsFollowLauncherStyle", true)
+
+    /**
+     * Tokito Laucher: id of the mini wallpaper used as the launcher background
+     * (empty when there is no background or the user picked their own file)
+     */
+    val launcherWallpaper = stringSetting("launcherWallpaper", "")
+
+    /**
+     * Tokito Laucher: the background was picked by hand (a mini wallpaper or an image from a ZIP pack),
+     * so changing the style never replaces it
+     */
+    val launcherWallpaperManual = boolSetting("launcherWallpaperManual", false)
+
+    /**
+     * Tokito Laucher: colors of the Liquid Glass style (Normal, Leve or Frio)
+     */
+    val liquidGlassMode = enumSetting("liquidGlassMode", GlassMode.NORMAL)
+
+    /**
+     * Tokito Laucher: the grid of the home screen moves. Turn it off for a calmer, lighter home screen.
+     */
+    val homeAnimations = boolSetting("homeAnimations", true)
 
     /**
      * 自定义颜色主题色

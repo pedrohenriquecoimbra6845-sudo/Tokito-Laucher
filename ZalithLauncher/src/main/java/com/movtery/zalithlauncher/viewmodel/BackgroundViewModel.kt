@@ -40,6 +40,7 @@ import com.movtery.zalithlauncher.context.copyLocalFile
 import com.movtery.zalithlauncher.path.PathManager
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.BackgroundBlur
+import com.movtery.zalithlauncher.ui.theme.LauncherWallpaper
 import com.movtery.zalithlauncher.utils.image.isImageFile
 import com.movtery.zalithlauncher.utils.video.isVideoFile
 import kotlinx.coroutines.Dispatchers
@@ -167,6 +168,9 @@ class BackgroundViewModel: ViewModel() {
     suspend fun delete() {
         withContext(Dispatchers.IO) {
             FileUtils.deleteQuietly(backgroundFile)
+            //Tokito Laucher: o mini wallpaper embutido deixou de ser o fundo
+            AllSettings.launcherWallpaper.save("")
+            AllSettings.launcherWallpaperManual.save(false)
             updateState()
         }
     }
@@ -174,12 +178,60 @@ class BackgroundViewModel: ViewModel() {
     suspend fun import(context: Context, result: Uri) {
         withContext(Dispatchers.IO) {
             FileUtils.deleteQuietly(backgroundFile)
+            //Tokito Laucher: o fundo passa a ser um arquivo escolhido pelo usuário (não é mais um mini wallpaper)
+            AllSettings.launcherWallpaper.save("")
+            AllSettings.launcherWallpaperManual.save(false)
             context.copyLocalFile(result, backgroundFile)
             if (!backgroundFile.isImageFile() && !backgroundFile.isVideoFile()) {
                 //不是媒体类文件
                 FileUtils.deleteQuietly(backgroundFile)
                 error("The selected file is not an image or a video!")
             }
+            updateState()
+        }
+    }
+
+    /**
+     * Tokito Laucher: usa um dos mini wallpapers embutidos no app como fundo do launcher
+     */
+    suspend fun importWallpaper(context: Context, wallpaper: LauncherWallpaper, pickedByHand: Boolean = false) {
+        withContext(Dispatchers.IO) {
+            FileUtils.deleteQuietly(backgroundFile)
+            backgroundFile.parentFile?.mkdirs()
+            context.resources.openRawResource(wallpaper.rawRes).use { input ->
+                backgroundFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            AllSettings.launcherWallpaper.save(wallpaper.id)
+            AllSettings.launcherWallpaperManual.save(pickedByHand)
+            updateState()
+        }
+    }
+
+    /**
+     * Tokito Laucher: usa uma imagem (ou vídeo) da biblioteca de pacotes ZIP como fundo do launcher
+     *
+     * @param id identificação gravada nas configurações (começa com "pack:")
+     */
+    suspend fun importWallpaperFile(file: File, id: String) {
+        withContext(Dispatchers.IO) {
+            FileUtils.deleteQuietly(backgroundFile)
+            backgroundFile.parentFile?.mkdirs()
+            file.inputStream().use { input ->
+                backgroundFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            if (!backgroundFile.isImageFile() && !backgroundFile.isVideoFile()) {
+                FileUtils.deleteQuietly(backgroundFile)
+                AllSettings.launcherWallpaper.save("")
+                AllSettings.launcherWallpaperManual.save(false)
+                updateState()
+                error("The selected file is not an image or a video!")
+            }
+            AllSettings.launcherWallpaper.save(id)
+            AllSettings.launcherWallpaperManual.save(true)
             updateState()
         }
     }

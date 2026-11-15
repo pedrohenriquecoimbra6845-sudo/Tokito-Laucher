@@ -19,12 +19,11 @@
 
 package com.movtery.zalithlauncher.ui.screens.content.home
 
-import android.content.Context
-import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -32,10 +31,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,7 +52,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.movtery.zalithlauncher.R
+import com.movtery.zalithlauncher.game.rust.RustEdition
+import com.movtery.zalithlauncher.game.rust.RustEditionState
 import com.movtery.zalithlauncher.ui.components.BackgroundCard
 
 /** Categories reachable from the Tokito library card on the home screen */
@@ -64,42 +74,6 @@ val LocalHomeLibraryOpener = staticCompositionLocalOf<(HomeLibraryCategory) -> U
 
 /** Opens a link (provided by the launcher screen) */
 val LocalHomeLinkOpener = staticCompositionLocalOf<(String) -> Unit> { {} }
-
-/**
- * "Minecraft Rust Edition": a native port of Minecraft: Java Edition written in Rust
- * (Starling, formerly Horizon Android, MIT license, https://github.com/Vasysik/horizon-android).
- *
- * It is a separate Android app, so Tokito Laucher cannot embed it: it detects the installed app,
- * opens it, and links to its release page when it is not installed.
- */
-object RustEdition {
-    /** Release page of the app */
-    const val RELEASES_URL = "https://github.com/JuanLuci/starling/releases/latest"
-
-    /** Package ids used by the app (stable, preview, dev and the legacy Horizon Android id) */
-    private val PACKAGES = listOf(
-        "io.github.juanluci.starling",
-        "io.github.juanluci.starling.preview",
-        "io.github.juanluci.starling.dev",
-        "dev.horizon.android"
-    )
-
-    /** Intent that opens the installed app, or null when it is not installed */
-    fun launchIntent(context: Context): Intent? {
-        val manager = context.packageManager
-        for (packageName in PACKAGES) {
-            val intent = runCatching { manager.getLaunchIntentForPackage(packageName) }.getOrNull()
-            if (intent != null) return intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        return null
-    }
-
-    /** Opens the app. Returns false when it is not installed (or could not be opened) */
-    fun open(context: Context): Boolean {
-        val intent = launchIntent(context) ?: return false
-        return runCatching { context.startActivity(intent) }.isSuccess
-    }
-}
 
 /**
  * Shortcuts to mods, textures (resource packs), modpacks, shaders and worlds.
@@ -193,14 +167,35 @@ private fun LibraryTile(
     }
 }
 
+/** Whether Rust Edition is installed; checked again every time the launcher comes back to the screen */
+@Composable
+private fun rememberRustInstalled(): Boolean {
+    val context = LocalContext.current
+    var installed by remember { mutableStateOf(RustEdition.isInstalled(context)) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                installed = RustEdition.isInstalled(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    return installed
+}
+
 /**
- * "Minecraft Rust Edition": opens the app if it is installed, otherwise links to its download page.
+ * "Minecraft Rust Edition": opens the app if it is installed. Otherwise it downloads the app from its
+ * official site into the Tokito folder and opens the installer.
  */
 @Composable
 fun TokitoRustEditionCard() {
     val context = LocalContext.current
     val openLink = LocalHomeLinkOpener.current
-    val installed = RustEdition.launchIntent(context) != null
+    val installed = rememberRustInstalled()
+    val state = RustEdition.state
+    val downloaded = remember(state, installed) { RustEdition.downloadedApk() }
 
     BackgroundCard(
         modifier = Modifier.fillMaxWidth(),
@@ -220,16 +215,52 @@ fun TokitoRustEditionCard() {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End)
-            ) {
-                OutlinedButton(onClick = { openLink(RustEdition.RELEASES_URL) }) {
-                    Text(text = stringResource(R.string.tokito_rust_download))
+            Text(
+                text = stringResource(R.string.tokito_rust_folder_hint),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            if (state is RustEditionState.Working) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (state.progress >= 0f) {
+                        LinearProgressIndicator(
+                            modifier = Modifier.fillMaxWidth(),
+                            progress = { state.progress }
+                        )
+                        Text(
+                            text = stringResource(R.string.tokito_rust_progress, (state.progress * 100).toInt()),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    } else {
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    }
                 }
-                if (installed) {
-                    Button(onClick = { RustEdition.open(context) }) {
-                        Text(text = stringResource(R.string.tokito_rust_open))
+            } else {
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    OutlinedButton(onClick = { openLink(RustEdition.RELEASES_URL) }) {
+                        Text(text = stringResource(R.string.tokito_rust_site))
+                    }
+                    if (installed) {
+                        OutlinedButton(onClick = { RustEdition.downloadAndInstall(context) }) {
+                            Text(text = stringResource(R.string.tokito_rust_update))
+                        }
+                        Button(onClick = { RustEdition.open(context) }) {
+                            Text(text = stringResource(R.string.tokito_rust_open))
+                        }
+                    } else {
+                        if (downloaded != null) {
+                            OutlinedButton(onClick = { RustEdition.installDownloaded(context) }) {
+                                Text(text = stringResource(R.string.tokito_rust_install))
+                            }
+                        }
+                        Button(onClick = { RustEdition.downloadAndInstall(context) }) {
+                            Text(text = stringResource(R.string.tokito_rust_download))
+                        }
                     }
                 }
             }

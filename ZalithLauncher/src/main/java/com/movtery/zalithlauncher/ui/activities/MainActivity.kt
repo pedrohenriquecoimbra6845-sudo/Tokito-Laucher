@@ -337,7 +337,9 @@ class MainActivity : BaseAppCompatActivity() {
         setContent {
             ZalithLauncherTheme(
                 backgroundViewModel = backgroundViewModel,
-                festivals = festivals
+                festivals = festivals,
+                //Modo PVP: só o launcher (esta tela) diminui o DPI, o jogo não é afetado
+                scaleForPvp = true
             ) {
                 ObserveFullScreenSetting(AllSettings.launcherFullScreen.state)
 

@@ -115,6 +115,7 @@ import com.movtery.zalithlauncher.ui.screens.game.elements.SendKeycodeState
 import com.movtery.zalithlauncher.ui.screens.game.multiplayer.TerracottaOperation
 import com.movtery.zalithlauncher.ui.screens.game.multiplayer.rememberTerracottaViewModel
 import com.movtery.zalithlauncher.ui.screens.main.control_editor.ControlEditor
+import com.movtery.zalithlauncher.ui.theme.ProvideTokitoControlStyle
 import com.movtery.zalithlauncher.utils.currentGameDisplayLayout
 import com.movtery.zalithlauncher.utils.logging.Logger
 import com.movtery.zalithlauncher.viewmodel.EditorViewModel
@@ -667,37 +668,40 @@ fun GameScreen(
             }
 
             //控制布局层
-            ControlBoxLayout(
-                modifier = Modifier.fillMaxSize(),
-                observedLayout = viewModel.observableLayout,
-                eventHandler = viewModel.eventHandler,
-                checkOccupiedPointers = { viewModel.occupiedPointers.contains(it) },
-                opacity = { (AllSettings.controlsOpacity.state.toFloat() / 100f).coerceIn(0f, 1f) },
-                markPointerAsMoveOnly = { viewModel.moveOnlyPointers.add(it) },
-                onOccupiedPointer = { viewModel.occupiedPointers.add(it) },
-                onReleasePointer = { viewModel.occupiedPointers.remove(it) },
-                isCursorGrabbing = isGrabbing,
-                hideLayerWhen = viewModel.controlLayerHideState,
-                isDark = isLauncherInDarkTheme()
-            ) {
-                //虚拟鼠标控制层
-                MouseControlLayout(
-                    isTouchProxyEnabled = isTouchProxyEnabled,
+            //Tokito Laucher: the on-screen controls follow the style of the launcher
+            ProvideTokitoControlStyle {
+                ControlBoxLayout(
                     modifier = Modifier.fillMaxSize(),
-                    cursorMode = cursorMode,
-                    screenSize = screenSize,
-                    onInputAreaRectUpdated = onInputAreaRectUpdated,
-                    textInputMode = textInputMode,
-                    isMoveOnlyPointer = { viewModel.moveOnlyPointers.contains(it) },
+                    observedLayout = viewModel.observableLayout,
+                    eventHandler = viewModel.eventHandler,
+                    checkOccupiedPointers = { viewModel.occupiedPointers.contains(it) },
+                    opacity = { (AllSettings.controlsOpacity.state.toFloat() / 100f).coerceIn(0f, 1f) },
+                    markPointerAsMoveOnly = { viewModel.moveOnlyPointers.add(it) },
                     onOccupiedPointer = { viewModel.occupiedPointers.add(it) },
-                    onReleasePointer = {
-                        viewModel.occupiedPointers.remove(it)
-                        viewModel.moveOnlyPointers.remove(it)
-                    },
-                    onMouseMoved = { viewModel.switchControlLayer(HideLayerWhen.WhenMouse) },
-                    onTouch = { viewModel.switchControlLayer(HideLayerWhen.None) },
-                    gamepadViewModel = gamepadViewModel.takeIf { AllSettings.gamepadControl.state }
-                )
+                    onReleasePointer = { viewModel.occupiedPointers.remove(it) },
+                    isCursorGrabbing = isGrabbing,
+                    hideLayerWhen = viewModel.controlLayerHideState,
+                    isDark = isLauncherInDarkTheme()
+                ) {
+                    //虚拟鼠标控制层
+                    MouseControlLayout(
+                        isTouchProxyEnabled = isTouchProxyEnabled,
+                        modifier = Modifier.fillMaxSize(),
+                        cursorMode = cursorMode,
+                        screenSize = screenSize,
+                        onInputAreaRectUpdated = onInputAreaRectUpdated,
+                        textInputMode = textInputMode,
+                        isMoveOnlyPointer = { viewModel.moveOnlyPointers.contains(it) },
+                        onOccupiedPointer = { viewModel.occupiedPointers.add(it) },
+                        onReleasePointer = {
+                            viewModel.occupiedPointers.remove(it)
+                            viewModel.moveOnlyPointers.remove(it)
+                        },
+                        onMouseMoved = { viewModel.switchControlLayer(HideLayerWhen.WhenMouse) },
+                        onTouch = { viewModel.switchControlLayer(HideLayerWhen.None) },
+                        gamepadViewModel = gamepadViewModel.takeIf { AllSettings.gamepadControl.state }
+                    )
+                }
             }
 
             //物品栏触发层

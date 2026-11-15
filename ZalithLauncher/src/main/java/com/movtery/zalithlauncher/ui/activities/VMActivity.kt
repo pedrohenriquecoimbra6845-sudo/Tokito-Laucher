@@ -483,7 +483,7 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
 
         window?.apply {
             setBackgroundDrawable(NativeColor.BLACK.toDrawable())
-            if (AllSettings.sustainedPerformance.getValue()) {
+            if (AllSettings.sustainedPerformance.getValue() || AllSettings.launcherPvpMode.getValue()) {
                 setSustainedPerformanceMode(true)
             }
             addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) // 防止系统息屏
@@ -840,7 +840,8 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
      */
     fun applyMaxRefreshRatePolicy() {
         val display = currentDisplay() ?: return
-        if (!AllSettings.requestMaxRefreshRate.getValue()) {
+        //Tokito Laucher: o Modo PVP sempre pede a maior taxa de atualização da tela
+        if (!AllSettings.requestMaxRefreshRate.getValue() && !AllSettings.launcherPvpMode.getValue()) {
             requestedRefreshRate = 0f
             setPreferredDisplayModeId(0)
             clearSurfaceFrameRate()

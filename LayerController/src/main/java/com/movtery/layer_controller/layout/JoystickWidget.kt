@@ -102,8 +102,17 @@ internal fun JoystickWidgetRenderer(
     val layoutDirection = LocalLayoutDirection.current
 
     // 获取样式
-    val joystickStyle = data.joystickStyleId?.let { id ->
+    val layoutJoystickStyle = data.joystickStyleId?.let { id ->
         joystickStyles.find { it.uuid == id }
+    }
+    //Tokito Laucher: the app can restyle the joysticks when they are drawn (the saved layout stays as it is)
+    val joystickStyleTransform = LocalJoystickStyleTransform.current
+    val joystickStyle = remember(layoutJoystickStyle, joystickStyleTransform) {
+        if (joystickStyleTransform != null) {
+            joystickStyleTransform(layoutJoystickStyle ?: DefaultObservableJoystickStyle)
+        } else {
+            layoutJoystickStyle
+        }
     }
 
     val themeConfig = if (joystickStyle?.commonStyle == true || !isDark) {

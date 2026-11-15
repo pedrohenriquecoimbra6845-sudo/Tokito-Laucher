@@ -25,6 +25,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -96,10 +97,15 @@ internal fun TextButton(
         }
 
         val styleId = data.styleId
-        val style = allStyles
+        val layoutStyle = allStyles
             .takeIf { data.styleId != null }
             ?.find { it.uuid == styleId }
             ?: DefaultObservableButtonStyle
+        //Tokito Laucher: the app can restyle the buttons when they are drawn (the saved layout stays as it is)
+        val styleTransform = LocalButtonStyleTransform.current
+        val style = remember(layoutStyle, styleTransform) {
+            styleTransform?.invoke(layoutStyle) ?: layoutStyle
+        }
 
         val locale = LocalConfiguration.current.locales[0]
 

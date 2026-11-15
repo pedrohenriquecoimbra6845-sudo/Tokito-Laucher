@@ -35,6 +35,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamicColorScheme
 import com.movtery.zalithlauncher.setting.AllSettings
@@ -606,8 +608,12 @@ fun ZalithLauncherTheme(
     dynamicColor: Boolean = true,
     backgroundViewModel: BackgroundViewModel? = null,
     festivals: List<Festival> = emptyList(),
+    //só a tela principal do launcher reduz o DPI no Modo PVP (o jogo e outras telas não)
+    scaleForPvp: Boolean = false,
     content: @Composable () -> Unit
 ) {
+    val launcherStyle = AllSettings.launcherStyle.state
+    val glassMode = AllSettings.liquidGlassMode.state
     val colorTheme = AllSettings.launcherColorTheme.state
     val customColorInt = AllSettings.launcherCustomColor.state
     val customColor = Color(customColorInt)
@@ -615,8 +621,14 @@ fun ZalithLauncherTheme(
 
     val context = LocalContext.current
 
-    val targetColorScheme = remember(darkTheme, dynamicColor, colorTheme, customColor, customPaletteStyle) {
+    val targetColorScheme = remember(
+        darkTheme, dynamicColor, colorTheme, customColor, customPaletteStyle, launcherStyle, glassMode
+    ) {
+        val ownPalette = launcherStyle.ownPalette(glassMode, darkTheme)
         when {
+            //Neon e Minecraft têm paleta própria (só no tema escuro); o Liquid Glass Leve e Frio também
+            ownPalette != null -> ownPalette
+
             dynamicColor && colorTheme == ColorThemeType.DYNAMIC && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
                 if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
             }
@@ -679,13 +691,25 @@ fun ZalithLauncherTheme(
         }
     }
 
+    //Modo PVP: diminui um pouco o DPI do launcher (tudo fica menor e sobra mais tela)
+    val baseDensity = LocalDensity.current
+    val launcherDensity = if (scaleForPvp && AllSettings.launcherPvpMode.state) {
+        Density(
+            density = baseDensity.density * PVP_DENSITY_SCALE,
+            fontScale = baseDensity.fontScale
+        )
+    } else {
+        baseDensity
+    }
+
     CompositionLocalProvider(
+        LocalDensity provides launcherDensity,
         LocalBackgroundViewModel provides backgroundViewModel,
         LocalFestivals provides festivals
     ) {
         MaterialExpressiveTheme(
             colorScheme = currentDisplayScheme,
-            shapes = PolyJavShapes,
+            shapes = launcherStyle.shapes(),
             motionScheme = MotionScheme.expressive(),
             typography = AppTypography,
             content = content

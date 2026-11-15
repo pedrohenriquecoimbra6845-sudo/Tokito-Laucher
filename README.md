@@ -2,7 +2,7 @@
 
 Launcher de **Minecraft: Java Edition para Android** (motor PojavLauncher), com visual próprio em vermelho, rosa e roxo, menu lateral com **mods, texturas e modpacks**, tela de entrada nova e atalho para o **Minecraft Rust Edition**.
 
-Versão atual: **1.11.2**
+Versão atual: **0.11.3**
 
 > **Versão Modificada Não Oficial** do [Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2).
 > Não é afiliada nem endossada pelos desenvolvedores do Zalith Launcher.

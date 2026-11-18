@@ -345,6 +345,15 @@ fun RendererSettingsScreen(
                         summary = stringResource(R.string.settings_renderer_max_refresh_rate_summary)
                     )
 
+                    //Tokito Launcher: takes the place of the Zink vertical sync option
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.tokitoLightChunks,
+                        title = stringResource(R.string.tokito_light_chunks_title),
+                        summary = stringResource(R.string.tokito_light_chunks_summary)
+                    )
+
                     if (checkVulkanSupport(LocalContext.current.packageManager)) {
                         var adrenoGPUAlert by remember { mutableStateOf(false) }
 
@@ -374,14 +383,6 @@ fun RendererSettingsScreen(
                             )
                         }
                     }
-
-                    SwitchSettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
-                        unit = AllSettings.vsyncInZink,
-                        title = stringResource(R.string.settings_renderer_vsync_in_zink_title),
-                        summary = stringResource(R.string.settings_renderer_vsync_in_zink_summary)
-                    )
 
                     SwitchSettingsCard(
                         modifier = Modifier.fillMaxWidth(),

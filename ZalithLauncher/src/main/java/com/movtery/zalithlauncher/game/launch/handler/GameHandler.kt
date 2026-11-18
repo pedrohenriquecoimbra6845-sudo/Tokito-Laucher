@@ -35,7 +35,7 @@ import com.movtery.zalithlauncher.game.input.LWJGLCharSender
 import com.movtery.zalithlauncher.game.launch.GameLauncher
 import com.movtery.zalithlauncher.game.launch.LaunchConfig
 import com.movtery.zalithlauncher.game.launch.MCOptions
-import com.movtery.zalithlauncher.game.launch.PvpMode
+import com.movtery.zalithlauncher.game.launch.OptimizationProfile
 import com.movtery.zalithlauncher.game.launch.loadLanguage
 import com.movtery.zalithlauncher.game.sdl.SdlBridge
 import com.movtery.zalithlauncher.game.sdl.handleGamepadKeyEvent
@@ -129,8 +129,8 @@ class GameHandler(
 
             loadLanguage(version.getVersionInfo()!!.minecraftVersion)
 
-            //Tokito Laucher: Modo PVP trava o FPS (ou restaura as opções ao desligar)
-            PvpMode.applyToGameOptions(activity, version)
+            //Tokito Launcher: optimization modes change some options (or put them back when the mode is off)
+            OptimizationProfile.applyToGameOptions(activity, version)
             save()
         }
 

@@ -1,5 +1,5 @@
 /*
- * Tokito Laucher
+ * Tokito Launcher
  * Based on Zalith Launcher 2 (Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -43,6 +43,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -72,6 +73,8 @@ import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.tokito.PackImportResult
 import com.movtery.zalithlauncher.tokito.TokitoPack
 import com.movtery.zalithlauncher.ui.components.IconTextButton
+import com.movtery.zalithlauncher.ui.components.LightChunksRow
+import com.movtery.zalithlauncher.ui.components.OptimizationModeList
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.ui.components.TitleAndSummary
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.CardPosition
@@ -94,8 +97,9 @@ import java.io.File
 private const val TAG = "TokitoSettings"
 
 /**
- * Tokito Laucher settings: launcher style (and the colors of the Liquid Glass), mini wallpapers, ZIP packs
- * (mouse pointers, wallpapers and control HUD), a calmer home screen, PVP mode and the style of the game controls.
+ * Tokito Launcher settings: launcher style (and the colors of the Liquid Glass), mini wallpapers, ZIP packs
+ * (mouse pointers, wallpapers and control HUD), a calmer home screen, the optimization modes (PVP, Survival, Brutal and
+ * light and fast chunks) and the style of the game controls.
  *
  * @param backgroundViewModel launcher background (null: the wallpapers cannot be used)
  */
@@ -298,14 +302,30 @@ fun TokitoStyleSettings(
             summary = stringResource(R.string.tokito_home_anim_summary)
         )
 
-        //PVP mode
-        SwitchSettingsCard(
+        //optimization modes: PVP, Survival, Brutal and the light and fast chunks
+        SettingsCard(
             modifier = Modifier.fillMaxWidth(),
-            position = CardPosition.Middle,
-            unit = AllSettings.launcherPvpMode,
-            title = stringResource(R.string.tokito_pvp_title),
-            summary = stringResource(R.string.tokito_pvp_summary)
-        )
+            position = CardPosition.Middle
+        ) {
+            val optimization = AllSettings.launcherOptimizationMode.state
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(all = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                TitleAndSummary(
+                    title = stringResource(R.string.tokito_opt_title),
+                    summary = stringResource(R.string.tokito_opt_summary)
+                )
+                OptimizationModeList(
+                    selected = optimization,
+                    onSelect = { AllSettings.launcherOptimizationMode.save(it) }
+                )
+                HorizontalDivider()
+                LightChunksRow(mode = optimization)
+            }
+        }
 
         //game controls in the style of the launcher
         SwitchSettingsCard(

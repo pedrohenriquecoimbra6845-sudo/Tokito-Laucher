@@ -97,10 +97,23 @@ object HomeCards {
     /** 用户卡片类型注册表 */
     val userCardTypes: List<CardType> = listOf(versionCardType, serverCardType)
 
-    /** 系统卡片（不可变更） */
-    fun systemCards(): List<SystemCard> = buildList {
-        add(SystemCard(id = "system_tokito_library") { TokitoLibraryCard() })
-        add(SystemCard(id = "system_tokito_rust_edition") { TokitoRustEditionCard() })
+    /**
+     * 系统卡片（不可变更）
+     *
+     * Tokito Launcher: the cards of the "Principais coisas" panel come first, as the player chose them
+     * (shown or hidden, in the order they picked). The card with the notice of the license is always there.
+     */
+    fun systemCards(entries: List<HomeMainEntry>): List<SystemCard> = buildList {
+        entries.forEach { entry ->
+            if (!entry.visible) return@forEach
+            when (entry.item) {
+                HomeMainItem.LIBRARY -> add(SystemCard(id = "system_tokito_library") { TokitoLibraryCard() })
+                HomeMainItem.MODES -> add(SystemCard(id = "system_tokito_modes") { TokitoModesCard() })
+                HomeMainItem.SKINS -> add(SystemCard(id = "system_tokito_skins") { TokitoSkinsCard() })
+                HomeMainItem.POPUPS -> add(SystemCard(id = "system_tokito_popups") { TokitoPopupsCard() })
+                HomeMainItem.NEWS -> add(SystemCard(id = "system_tokito_news") { TokitoNewsCard() })
+            }
+        }
         add(prestigieInfoCard())
         if (BuildConfig.DEBUG) {
             add(debugWarningCard())
@@ -108,7 +121,7 @@ object HomeCards {
     }
 
     /**
-     * Tokito Laucher: card pinned to the main tab.
+     * Tokito Launcher: card pinned to the main tab.
      * - Shows the mandatory "Unofficial Modified Version" notice required by the Zalith Launcher 2 license terms.
      * - Credits OneClient (Polyfrost), which inspired the visual theme.
      */
@@ -131,6 +144,10 @@ object HomeCards {
                     text = stringResource(R.string.prestigie_card_unofficial),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = stringResource(R.string.tokito_creators_line),
+                    style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
                     text = stringResource(R.string.prestigie_card_oneclient),

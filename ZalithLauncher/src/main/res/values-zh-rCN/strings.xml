@@ -982,8 +982,6 @@
     <string name="settings_renderer_vulkan_driver_system_title">使用系统 Vulkan 驱动</string>
     <string name="settings_renderer_vulkan_driver_system_summary">启用后，启动器将强制使用系统自带的 Vulkan 驱动（适用于 Adreno GPU），而不使用默认的 Turnip 驱动。本设置仅影响使用 Vulkan 渲染的 Zink 后端及相关模组</string>
     <string name="settings_renderer_zink_driver_adreno">启动器检测到您的设备为 Adreno GPU，开启这个选项可能会导致 Zink 渲染器无法正常工作，您确定要打开这个选项吗？</string>
-    <string name="settings_renderer_vsync_in_zink_title">启用 Zink 垂直同步</string>
-    <string name="settings_renderer_vsync_in_zink_summary">通过系统接口为 Zink 渲染器启用垂直同步</string>
     <string name="settings_game_version_isolation_title">全局版本隔离</string>
     <string name="settings_game_version_isolation_summary">默认隔离所有的版本，版本之间的数据互不干扰</string>
     <string name="settings_game_skip_game_integrity_check_title">不检查游戏完整性</string>

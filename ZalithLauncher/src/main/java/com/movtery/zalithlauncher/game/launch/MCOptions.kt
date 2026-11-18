@@ -100,6 +100,11 @@ object MCOptions {
         set(key, value.joinToString(prefix = "[", postfix = "]") { "\"$it\"" })
     }
 
+    //Tokito Launcher: used to put back an option that was not in options.txt before an optimization mode added it
+    fun remove(key: String) {
+        parameterMap.remove(key)
+    }
+
     fun get(key: String): String? = parameterMap[key]
 
     fun getAsList(key: String): List<String> {

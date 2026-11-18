@@ -1,7 +1,7 @@
 /*
- * Tokito Laucher - unofficial modified version of Zalith Launcher 2
+ * Tokito Launcher - unofficial modified version of Zalith Launcher 2
  * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors (Zalith Launcher 2)
- * Modifications Copyright (C) 2026 Tokito Laucher contributors
+ * Modifications Copyright (C) 2026 Tokito Launcher contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -86,6 +86,8 @@ import com.movtery.zalithlauncher.game.account.wardrobe.toArmModel
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.setting.AllSettings
+import com.movtery.zalithlauncher.setting.enums.OptimizationMode
+import com.movtery.zalithlauncher.ui.components.OptimizationDialog
 import com.movtery.zalithlauncher.ui.components.PetModelView
 import com.movtery.zalithlauncher.ui.guide.GuideKeys
 import com.movtery.zalithlauncher.ui.screens.content.elements.CommonVersionInfoLayout
@@ -119,8 +121,10 @@ fun TokitoHero(
     val isRefreshing by VersionsManager.isRefreshing.collectAsStateWithLifecycle()
 
     val style = AllSettings.launcherStyle.state
-    //Modo PVP: o boneco da tela de jogar fica menor
-    val pvp = AllSettings.launcherPvpMode.state
+    //PVP and Brutal modes: the character on the play screen is smaller
+    val optimization = AllSettings.launcherOptimizationMode.state
+    val shrink = optimization.shrinksLauncher
+    var showOptimization by remember { mutableStateOf(false) }
     //tela inicial mais leve e suave: com as animações desligadas o boneco fica parado e a grade não se move
     val animated = AllSettings.homeAnimations.state
     val backgroundShown = backgroundVisible()
@@ -157,13 +161,16 @@ fun TokitoHero(
                     account = currentAccount,
                     onClick = toAccountManageScreen
                 )
-                TokitoPvpChip(
-                    enabled = pvp,
-                    onClick = { AllSettings.launcherPvpMode.save(!pvp) }
+                TokitoModeChip(
+                    mode = optimization,
+                    onClick = { showOptimization = true }
                 )
             }
 
-            Box(
+            //The renderer of the character fits it by the WIDTH of its view (the body is about 0.73 times
+            //as tall as the view is wide), so a wide and short view cut the head and the feet.
+            //The view gets a size that always has room for the whole body.
+            BoxWithConstraints(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
@@ -186,8 +193,12 @@ fun TokitoHero(
                         }
                     }
 
+                    val factor = if (shrink) CHARACTER_SCALE_SHRUNK else CHARACTER_SCALE
+                    val viewHeight = maxHeight * factor
+                    val viewWidth = minOf(maxWidth * factor, viewHeight / CHARACTER_VIEW_RATIO)
+
                     PetModelView(
-                        modifier = if (pvp) Modifier.fillMaxSize(PVP_CHARACTER_SCALE) else Modifier.fillMaxSize(),
+                        modifier = Modifier.size(width = viewWidth, height = viewHeight),
                         skin = skinBytes,
                         cape = capeBytes,
                         arm = armModel,
@@ -201,7 +212,7 @@ fun TokitoHero(
                 } else if (currentAccount != null) {
                     PlayerFace(
                         account = currentAccount,
-                        avatarSize = if (pvp) 52.dp else 72.dp
+                        avatarSize = if (shrink) 52.dp else 72.dp
                     )
                 }
             }
@@ -214,6 +225,10 @@ fun TokitoHero(
                 toVersionSettingsScreen = toVersionSettingsScreen
             )
         }
+    }
+
+    if (showOptimization) {
+        OptimizationDialog(onDismiss = { showOptimization = false })
     }
 }
 
@@ -270,8 +285,14 @@ private fun TokitoPlayerChip(
     }
 }
 
-/** Size of the 3D character (fraction of its box) while the PVP mode is on */
-private const val PVP_CHARACTER_SCALE = 0.62f
+/** Size of the 3D character (fraction of the room it has) */
+private const val CHARACTER_SCALE = 0.92f
+
+/** Size of the 3D character while the PVP or Brutal mode is on */
+private const val CHARACTER_SCALE_SHRUNK = 0.66f
+
+/** Height of the view of the character divided by its width: the body (0.73 of the width) fits with a margin */
+private const val CHARACTER_VIEW_RATIO = 0.9f
 
 /** The idle animation of the character on the home screen plays a little slower, for a softer feel */
 private const val HOME_IDLE_SPEED = 0.85f
@@ -282,15 +303,16 @@ private const val GRID_PERIOD_MS = 9000
 /** Number of lines running across the floor */
 private const val GRID_ROWS = 6
 
-/** Quick switch of the PVP mode: lit when it is on, tap to turn it on or off */
+/** Chip of the optimization mode: lit when a mode is on, tap to choose the mode */
 @Composable
-private fun TokitoPvpChip(
-    enabled: Boolean,
+private fun TokitoModeChip(
+    mode: OptimizationMode,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = MaterialTheme.colorScheme
     val shape = MaterialTheme.shapes.large
+    val enabled = mode.isActive
     Row(
         modifier = modifier
             .clip(shape)
@@ -300,7 +322,7 @@ private fun TokitoPvpChip(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = stringResource(R.string.tokito_pvp_chip),
+            text = stringResource(mode.chipRes),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.ExtraBold,
             letterSpacing = 1.sp,

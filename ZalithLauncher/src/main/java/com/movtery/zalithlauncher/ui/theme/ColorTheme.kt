@@ -32,7 +32,7 @@ data class ColorTheme(
 
 enum class ColorThemeType {
     /**
-     * Tokito Laucher default: plum background with red, pink and purple accents
+     * Tokito Launcher default: plum background with red, pink and purple accents
      */
     TOKITO,
     /**

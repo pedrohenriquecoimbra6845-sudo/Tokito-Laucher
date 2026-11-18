@@ -136,6 +136,14 @@ fun AboutInfoScreen(
                                 }
                             }
                         )
+
+                        //Tokito Launcher: the creators of this modified version
+                        ButtonIconItem(
+                            icon = painterResource(R.drawable.img_launcher),
+                            title = "Claude, pedznb",
+                            text = stringResource(R.string.tokito_creators_text),
+                            button = {}
+                        )
                     }
                 }
             }

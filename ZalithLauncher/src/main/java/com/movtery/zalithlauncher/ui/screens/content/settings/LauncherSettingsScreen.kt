@@ -150,7 +150,7 @@ fun LauncherSettingsScreen(
                 .padding(all = 12.dp),
             isVisible = isVisible
         ) {
-            //Tokito Laucher: estilos, mini wallpapers, Modo PVP e controles no estilo do launcher
+            //Tokito Launcher: estilos, mini wallpapers, Modo PVP e controles no estilo do launcher
             AnimatedItem { ctx ->
                 TokitoStyleSettings(
                     modifier = Modifier

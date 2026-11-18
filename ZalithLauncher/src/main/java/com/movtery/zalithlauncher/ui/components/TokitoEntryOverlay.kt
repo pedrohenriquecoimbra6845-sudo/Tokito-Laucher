@@ -1,7 +1,7 @@
 /*
- * Tokito Laucher - unofficial modified version of Zalith Launcher 2
+ * Tokito Launcher - unofficial modified version of Zalith Launcher 2
  * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors (Zalith Launcher 2)
- * Modifications Copyright (C) 2026 Tokito Laucher contributors
+ * Modifications Copyright (C) 2026 Tokito Launcher contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,7 +82,7 @@ object TokitoEntry {
 }
 
 /**
- * Tokito Laucher: the new way of entering the app.
+ * Tokito Launcher: the new way of entering the app.
  *
  * Every time the launcher is opened, the app icon spins in and the app name slides out on its right side.
  * - With an account: "Welcome back, <name>" and the launcher opens by itself (or on tap).

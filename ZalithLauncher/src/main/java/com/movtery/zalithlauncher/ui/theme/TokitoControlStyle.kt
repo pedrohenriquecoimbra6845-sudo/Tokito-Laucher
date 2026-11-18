@@ -1,5 +1,5 @@
 /*
- * Tokito Laucher
+ * Tokito Launcher
  * Based on Zalith Launcher 2 (Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -34,7 +34,7 @@ import com.movtery.layer_controller.observable.ObservableJoystickStyle
 import com.movtery.zalithlauncher.setting.AllSettings
 
 /**
- * Tokito Laucher: makes the on-screen game controls (buttons and joysticks) look like the launcher.
+ * Tokito Launcher: makes the on-screen game controls (buttons and joysticks) look like the launcher.
  *
  * The colors, borders and corners come from the current launcher style and color theme. The control layout
  * itself is not changed: the new look is only applied when the buttons are drawn, so turning the setting off

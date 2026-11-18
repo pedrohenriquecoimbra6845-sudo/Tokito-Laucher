@@ -22,8 +22,6 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE"/>
     <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS"/>
-    <!-- Tokito Laucher: lets the launcher open the Android installer for Minecraft Rust Edition -->
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:name=".ZLApplication"
@@ -226,10 +224,6 @@
     </application>
     <queries>
         <package android:name="net.kdt.pojavlaunch.ffmpeg"/>
-        <package android:name="io.github.juanluci.starling"/>
-        <package android:name="io.github.juanluci.starling.preview"/>
-        <package android:name="io.github.juanluci.starling.dev"/>
-        <package android:name="dev.horizon.android"/>
         <intent>
             <action android:name="android.intent.action.MAIN" />
         </intent>

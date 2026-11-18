@@ -19,5 +19,11 @@
 package com.movtery.zalithlauncher.game.account
 
 enum class AccountType(val tag: String) {
-    MICROSOFT("Microsoft"), LOCAL("Local")
+    MICROSOFT("Microsoft"), LOCAL("Local"),
+
+    /**
+     * Tokito Launcher: TokiAuth, the own account of the launcher.
+     * It works as an offline kind of account (no sign-in, no internet, never expires) and is always active.
+     */
+    TOKIAUTH("TokiAuth")
 }

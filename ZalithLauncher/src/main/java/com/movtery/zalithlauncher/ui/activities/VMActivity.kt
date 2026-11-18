@@ -112,6 +112,7 @@ import com.movtery.zalithlauncher.game.launch.handler.AbstractHandler
 import com.movtery.zalithlauncher.game.launch.handler.GameHandler
 import com.movtery.zalithlauncher.game.launch.handler.HandlerType
 import com.movtery.zalithlauncher.game.launch.handler.JVMHandler
+import com.movtery.zalithlauncher.game.launch.OptimizationProfile
 import com.movtery.zalithlauncher.game.multirt.RuntimesManager
 import com.movtery.zalithlauncher.game.plugin.PluginLoader
 import com.movtery.zalithlauncher.game.renderer.Renderers
@@ -483,7 +484,7 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
 
         window?.apply {
             setBackgroundDrawable(NativeColor.BLACK.toDrawable())
-            if (AllSettings.sustainedPerformance.getValue() || AllSettings.launcherPvpMode.getValue()) {
+            if (AllSettings.sustainedPerformance.getValue() || OptimizationProfile.wantsSustainedPerformance()) {
                 setSustainedPerformanceMode(true)
             }
             addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) // 防止系统息屏
@@ -840,8 +841,8 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
      */
     fun applyMaxRefreshRatePolicy() {
         val display = currentDisplay() ?: return
-        //Tokito Laucher: o Modo PVP sempre pede a maior taxa de atualização da tela
-        if (!AllSettings.requestMaxRefreshRate.getValue() && !AllSettings.launcherPvpMode.getValue()) {
+        //Tokito Launcher: the PVP and Brutal modes always ask for the highest refresh rate of the screen
+        if (!AllSettings.requestMaxRefreshRate.getValue() && !OptimizationProfile.wantsMaxRefreshRate()) {
             requestedRefreshRate = 0f
             setPreferredDisplayModeId(0)
             clearSurfaceFrameRate()

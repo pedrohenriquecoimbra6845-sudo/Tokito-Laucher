@@ -354,6 +354,9 @@ private fun LoginMenuOperation(
                 onLocalLogin = {
                     actions.onIntent(AccountManageIntent.UpdateLocalLoginOp(LocalLoginOperation.Edit))
                 },
+                onTokiAuthLogin = {
+                    actions.onIntent(AccountManageIntent.UpdateLocalLoginOp(LocalLoginOperation.EditTokiAuth))
+                },
                 onAuthServerLogin = { server ->
                     actions.onIntent(
                         AccountManageIntent.UpdateOtherLoginOp(
@@ -471,12 +474,35 @@ private fun LocalLoginOperation(
             )
         }
 
+        is LocalLoginOperation.EditTokiAuth -> {
+            LocalLoginDialog(
+                onDismissRequest = {
+                    actions.onIntent(
+                        AccountManageIntent.UpdateLocalLoginOp(
+                            LocalLoginOperation.None
+                        )
+                    )
+                },
+                onConfirm = { isInvalid, name, uuid ->
+                    val nextOp = if (isInvalid) LocalLoginOperation.Alert(
+                        name,
+                        uuid,
+                        tokiAuth = true
+                    ) else LocalLoginOperation.Create(name, uuid, tokiAuth = true)
+                    actions.onIntent(AccountManageIntent.UpdateLocalLoginOp(nextOp))
+                },
+                openLink = actions.openLink,
+                tokiAuth = true
+            )
+        }
+
         is LocalLoginOperation.Create -> {
             LaunchedEffect(operation) {
                 actions.onIntent(
                     AccountManageIntent.CreateLocalAccount(
                         operation.userName,
-                        operation.userUUID
+                        operation.userUUID,
+                        operation.tokiAuth
                     )
                 )
             }
@@ -505,7 +531,7 @@ private fun LocalLoginOperation(
                 onConfirm = {
                     actions.onIntent(
                         AccountManageIntent.UpdateLocalLoginOp(
-                            LocalLoginOperation.Create(operation.userName, operation.userUUID)
+                            LocalLoginOperation.Create(operation.userName, operation.userUUID, operation.tokiAuth)
                         )
                     )
                 },

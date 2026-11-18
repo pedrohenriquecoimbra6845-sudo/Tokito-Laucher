@@ -101,7 +101,7 @@ internal fun TextButton(
             .takeIf { data.styleId != null }
             ?.find { it.uuid == styleId }
             ?: DefaultObservableButtonStyle
-        //Tokito Laucher: the app can restyle the buttons when they are drawn (the saved layout stays as it is)
+        //Tokito Launcher: the app can restyle the buttons when they are drawn (the saved layout stays as it is)
         val styleTransform = LocalButtonStyleTransform.current
         val style = remember(layoutStyle, styleTransform) {
             styleTransform?.invoke(layoutStyle) ?: layoutStyle

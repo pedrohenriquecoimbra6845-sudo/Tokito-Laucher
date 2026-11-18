@@ -1,5 +1,5 @@
 /*
- * Tokito Laucher
+ * Tokito Launcher
  * Based on Zalith Launcher 2 (Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -49,13 +49,13 @@ import com.movtery.zalithlauncher.viewmodel.BackgroundViewModel
 import com.movtery.zalithlauncher.viewmodel.backgroundVisible
 
 /**
- * How much the launcher density (DPI) is scaled while the PVP mode is on.
+ * How much the launcher density (DPI) is scaled while the PVP or Brutal mode is on.
  * A bit below 1 so everything gets slightly smaller and more of the screen is free.
  */
 const val PVP_DENSITY_SCALE = 0.86f
 
 /**
- * Mini wallpapers shipped with Tokito Laucher (original art made for this project).
+ * Mini wallpapers shipped with Tokito Launcher (original art made for this project).
  * Each one has the full image (res/raw) and a small thumbnail (res/drawable-nodpi).
  */
 enum class LauncherWallpaper(
@@ -101,7 +101,7 @@ enum class GlassMode(@StringRes val nameRes: Int) {
 }
 
 /**
- * Visual styles of Tokito Laucher. The user picks one in Settings > Launcher.
+ * Visual styles of Tokito Launcher. The user picks one in Settings > Launcher.
  *
  * @param panelCornerDp corner radius of the big panels (hero, floating menu and top bar)
  * @param buttonCornerDp corner radius of the big buttons

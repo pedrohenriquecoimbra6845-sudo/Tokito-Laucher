@@ -105,7 +105,7 @@ internal fun JoystickWidgetRenderer(
     val layoutJoystickStyle = data.joystickStyleId?.let { id ->
         joystickStyles.find { it.uuid == id }
     }
-    //Tokito Laucher: the app can restyle the joysticks when they are drawn (the saved layout stays as it is)
+    //Tokito Launcher: the app can restyle the joysticks when they are drawn (the saved layout stays as it is)
     val joystickStyleTransform = LocalJoystickStyleTransform.current
     val joystickStyle = remember(layoutJoystickStyle, joystickStyleTransform) {
         if (joystickStyleTransform != null) {

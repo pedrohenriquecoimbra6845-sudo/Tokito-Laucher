@@ -1,7 +1,7 @@
 /*
- * Tokito Laucher - unofficial modified version of Zalith Launcher 2
+ * Tokito Launcher - unofficial modified version of Zalith Launcher 2
  * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors (Zalith Launcher 2)
- * Modifications Copyright (C) 2026 Tokito Laucher contributors
+ * Modifications Copyright (C) 2026 Tokito Launcher contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,7 +85,6 @@ internal enum class TokitoDestination {
     MODS,
     TEXTURES,
     MODPACKS,
-    RUST,
     SETTINGS
 }
 
@@ -107,7 +106,7 @@ internal fun tokitoDestinationOf(key: TitledNavKey?): TokitoDestination? {
 
 /**
  * Tokito side rail: the app icon on top, then the main places of the launcher
- * (home, versions, downloads, mods, textures, modpacks, Rust Edition) and the settings at the bottom.
+ * (home, versions, downloads, mods, textures, modpacks) and the settings at the bottom.
  */
 @Composable
 internal fun TokitoSideRail(
@@ -121,8 +120,7 @@ internal fun TokitoSideRail(
         TokitoDestination.DOWNLOAD,
         TokitoDestination.MODS,
         TokitoDestination.TEXTURES,
-        TokitoDestination.MODPACKS,
-        TokitoDestination.RUST
+        TokitoDestination.MODPACKS
     )
 
     val style = AllSettings.launcherStyle.state
@@ -194,7 +192,6 @@ private fun TokitoRailEntry(
         TokitoDestination.MODS -> R.drawable.ic_extension_outlined
         TokitoDestination.TEXTURES -> R.drawable.ic_format_paint_outlined
         TokitoDestination.MODPACKS -> R.drawable.ic_package_2_outlined
-        TokitoDestination.RUST -> R.drawable.ic_rocket_launch_filled
         TokitoDestination.SETTINGS -> R.drawable.ic_settings_filled
     }
     val labelRes = when (destination) {
@@ -204,7 +201,6 @@ private fun TokitoRailEntry(
         TokitoDestination.MODS -> R.string.tokito_rail_mods
         TokitoDestination.TEXTURES -> R.string.tokito_rail_textures
         TokitoDestination.MODPACKS -> R.string.tokito_rail_modpacks
-        TokitoDestination.RUST -> R.string.tokito_rail_rust
         TokitoDestination.SETTINGS -> R.string.tokito_rail_settings
     }
 

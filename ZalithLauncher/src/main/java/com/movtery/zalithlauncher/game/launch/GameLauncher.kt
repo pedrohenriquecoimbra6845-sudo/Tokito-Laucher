@@ -30,6 +30,8 @@ import com.movtery.zalithlauncher.ZLApplication
 import com.movtery.zalithlauncher.bridge.LoggerBridge.appendInfo
 import com.movtery.zalithlauncher.bridge.LoggerBridge.appendTitle
 import com.movtery.zalithlauncher.bridge.ZLBridge
+import com.movtery.zalithlauncher.components.InstallableItem
+import com.movtery.zalithlauncher.components.jre.UnpackJnaTask
 import com.movtery.zalithlauncher.context.readAssetFile
 import com.movtery.zalithlauncher.game.account.Account
 import com.movtery.zalithlauncher.game.account.AccountType
@@ -51,7 +53,6 @@ import com.movtery.zalithlauncher.game.support.touch_controller.ControllerProxy
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionInfoParser
 import com.movtery.zalithlauncher.game.versioninfo.models.GameManifest
-import com.movtery.zalithlauncher.path.LibPath
 import com.movtery.zalithlauncher.path.PathManager
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.utils.GSON
@@ -60,6 +61,7 @@ import com.movtery.zalithlauncher.utils.file.child
 import com.movtery.zalithlauncher.utils.file.ensureDirectorySilently
 import com.movtery.zalithlauncher.utils.logging.Logger
 import com.movtery.zalithlauncher.utils.string.isEqualTo
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.parcelize.Parcelize
@@ -131,13 +133,23 @@ class GameLauncher(
             .build()
 
         //jna
-        jnaDir = gameManifest.libraries?.find { library ->
+        //Tokito Launcher: the natives are checked (and installed again if they are missing or damaged) and the
+        //closest compatible version is used when the game lists a JNA version that is not bundled
+        verifyJnaNatives()
+        val jnaVersion = gameManifest.libraries?.find { library ->
             library.name.startsWith("net.java.dev.jna:jna:")
         }?.let { library ->
-            parseLibraryComponents(library.name).version
-        }?.let { jnaVersion ->
-            File(LibPath.JNA, jnaVersion)
-        }?.takeIf { it.exists() }
+            runCatching { parseLibraryComponents(library.name).version }.getOrNull()
+        }
+        jnaDir = JnaNatives.choose(jnaVersion)?.also { choice ->
+            appendInfo(
+                if (choice.exact) {
+                    "JNA: using the natives ${choice.version}"
+                } else {
+                    "JNA: the game asks for ${jnaVersion ?: "no version"}, using the compatible natives ${choice.version}"
+                }
+            )
+        }?.dir
 
         CallbackBridge.nativeSetUseInputStackQueue(gameManifest.arguments != null)
 
@@ -157,6 +169,37 @@ class GameLauncher(
             javaRuntime = javaRuntime,
             customArgs = customArgs,
         )
+    }
+
+    /**
+     * Tokito Launcher: makes sure the JNA natives are installed and intact before the game starts, the same
+     * way the LWJGL natives are checked. A cleaner app, an interrupted first start or a full storage can leave
+     * them missing or damaged on some phones, and then the game cannot use JNA at all.
+     * A problem here never stops the launch: only some games and mods need JNA.
+     */
+    private suspend fun verifyJnaNatives() {
+        withContext(Dispatchers.IO) {
+            try {
+                val task = UnpackJnaTask(activity)
+                if (task.checkState() == InstallableItem.State.FINISHED) {
+                    appendInfo("JNA: natives passed SHA-1 verification")
+                } else {
+                    appendInfo("JNA: natives are missing or damaged, installing them again")
+                    task.run()
+                    val state = task.checkState()
+                    if (state == InstallableItem.State.FINISHED) {
+                        appendInfo("JNA: natives passed SHA-1 verification after installing them again")
+                    } else {
+                        appendInfo("JNA: natives are still not valid ($state)")
+                    }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Logger.warning(TAG, "Failed to verify the JNA natives", e)
+                appendInfo("JNA: could not verify the natives: ${e.message}")
+            }
+        }
     }
 
     override fun MutableMap<String, String>.putJavaArgs() {
@@ -507,6 +550,8 @@ private fun setRendererEnv(
         // Mesa 系渲染器的 OSMesa 桥依据该变量定位 Mesa 库
         envMap["LIB_MESA_NAME"] = getRendererLibrary() ?: "null"
         envMap["MESA_GLSL_CACHE_DIR"] = PathManager.DIR_CACHE.absolutePath
+        //Tokito Launcher: Survival and Brutal keep a bigger shader cache
+        OptimizationProfile.applyShaderCacheEnv(envMap)
     }
 
     if (renderer.needsZinkDriverOverride) {

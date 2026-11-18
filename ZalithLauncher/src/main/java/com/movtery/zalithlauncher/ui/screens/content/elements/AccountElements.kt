@@ -201,11 +201,22 @@ sealed interface LocalLoginOperation {
     /** 编辑用户名流程 */
     data object Edit : LocalLoginOperation
 
+    /** Tokito Launcher: same as [Edit], but for a TokiAuth account */
+    data object EditTokiAuth : LocalLoginOperation
+
     /** 创建账号流程 */
-    data class Create(val userName: String, val userUUID: String?) : LocalLoginOperation
+    data class Create(
+        val userName: String,
+        val userUUID: String?,
+        val tokiAuth: Boolean = false
+    ) : LocalLoginOperation
 
     /** 警告非法用户名流程 */
-    data class Alert(val userName: String, val userUUID: String?) : LocalLoginOperation
+    data class Alert(
+        val userName: String,
+        val userUUID: String?,
+        val tokiAuth: Boolean = false
+    ) : LocalLoginOperation
 }
 
 /**
@@ -366,7 +377,7 @@ fun AccountItem(
                 //刷新
                 IconButton(
                     onClick = onRefreshClick,
-                    enabled = account.accountType != AccountType.LOCAL.tag
+                    enabled = !account.isLocalAccount()
                 ) {
                     Icon(
                         modifier = Modifier.size(24.dp),
@@ -446,6 +457,7 @@ fun LoginMenuDialog(
     onAuthServerLogin: (server: AuthServer) -> Unit,
     onAddAuthServer: () -> Unit,
     onDeleteAuthServer: (server: AuthServer) -> Unit,
+    onTokiAuthLogin: () -> Unit = {},
 ) {
     Dialog(
         onDismissRequest = onDismissRequest,
@@ -485,6 +497,15 @@ fun LoginMenuDialog(
                                 .padding(start = 12.dp, end = 6.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
+                            //Tokito Launcher: TokiAuth, the own account of the launcher
+                            LoginItem(
+                                modifier = Modifier.fillMaxWidth(),
+                                title = stringResource(R.string.account_tokiauth_menu_title),
+                                onClick = {
+                                    onTokiAuthLogin()
+                                    onDismissRequest()
+                                }
+                            )
                             //微软登录
                             LoginItem(
                                 modifier = Modifier.fillMaxWidth(),
@@ -772,7 +793,8 @@ private val localNamePattern = Pattern.compile("[^a-zA-Z0-9_]")
 fun LocalLoginDialog(
     onDismissRequest: () -> Unit,
     onConfirm: (isUserNameInvalid: Boolean, userName: String, userUUID: String?) -> Unit,
-    openLink: (url: String) -> Unit
+    openLink: (url: String) -> Unit,
+    tokiAuth: Boolean = false
 ) {
     /** 用户输入的用户名 */
     var userName by rememberSaveable { mutableStateOf("") }
@@ -834,10 +856,35 @@ fun LocalLoginDialog(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = stringResource(R.string.account_local_create_account),
+                        text = stringResource(
+                            if (tokiAuth) R.string.account_tokiauth_create_account
+                            else R.string.account_local_create_account
+                        ),
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.size(16.dp))
+
+                    //Tokito Launcher: what a TokiAuth account is (and is not)
+                    if (tokiAuth) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(all = 8.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.account_tokiauth_info),
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.size(12.dp))
+                    }
 
                     val scrollState = rememberScrollState()
                     Column(

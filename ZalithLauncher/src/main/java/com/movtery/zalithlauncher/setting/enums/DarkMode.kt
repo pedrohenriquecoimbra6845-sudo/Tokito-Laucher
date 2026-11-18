@@ -45,7 +45,7 @@ enum class DarkMode(val textRes: Int) {
 @Composable
 fun isLauncherInDarkTheme(): Boolean {
     val value = AllSettings.launcherDarkMode.state
-    //Tokito Laucher: Liquid Glass "Leve" is always light and "Frio" always dark
+    //Tokito Launcher: Liquid Glass "Leve" is always light and "Frio" always dark
     val forced = forcedDarkTheme(AllSettings.launcherStyle.state, AllSettings.liquidGlassMode.state)
     return key(value, forced) {
         forced ?: when (value) {

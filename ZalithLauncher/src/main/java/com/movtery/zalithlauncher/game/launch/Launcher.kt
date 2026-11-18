@@ -218,6 +218,9 @@ abstract class Launcher(
             put("java.home", getJavaHome())
             put("java.io.tmpdir", PathManager.DIR_CACHE.absolutePath)
             put("jna.boot.library.path", PathManager.DIR_NATIVE_LIB)
+            //Tokito Launcher: never bind to a JNA library that came with the phone (some brands ship their own,
+            //and its version rarely matches the one of the game)
+            put("jna.nosys", "true")
             put("user.home", userHome)
             if (useLocalLanguage) {
                 put("user.language", System.getProperty("user.language") ?: "en")
@@ -502,7 +505,7 @@ abstract class Launcher(
 
             if (AllSettings.dumpShaders.getValue()) map["LIBGL_VGPU_DUMP"] = "1"
             if (AllSettings.zinkPreferSystemDriver.getValue()) map["POJAV_ZINK_PREFER_SYSTEM_DRIVER"] = "1"
-            if (AllSettings.vsyncInZink.getValue()) map["POJAV_VSYNC_IN_ZINK"] = "1"
+            //Tokito Launcher: the Zink vertical sync option was removed; without this variable the swap interval stays at 0
 
             if (FFmpegPluginManager.isAvailable) map["POJAV_FFMPEG_PATH"] = FFmpegPluginManager.executablePath!!
         }

@@ -608,7 +608,7 @@ fun ZalithLauncherTheme(
     dynamicColor: Boolean = true,
     backgroundViewModel: BackgroundViewModel? = null,
     festivals: List<Festival> = emptyList(),
-    //só a tela principal do launcher reduz o DPI no Modo PVP (o jogo e outras telas não)
+    //Tokito Launcher: only the main screen of the launcher gets the lower DPI of the PVP and Brutal modes (the game and other screens do not)
     scaleForPvp: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -691,9 +691,9 @@ fun ZalithLauncherTheme(
         }
     }
 
-    //Modo PVP: diminui um pouco o DPI do launcher (tudo fica menor e sobra mais tela)
+    //PVP and Brutal modes: a bit lower DPI of the launcher (everything gets smaller and more of the screen is free)
     val baseDensity = LocalDensity.current
-    val launcherDensity = if (scaleForPvp && AllSettings.launcherPvpMode.state) {
+    val launcherDensity = if (scaleForPvp && AllSettings.launcherOptimizationMode.state.shrinksLauncher) {
         Density(
             density = baseDensity.density * PVP_DENSITY_SCALE,
             fontScale = baseDensity.fontScale

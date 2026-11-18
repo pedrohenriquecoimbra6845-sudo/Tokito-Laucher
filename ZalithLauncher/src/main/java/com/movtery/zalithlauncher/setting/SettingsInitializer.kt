@@ -19,6 +19,7 @@
 package com.movtery.zalithlauncher.setting
 
 import android.content.Context
+import com.movtery.zalithlauncher.setting.enums.OptimizationMode
 import com.movtery.zalithlauncher.utils.device.Architecture
 import com.movtery.zalithlauncher.utils.platform.bytesToMB
 import com.movtery.zalithlauncher.utils.platform.getTotalMemory
@@ -39,6 +40,20 @@ fun loadAllSettings(context: Context, reloadAll: Boolean = false) {
     val jvmArgs = AllSettings.jvmArgs.getValue()
     jvmArgs.splitPreservingQuotes().find { it.startsWith(LWJGL_LIB_NAME_ARG) }?.let { arg ->
         AllSettings.jvmArgs.save(jvmArgs.replace(arg, ""))
+    }
+    migrateTokitoPvpSwitch()
+}
+
+/**
+ * Tokito Launcher 0.11.4: the PVP on/off switch of 0.11.3 became the optimization mode selector.
+ * Whoever had the PVP mode on keeps it on, only once.
+ */
+private fun migrateTokitoPvpSwitch() {
+    if (AllSettings.launcherPvpMode.getValue()) {
+        if (AllSettings.launcherOptimizationMode.getValue() == OptimizationMode.OFF) {
+            AllSettings.launcherOptimizationMode.save(OptimizationMode.PVP)
+        }
+        AllSettings.launcherPvpMode.save(false)
     }
 }
 

@@ -363,7 +363,7 @@ class MainActivity : BaseAppCompatActivity() {
                         }
                     )
 
-                    //Tokito Laucher: entry screen shown every time the launcher opens
+                    //Tokito Launcher: entry screen shown every time the launcher opens
                     TokitoEntryOverlay(
                         onLoginMicrosoft = {
                             screenBackStackModel.mainScreen.navigateTo(
@@ -420,7 +420,7 @@ class MainActivity : BaseAppCompatActivity() {
                     //启动游戏流程展示
                     val launchFlow by launchGameViewModel.launchFlow.collectAsStateWithLifecycle()
                     val flow = launchFlow
-                    //Tokito Laucher: animation while Minecraft is opening.
+                    //Tokito Launcher: animation while Minecraft is opening.
                     //Composed before the task dialog so the task list/cancel button stay on top.
                     PrestigieLaunchAnimation(visible = flow != null)
                     if (flow != null) {

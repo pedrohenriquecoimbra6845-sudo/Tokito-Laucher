@@ -547,8 +547,6 @@
     <string name="settings_renderer_vulkan_driver_system_title">Usar o driver Vulkan do sistema</string>
     <string name="settings_renderer_vulkan_driver_system_summary">Quando ativado, o launcher forçará o uso do driver Vulkan integrado do sistema (para GPUs Adreno) em vez do driver Turnip padrão. Esta configuração afeta apenas o driver Zink e mods que utilizam a renderização Vulkan</string>
     <string name="settings_renderer_zink_driver_adreno">O launcher detectou que seu dispositivo possui uma GPU Adreno. Habilitar esta opção pode causar o mau funcionamento do renderizador Zink. Tem certeza de que deseja habilitá-la?</string>
-    <string name="settings_renderer_vsync_in_zink_title">Sincronização vertical do Zink</string>
-    <string name="settings_renderer_vsync_in_zink_summary">Habilita a sincronização vertical para o renderizador Zink através da interface do sistema</string>
     <string name="settings_game_version_isolation_summary">Isola todas as versões para que seus arquivos não se interfiram</string>
     <string name="settings_game_skip_game_integrity_check_title">Pular verificação de integridade</string>
     <string name="settings_game_skip_game_integrity_check_summary">Ao iniciar o jogo, ficheiros de jogo incompatíveis não serão descarregados novamente</string>

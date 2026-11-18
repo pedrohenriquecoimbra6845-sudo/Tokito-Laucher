@@ -668,7 +668,7 @@ fun GameScreen(
             }
 
             //控制布局层
-            //Tokito Laucher: the on-screen controls follow the style of the launcher
+            //Tokito Launcher: the on-screen controls follow the style of the launcher
             ProvideTokitoControlStyle {
                 ControlBoxLayout(
                     modifier = Modifier.fillMaxSize(),

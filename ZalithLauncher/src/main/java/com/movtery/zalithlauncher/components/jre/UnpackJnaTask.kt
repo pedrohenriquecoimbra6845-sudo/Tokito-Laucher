@@ -25,6 +25,10 @@ import com.movtery.zalithlauncher.components.UnpackSingleTask
 import com.movtery.zalithlauncher.components.toComponentFile
 import com.movtery.zalithlauncher.path.PathManager
 import com.movtery.zalithlauncher.utils.device.Architecture
+import com.movtery.zalithlauncher.utils.logging.Logger
+import kotlinx.coroutines.CancellationException
+
+private const val TAG = "UnpackJnaTask"
 
 class UnpackJnaTask(context: Context) : UnpackSingleTask(
     context = context,
@@ -32,9 +36,13 @@ class UnpackJnaTask(context: Context) : UnpackSingleTask(
     assetsDirName = "runtimes/jna",
     fileDirName = "jna"
 ) {
+    /**
+     * Tokito Launcher: a JNA version that has no natives for this processor is skipped instead of failing
+     * the whole task. The game then uses the closest compatible version that was installed
+     * (see `JnaNatives`). Only a launcher without any JNA natives for this processor fails.
+     */
     override fun selectFiles(manifest: AssetManifest): List<ComponentFile> {
         val abi = Architecture.archAsStringAndroid(Architecture.getDeviceArchitecture())
-        val versions = manifest.files.mapTo(HashSet()) { it.path.substringBefore('/') }
         val files = manifest.files.mapNotNull { file ->
             val parts = file.path.split('/')
             require(parts.size == 4 && parts[1] == "natives" && parts[3] == "libjnidispatch.so") {
@@ -43,9 +51,25 @@ class UnpackJnaTask(context: Context) : UnpackSingleTask(
             if (parts[2] != abi) return@mapNotNull null
             file.toComponentFile("${parts[0]}/libjnidispatch.so")
         }
-        require(files.mapTo(HashSet()) { it.outputPath.substringBefore('/') } == versions) {
+        require(files.isNotEmpty()) {
             "JNA assets are incomplete for ABI: $abi"
         }
         return files
+    }
+
+    /**
+     * Tokito Launcher: JNA is only needed by some games and mods, so a problem while installing it must not
+     * keep the whole launcher stuck on the first start screen. The natives are checked again, and installed
+     * again if needed, every time a game starts.
+     */
+    override suspend fun run() {
+        try {
+            super.run()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Logger.warning(TAG, "Failed to install the JNA natives, they will be tried again when a game starts", e)
+            updateMessage(null)
+        }
     }
 }

@@ -28,6 +28,7 @@ import com.movtery.zalithlauncher.context.copyLocalFile
 import com.movtery.zalithlauncher.coroutine.Task
 import com.movtery.zalithlauncher.coroutine.TaskSystem
 import com.movtery.zalithlauncher.game.account.Account
+import com.movtery.zalithlauncher.game.account.AccountType
 import com.movtery.zalithlauncher.game.account.AccountsManager
 import com.movtery.zalithlauncher.game.account.accountErrorText
 import com.movtery.zalithlauncher.game.account.addOtherServer
@@ -147,8 +148,11 @@ sealed interface AccountManageIntent {
     ) : AccountManageIntent
 
     /** 创建新的离线账号 */
-    data class CreateLocalAccount(val userName: String, val userUUID: String?) :
-        AccountManageIntent
+    data class CreateLocalAccount(
+        val userName: String,
+        val userUUID: String?,
+        val tokiAuth: Boolean = false
+    ) : AccountManageIntent
 
     /** 使用第三方验证服务器进行登录 */
     data class LoginWithOtherServer(
@@ -360,7 +364,8 @@ class AccountManageViewModel @AssistedInject constructor(
             is AccountManageIntent.ApplyMicrosoftCape -> applyMicrosoftCape(intent)
             is AccountManageIntent.CreateLocalAccount -> createLocalAccount(
                 intent.userName,
-                intent.userUUID
+                intent.userUUID,
+                intent.tokiAuth
             )
 
             is AccountManageIntent.LoginWithOtherServer -> loginWithOtherServer(intent)
@@ -725,8 +730,12 @@ class AccountManageViewModel @AssistedInject constructor(
     }
 
     /** 创建离线账号 */
-    private fun createLocalAccount(userName: String, userUUID: String?) {
-        localLogin(userName, userUUID)
+    private fun createLocalAccount(userName: String, userUUID: String?, tokiAuth: Boolean = false) {
+        localLogin(
+            userName,
+            userUUID,
+            if (tokiAuth) AccountType.TOKIAUTH else AccountType.LOCAL
+        )
         onIntent(AccountManageIntent.UpdateLocalLoginOp(LocalLoginOperation.None))
     }
 

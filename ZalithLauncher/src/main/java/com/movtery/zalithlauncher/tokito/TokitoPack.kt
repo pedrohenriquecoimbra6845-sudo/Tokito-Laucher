@@ -1,5 +1,5 @@
 /*
- * Tokito Laucher
+ * Tokito Launcher
  * Based on Zalith Launcher 2 (Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -142,7 +142,7 @@ data class PackImportResult(
 }
 
 /**
- * ZIP packs of Tokito Laucher: one `.zip` with mouse pointers, wallpapers and a control HUD.
+ * ZIP packs of Tokito Launcher: one `.zip` with mouse pointers, wallpapers and a control HUD.
  *
  * Folders and file names are understood loosely:
  *  - pointers: images inside a folder called `pointers`, `cursors`, `mouse` or `setas`, or images named

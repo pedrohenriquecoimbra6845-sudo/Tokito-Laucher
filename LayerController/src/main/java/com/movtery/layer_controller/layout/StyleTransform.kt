@@ -23,7 +23,7 @@ import com.movtery.layer_controller.observable.ObservableButtonStyle
 import com.movtery.layer_controller.observable.ObservableJoystickStyle
 
 /**
- * Tokito Laucher: lets the app change how the buttons look when they are drawn, without touching the
+ * Tokito Launcher: lets the app change how the buttons look when they are drawn, without touching the
  * saved control layout. It receives the style the layout asks for and returns the style to draw.
  *
  * It is `null` by default (the layout is drawn as it was saved) and it is not provided in the control editor.

@@ -65,7 +65,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -79,7 +78,6 @@ import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.coroutine.TaskSystem
 import com.movtery.zalithlauncher.game.version.installed.Version
-import com.movtery.zalithlauncher.game.rust.RustEdition
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.path.PathManager
 import com.movtery.zalithlauncher.setting.AllSettings
@@ -87,7 +85,6 @@ import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.components.BackgroundCard
 import com.movtery.zalithlauncher.ui.components.CardTitleLayout
-import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.ui.components.TextRailItem
 import com.movtery.zalithlauncher.ui.guide.sendStartGuideOnce
 import com.movtery.zalithlauncher.ui.screens.BackStackNavKey
@@ -171,12 +168,10 @@ fun MainScreen(
         backgroundColor().copy(alpha = launcherBackgroundOpacity)
     } else backgroundColor()
 
-    val context = LocalContext.current
-    var showRustMissing by remember { mutableStateOf(false) }
-    //Tokito Laucher: the side rail item that matches the screen that is open
+    //Tokito Launcher: the side rail item that matches the screen that is open
     val selectedDestination = tokitoDestinationOf(mainScreenKey)
 
-    //Tokito Laucher: Liquid Glass, Transparent, Neon and Minecraft use floating panels with gaps between them
+    //Tokito Launcher: Liquid Glass, Transparent, Neon and Minecraft use floating panels with gaps between them
     val floatingPanels = AllSettings.launcherStyle.state.isFloating
 
     Surface(
@@ -189,7 +184,7 @@ fun MainScreen(
                 .fillMaxSize()
                 .then(if (floatingPanels) Modifier.padding(8.dp) else Modifier)
         ) {
-            //left rail: app icon, home, versions, downloads, mods, textures, modpacks, Rust Edition, settings
+            //left rail: app icon, home, versions, downloads, mods, textures, modpacks, settings
             TokitoSideRail(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -229,10 +224,6 @@ fun MainScreen(
                             if (selectedDestination != TokitoDestination.MODPACKS) {
                                 screenBackStackModel.navigateToDownload(screenBackStackModel.downloadModPackScreen)
                             }
-                        }
-                        TokitoDestination.RUST -> {
-                            //Minecraft Rust Edition is a separate app: open it, or offer its download page
-                            if (!RustEdition.open(context)) showRustMissing = true
                         }
                         TokitoDestination.SETTINGS -> {
                             if (selectedDestination != TokitoDestination.SETTINGS) {
@@ -337,20 +328,6 @@ fun MainScreen(
             }
         }
     }
-
-    if (showRustMissing) {
-        SimpleAlertDialog(
-            title = stringResource(R.string.tokito_rust_missing_title),
-            text = stringResource(R.string.tokito_rust_missing_text),
-            confirmText = stringResource(R.string.tokito_rust_download),
-            onConfirm = {
-                showRustMissing = false
-                //downloads the app from its official site into the Tokito folder and opens the installer
-                RustEdition.downloadAndInstall(context)
-            },
-            onDismiss = { showRustMissing = false }
-        )
-    }
 }
 
 @Composable
@@ -450,7 +427,7 @@ private fun <E: TitledNavKey> TopBar(
                 if (parent == null) {
                     if (festivals.isEmpty()) {
                         Text(
-                            text = BuildKeys.LAUNCHER_IDENTIFIER,
+                            text = BuildKeys.LAUNCHER_NAME,
                             style = style,
                             softWrap = softWarp,
                             maxLines = maxLines

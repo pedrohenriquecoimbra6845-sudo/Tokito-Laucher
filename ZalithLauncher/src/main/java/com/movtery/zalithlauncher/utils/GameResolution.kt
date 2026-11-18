@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import com.movtery.zalithlauncher.game.launch.OptimizationProfile
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.ResolutionRule
 import kotlin.math.roundToInt
@@ -103,7 +104,8 @@ fun computeGameRenderSize(
 fun computeGameRenderSize(screenSize: IntSize): IntSize = computeGameRenderSize(
     screenSize = screenSize,
     rule = AllSettings.resolutionRule.getValue(),
-    percentage = AllSettings.resolutionRatio.getValue(),
+    //Tokito Launcher: the Brutal mode renders at a lower resolution
+    percentage = OptimizationProfile.effectiveResolutionPercent(AllSettings.resolutionRatio.getValue()),
     customWidth = AllSettings.customResolutionWidth.getValue(),
     customHeight = AllSettings.customResolutionHeight.getValue()
 )
@@ -114,7 +116,11 @@ fun computeGameRenderSize(screenSize: IntSize): IntSize = computeGameRenderSize(
 @Composable
 fun rememberGameRenderSize(screenSize: IntSize): IntSize {
     val rule = AllSettings.resolutionRule.state
-    val percentage = AllSettings.resolutionRatio.state
+    val optimizationMode = AllSettings.launcherOptimizationMode.state
+    val percentage = OptimizationProfile.effectiveResolutionPercent(
+        percentage = AllSettings.resolutionRatio.state,
+        mode = optimizationMode
+    )
     val customWidth = AllSettings.customResolutionWidth.state
     val customHeight = AllSettings.customResolutionHeight.state
     return remember(screenSize, rule, percentage, customWidth, customHeight) {

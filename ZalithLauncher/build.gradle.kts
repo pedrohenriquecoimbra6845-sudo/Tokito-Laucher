@@ -129,7 +129,7 @@ android {
     }
 
     defaultConfig {
-        //Tokito Laucher: own application id, so it installs next to the official apps.
+        //Tokito Launcher: own application id, so it installs next to the official apps.
         //The Kotlin/JNI package (namespace) stays unchanged on purpose.
         applicationId = "com.tokito.laucher"
         minSdk = 26

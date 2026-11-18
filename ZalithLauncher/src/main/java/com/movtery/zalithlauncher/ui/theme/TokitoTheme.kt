@@ -1,7 +1,7 @@
 /*
- * Tokito Laucher - unofficial modified version of Zalith Launcher 2
+ * Tokito Launcher - unofficial modified version of Zalith Launcher 2
  * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors (Zalith Launcher 2)
- * Modifications Copyright (C) 2026 Tokito Laucher contributors
+ * Modifications Copyright (C) 2026 Tokito Launcher contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
 /**
- * "Tokito Rose": original theme of Tokito Laucher.
+ * "Tokito Rose": original theme of Tokito Launcher.
  * Deep plum surfaces with hot pink, purple and red accents (the colors of the app icon).
  * All values were chosen for this project.
  */

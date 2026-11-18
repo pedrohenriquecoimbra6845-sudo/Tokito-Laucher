@@ -19,6 +19,7 @@
 package com.movtery.zalithlauncher.utils.device
 
 import android.os.Build
+import android.os.Process as AndroidProcess
 
 /**
  * [from Architecture.java](https://github.com/PojavLauncherTeam/PojavLauncher/blob/v3_openjdk/app_pojavlauncher/src/main/java/net/kdt/pojavlaunch/Architecture.java)
@@ -35,8 +36,16 @@ object Architecture {
 
     fun getAddressSpaceLimit() = if (is64BitsDevice) ADDRESS_SPACE_LIMIT_64_BIT else ADDRESS_SPACE_LIMIT_32_BIT
 
+    /**
+     * Tokito Launcher: whether the launcher runs as a 64-bit process.
+     *
+     * The process is what counts, not what the processor can do. Many phones (a lot of the entry level
+     * Samsung, Xiaomi and Motorola ones) have a 64-bit processor but start apps as 32-bit ones, because of
+     * a 32-bit system image or a 32-bit ABI listed first. On those, asking only the device made the launcher
+     * pick the 64-bit Java, JNA and LWJGL files for a 32-bit process, and nothing could be loaded.
+     */
     val is64BitsDevice: Boolean
-        get() = Build.SUPPORTED_64_BIT_ABIS.isNotEmpty()
+        get() = AndroidProcess.is64Bit()
 
     val is32BitsDevice: Boolean
         get() = !is64BitsDevice

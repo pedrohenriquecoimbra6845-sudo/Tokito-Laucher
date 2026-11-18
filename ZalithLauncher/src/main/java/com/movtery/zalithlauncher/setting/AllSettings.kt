@@ -38,6 +38,7 @@ import com.movtery.zalithlauncher.setting.enums.GestureActionType
 import com.movtery.zalithlauncher.setting.enums.MirrorSourceType
 import com.movtery.zalithlauncher.setting.enums.MouseControlMode
 import com.movtery.zalithlauncher.setting.enums.MouseTouchBlockMode
+import com.movtery.zalithlauncher.setting.enums.OptimizationMode
 import com.movtery.zalithlauncher.setting.enums.ResolutionRule
 import com.movtery.zalithlauncher.ui.control.HotbarRule
 import com.movtery.zalithlauncher.ui.control.gamepad.JoystickMode
@@ -115,11 +116,6 @@ object AllSettings : SettingsRegistry() {
      * 使用系统的 Vulkan 驱动
      */
     val zinkPreferSystemDriver = boolSetting("zinkPreferSystemDriver", false)
-
-    /**
-     * Zink 垂直同步
-     */
-    val vsyncInZink = boolSetting("vsyncInZink", false)
 
     /**
      * 启用着色器日志输出
@@ -385,46 +381,82 @@ object AllSettings : SettingsRegistry() {
      */
     val launcherColorTheme = enumSetting(
         "launcherColorTheme",
-        //Tokito Laucher: plum/pink/purple theme by default on every Android version
+        //Tokito Launcher: plum/pink/purple theme by default on every Android version
         ColorThemeType.TOKITO
     )
 
     /**
-     * Tokito Laucher: visual style of the launcher
+     * Tokito Launcher: visual style of the launcher
      * (Tokito, Liquid Glass, Transparent, Neon, Minecraft or Zalith)
      */
     val launcherStyle = enumSetting("launcherStyle", LauncherStyle.TOKITO)
 
     /**
-     * Tokito Laucher: PVP mode. Locks the game FPS, lowers the launcher DPI a little
-     * and shrinks the character on the home screen.
+     * Tokito Launcher: the old on/off PVP switch of 0.11.3. Only kept so the choice is moved to
+     * [launcherOptimizationMode] the first time 0.11.4 starts (see `SettingsInitializer`).
      */
     val launcherPvpMode = boolSetting("launcherPvpMode", false)
 
     /**
-     * Tokito Laucher: the in-game on-screen controls use the colors of the launcher style
+     * Tokito Launcher: optimization mode (Off, PVP, Survival or Brutal)
+     */
+    val launcherOptimizationMode = enumSetting("launcherOptimizationMode", OptimizationMode.OFF)
+
+    /**
+     * Tokito Launcher: "light and fast chunks", also part of the Survival and Brutal modes
+     */
+    val tokitoLightChunks = boolSetting("tokitoLightChunks", false)
+
+    /**
+     * Tokito Launcher: items of the "Principais coisas" panel on the home screen, in order.
+     * An id with a "!" in front is hidden. Empty means the default panel.
+     */
+    val tokitoMainItems = stringListSetting("tokitoMainItems", emptyList())
+
+    /**
+     * Tokito Launcher: version code of the last launcher version whose "What's new" window was shown
+     */
+    val tokitoLastSeenVersion = intSetting("tokitoLastSeenVersion", 0)
+
+    /**
+     * Tokito Launcher: id of the last announcement (from the repository) that was shown
+     */
+    val tokitoLastNoticeId = intSetting("tokitoLastNoticeId", 0)
+
+    /**
+     * Tokito Launcher: time of the last check for an announcement
+     */
+    val tokitoLastNoticeCheck = longSetting("tokitoLastNoticeCheck", 0L)
+
+    /**
+     * Tokito Launcher: the pop-up photos and videos are shown on the home screen
+     */
+    val tokitoPopupsEnabled = boolSetting("tokitoPopupsEnabled", true)
+
+    /**
+     * Tokito Launcher: the in-game on-screen controls use the colors of the launcher style
      */
     val controlsFollowLauncherStyle = boolSetting("controlsFollowLauncherStyle", true)
 
     /**
-     * Tokito Laucher: id of the mini wallpaper used as the launcher background
+     * Tokito Launcher: id of the mini wallpaper used as the launcher background
      * (empty when there is no background or the user picked their own file)
      */
     val launcherWallpaper = stringSetting("launcherWallpaper", "")
 
     /**
-     * Tokito Laucher: the background was picked by hand (a mini wallpaper or an image from a ZIP pack),
+     * Tokito Launcher: the background was picked by hand (a mini wallpaper or an image from a ZIP pack),
      * so changing the style never replaces it
      */
     val launcherWallpaperManual = boolSetting("launcherWallpaperManual", false)
 
     /**
-     * Tokito Laucher: colors of the Liquid Glass style (Normal, Leve or Frio)
+     * Tokito Launcher: colors of the Liquid Glass style (Normal, Leve or Frio)
      */
     val liquidGlassMode = enumSetting("liquidGlassMode", GlassMode.NORMAL)
 
     /**
-     * Tokito Laucher: the grid of the home screen moves. Turn it off for a calmer, lighter home screen.
+     * Tokito Launcher: the grid of the home screen moves. Turn it off for a calmer, lighter home screen.
      */
     val homeAnimations = boolSetting("homeAnimations", true)
 

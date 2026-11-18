@@ -149,7 +149,7 @@ private fun LoadingScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                //Tokito Laucher: app icon with the name and version on its right side
+                //Tokito Launcher: app icon with the name and version on its right side
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(14.dp)

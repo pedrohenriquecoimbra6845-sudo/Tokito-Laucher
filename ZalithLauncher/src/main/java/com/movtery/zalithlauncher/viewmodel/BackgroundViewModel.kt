@@ -168,7 +168,7 @@ class BackgroundViewModel: ViewModel() {
     suspend fun delete() {
         withContext(Dispatchers.IO) {
             FileUtils.deleteQuietly(backgroundFile)
-            //Tokito Laucher: o mini wallpaper embutido deixou de ser o fundo
+            //Tokito Launcher: o mini wallpaper embutido deixou de ser o fundo
             AllSettings.launcherWallpaper.save("")
             AllSettings.launcherWallpaperManual.save(false)
             updateState()
@@ -178,7 +178,7 @@ class BackgroundViewModel: ViewModel() {
     suspend fun import(context: Context, result: Uri) {
         withContext(Dispatchers.IO) {
             FileUtils.deleteQuietly(backgroundFile)
-            //Tokito Laucher: o fundo passa a ser um arquivo escolhido pelo usuário (não é mais um mini wallpaper)
+            //Tokito Launcher: o fundo passa a ser um arquivo escolhido pelo usuário (não é mais um mini wallpaper)
             AllSettings.launcherWallpaper.save("")
             AllSettings.launcherWallpaperManual.save(false)
             context.copyLocalFile(result, backgroundFile)
@@ -192,7 +192,7 @@ class BackgroundViewModel: ViewModel() {
     }
 
     /**
-     * Tokito Laucher: usa um dos mini wallpapers embutidos no app como fundo do launcher
+     * Tokito Launcher: usa um dos mini wallpapers embutidos no app como fundo do launcher
      */
     suspend fun importWallpaper(context: Context, wallpaper: LauncherWallpaper, pickedByHand: Boolean = false) {
         withContext(Dispatchers.IO) {
@@ -210,7 +210,7 @@ class BackgroundViewModel: ViewModel() {
     }
 
     /**
-     * Tokito Laucher: usa uma imagem (ou vídeo) da biblioteca de pacotes ZIP como fundo do launcher
+     * Tokito Launcher: usa uma imagem (ou vídeo) da biblioteca de pacotes ZIP como fundo do launcher
      *
      * @param id identificação gravada nas configurações (começa com "pack:")
      */

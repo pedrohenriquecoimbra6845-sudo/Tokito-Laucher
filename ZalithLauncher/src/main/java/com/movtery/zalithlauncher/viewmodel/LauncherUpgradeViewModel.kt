@@ -82,7 +82,7 @@ sealed interface LauncherUpgradeOperation {
  */
 private const val LATEST_VERSION = "latest_version_md.json"
 /**
- * Tokito Laucher is an unofficial modified version of Zalith Launcher 2.
+ * Tokito Launcher is an unofficial modified version of Zalith Launcher 2.
  * The upstream update feed must not be used to update this app.
  */
 private const val UPSTREAM_UPDATE_CHECK_ENABLED = false
@@ -130,7 +130,7 @@ class LauncherUpgradeViewModel: ViewModel() {
         onIsLatest: suspend () -> Unit = {}
     ) {
         viewModelScope.launch {
-            //Tokito Laucher: the upstream release feed belongs to Zalith Launcher 2,
+            //Tokito Launcher: the upstream release feed belongs to Zalith Launcher 2,
             //so update checks are disabled to avoid offering the official app as an "update".
             if (!UPSTREAM_UPDATE_CHECK_ENABLED) return@launch
 

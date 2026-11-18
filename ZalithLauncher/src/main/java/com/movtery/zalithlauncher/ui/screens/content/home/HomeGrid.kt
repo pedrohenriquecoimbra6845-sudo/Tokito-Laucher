@@ -209,7 +209,9 @@ fun HomeGrid(
                 .padding(6.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            val systemCards = HomeCards.systemCards()
+            //Tokito Launcher: the player chooses which of the main things are shown, and in which order
+            val mainEntries = HomeMainItems.resolve(AllSettings.tokitoMainItems.state)
+            val systemCards = HomeCards.systemCards(mainEntries)
             if (!systemCards.isEmpty()) {
                 Column(
                     modifier = Modifier

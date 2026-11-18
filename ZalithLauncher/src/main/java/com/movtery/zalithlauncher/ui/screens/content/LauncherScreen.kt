@@ -97,6 +97,8 @@ import com.movtery.zalithlauncher.ui.components.ScalingActionButton
 import com.movtery.zalithlauncher.ui.components.ScreenType
 import com.movtery.zalithlauncher.ui.components.ScreenTypeLayout
 import com.movtery.zalithlauncher.ui.components.TokitoEntry
+import com.movtery.zalithlauncher.ui.components.TokitoNoticeHost
+import com.movtery.zalithlauncher.ui.components.TokitoPopupLayer
 import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.rememberAnimatedContext
 import com.movtery.zalithlauncher.ui.guide.GuideKeys
@@ -117,13 +119,14 @@ import com.movtery.zalithlauncher.ui.screens.content.home.HomeLibraryCategory
 import com.movtery.zalithlauncher.ui.screens.content.home.LocalHomeLibraryOpener
 import com.movtery.zalithlauncher.ui.screens.content.home.LocalHomeLinkOpener
 import com.movtery.zalithlauncher.ui.screens.content.home.TokitoHero
+import com.movtery.zalithlauncher.ui.screens.content.home.TokitoMainCustomizeDialog
 import com.movtery.zalithlauncher.viewmodel.ScreenBackStackViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
-/** Tokito Laucher: width share of the hero (3D skin + PLAY) and of the news panel */
+/** Tokito Launcher: width share of the hero (3D skin + PLAY) and of the "Principais coisas" panel */
 private const val HeroWeight = 6f
 private const val NewsWeight = 4f
 
@@ -137,7 +140,7 @@ fun LauncherScreen(
     startGuideOnce: (GuideKeys.Keys) -> Unit,
 ) {
     LaunchedEffect(Unit) {
-        //Tokito Laucher: the guide starts only after the entry screen is gone
+        //Tokito Launcher: the guide starts only after the entry screen is gone
         TokitoEntry.finished.first { it }
         //发起新手引导
         startGuideOnce(GuideKeys.Main)
@@ -164,83 +167,115 @@ fun LauncherScreen(
             }
         }
 
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(10.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            //hero: 3D skin, PLAY button and version list
-            TokitoHero(
-                modifier = Modifier
-                    .weight(HeroWeight)
-                    .fillMaxHeight(),
-                onLaunchGame = onLaunchGame,
-                toAccountManageScreen = toAccountManageScreen,
-                toVersionManageScreen = toVersionManageScreen,
-                toVersionSettingsScreen = toVersionSettingsScreen
-            )
+        var showCustomize by remember { mutableStateOf(false) }
 
-            //news panel: mods / textures / modpacks shortcuts, Rust Edition and the cards of the user
-            Column(
+        Box(modifier = Modifier.fillMaxSize()) {
+            Row(
                 modifier = Modifier
-                    .weight(NewsWeight)
-                    .fillMaxHeight()
-                    .guideNode(
-                        key = GuideKeys.Main.Step.CardTip,
-                        holeRadius = 0.dp
-                    )
+                    .fillMaxSize()
+                    .padding(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Row(
+                //hero: 3D skin, PLAY button and version list
+                TokitoHero(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        modifier = Modifier.size(20.dp),
-                        painter = painterResource(R.drawable.ic_article_outlined),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = stringResource(R.string.tokito_news_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                        .weight(HeroWeight)
+                        .fillMaxHeight(),
+                    onLaunchGame = onLaunchGame,
+                    toAccountManageScreen = toAccountManageScreen,
+                    toVersionManageScreen = toVersionManageScreen,
+                    toVersionSettingsScreen = toVersionSettingsScreen
+                )
 
-                CompositionLocalProvider(
-                    LocalUriHandler provides object : UriHandler {
-                        override fun openUri(uri: String) {
-                            onOpenLink(uri)
+                //"Principais coisas" panel: the things the player chose (library, modes, skins, pop-ups, news) and the cards of the user
+                Column(
+                    modifier = Modifier
+                        .weight(NewsWeight)
+                        .fillMaxHeight()
+                        .guideNode(
+                            key = GuideKeys.Main.Step.CardTip,
+                            holeRadius = 0.dp
+                        )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(20.dp),
+                            painter = painterResource(R.drawable.ic_dashboard_outlined),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            modifier = Modifier.weight(1f),
+                            text = stringResource(R.string.tokito_main_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        //the player chooses what is shown here and in which order
+                        IconButton(
+                            modifier = Modifier.size(32.dp),
+                            onClick = { showCustomize = true }
+                        ) {
+                            Icon(
+                                modifier = Modifier.size(18.dp),
+                                painter = painterResource(R.drawable.ic_edit_outlined),
+                                contentDescription = stringResource(R.string.tokito_main_customize),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
-                ) {
-                    ContentMenu(
-                        modifier = Modifier.weight(1f),
-                        isVisible = isVisible,
-                        onLaunchGame = { version ->
-                            onLaunchGame(version)
-                        },
-                        onQuickPlayServer = onQuickPlayServer,
-                        onOpenVersionSettings = navigateToVersions,
-                        onOpenLibrary = { category ->
-                            backStackViewModel.navigateToDownload(
-                                when (category) {
-                                    HomeLibraryCategory.MODS -> backStackViewModel.downloadModScreen
-                                    HomeLibraryCategory.RESOURCE_PACKS -> backStackViewModel.downloadResourcePackScreen
-                                    HomeLibraryCategory.MODPACKS -> backStackViewModel.downloadModPackScreen
-                                    HomeLibraryCategory.SHADERS -> backStackViewModel.downloadShadersScreen
-                                    HomeLibraryCategory.WORLDS -> backStackViewModel.downloadSavesScreen
-                                }
-                            )
-                        },
-                        onOpenLink = onOpenLink
-                    )
+
+                    CompositionLocalProvider(
+                        LocalUriHandler provides object : UriHandler {
+                            override fun openUri(uri: String) {
+                                onOpenLink(uri)
+                            }
+                        }
+                    ) {
+                        ContentMenu(
+                            modifier = Modifier.weight(1f),
+                            isVisible = isVisible,
+                            onLaunchGame = { version ->
+                                onLaunchGame(version)
+                            },
+                            onQuickPlayServer = onQuickPlayServer,
+                            onOpenVersionSettings = navigateToVersions,
+                            onOpenLibrary = { category ->
+                                backStackViewModel.navigateToDownload(
+                                    when (category) {
+                                        HomeLibraryCategory.MODS -> backStackViewModel.downloadModScreen
+                                        HomeLibraryCategory.RESOURCE_PACKS -> backStackViewModel.downloadResourcePackScreen
+                                        HomeLibraryCategory.MODPACKS -> backStackViewModel.downloadModPackScreen
+                                        HomeLibraryCategory.SHADERS -> backStackViewModel.downloadShadersScreen
+                                        HomeLibraryCategory.WORLDS -> backStackViewModel.downloadSavesScreen
+                                    }
+                                )
+                            },
+                            onOpenLink = onOpenLink
+                        )
+                    }
                 }
             }
+
+            //pop-ups with photos and videos, above everything else of the home screen
+            TokitoPopupLayer(
+                isVisible = isVisible,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(10.dp)
+            )
+
+            //"Novidades" after an update and the announcements of the creators
+            TokitoNoticeHost(isVisible = isVisible)
+        }
+
+        if (showCustomize) {
+            TokitoMainCustomizeDialog(onDismiss = { showCustomize = false })
         }
     }
 }

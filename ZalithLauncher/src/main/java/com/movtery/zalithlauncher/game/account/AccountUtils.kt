@@ -75,8 +75,18 @@ fun Account.isMicrosoftAccount(): Boolean {
     return accountType == AccountType.MICROSOFT.tag
 }
 
+/**
+ * Offline kind of account: a classic offline account or a TokiAuth account (Tokito Launcher)
+ */
 fun Account.isLocalAccount(): Boolean {
-    return accountType == AccountType.LOCAL.tag
+    return accountType == AccountType.LOCAL.tag || accountType == AccountType.TOKIAUTH.tag
+}
+
+/**
+ * Tokito Launcher: TokiAuth account, the own account of the launcher
+ */
+fun Account.isTokiAuthAccount(): Boolean {
+    return accountType == AccountType.TOKIAUTH.tag
 }
 
 fun Account?.isNoLoginRequired(): Boolean {
@@ -338,19 +348,20 @@ fun accountErrorText(th: Throwable): AndroidStringText = when (th) {
 
 /**
  * 离线账号登陆
+ * @param type Tokito Launcher: [AccountType.LOCAL] (offline) or [AccountType.TOKIAUTH] (TokiAuth)
  */
-fun localLogin(userName: String, userUUID: String?) {
+fun localLogin(userName: String, userUUID: String?, type: AccountType = AccountType.LOCAL) {
     val account = if (userUUID != null) {
         Account(
             username = userName,
             profileId = userUUID,
-            accountType = AccountType.LOCAL.tag
+            accountType = type.tag
         )
     } else {
         //如果不填，则使用默认生成的 uuid
         Account(
             username = userName,
-            accountType = AccountType.LOCAL.tag
+            accountType = type.tag
         )
     }
     AccountsManager.saveAccount(account)
@@ -440,6 +451,8 @@ fun addOtherServer(
 fun getAccountTypeName(account: Account): String {
     return if (account.isMicrosoftAccount()) {
         stringResource(R.string.account_type_microsoft)
+    } else if (account.isTokiAuthAccount()) {
+        stringResource(R.string.account_type_tokiauth)
     } else if (account.isAuthServerAccount()) {
         account.accountType ?: "Unknown"
     } else {

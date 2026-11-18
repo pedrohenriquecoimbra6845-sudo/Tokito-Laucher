@@ -1,0 +1,15 @@
+{
+  "_como_usar": "Para avisar todos os jogadores: troque id por um numero MAIOR que o ultimo usado (1, 2, 3...), escreva title e message (texto simples ou um objeto com pt e en) e, se quiser, url (https) e, para versao nova, versionCode e versionName. Com id 0 nenhum aviso aparece. Veja o README.",
+  "id": 0,
+  "versionCode": 0,
+  "versionName": "",
+  "title": {
+    "pt": "Nova versao do Tokito Launcher",
+    "en": "New Tokito Launcher version"
+  },
+  "message": {
+    "pt": "Escreva aqui o aviso para os jogadores.",
+    "en": "Write the announcement for the players here."
+  },
+  "url": ""
+}

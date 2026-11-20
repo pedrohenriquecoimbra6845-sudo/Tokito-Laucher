@@ -72,6 +72,9 @@ import com.movtery.zalithlauncher.game.account.AccountsManager
 import com.movtery.zalithlauncher.game.account.accountErrorText
 import com.movtery.zalithlauncher.game.account.auth_server.AuthServerHelper
 import com.movtery.zalithlauncher.game.account.isMicrosoftAccount
+import com.movtery.zalithlauncher.game.account.isTokiAuthAccount
+import com.movtery.zalithlauncher.tokito.TokiAuthPasswords
+import com.movtery.zalithlauncher.ui.components.TokiAuthUnlockDialog
 import com.movtery.zalithlauncher.game.account.microsoftLogin
 import com.movtery.zalithlauncher.game.plugin.ApkPlugin
 import com.movtery.zalithlauncher.game.plugin.natives.NativePluginManager
@@ -154,6 +157,13 @@ sealed interface LaunchGameOperation {
         val version: Version,
         val quickPlay: QuickPlay?
     ): LaunchGameOperation
+
+    /** Tokito Launcher: the TokiAuth account has a password that was not typed yet */
+    data class TokiAuthLocked(
+        val account: Account,
+        val version: Version,
+        val quickPlay: QuickPlay?
+    ) : LaunchGameOperation
 
     /** 尝试启动：启动前检查一些东西 */
     data class TryLaunch(
@@ -280,6 +290,17 @@ fun LaunchGameOperation(
                 }
             )
         }
+        is LaunchGameOperation.TokiAuthLocked -> {
+            TokiAuthUnlockDialog(
+                userName = operation.account.username,
+                onUnlocked = {
+                    launchGameViewModel.updateOperation(LaunchGameOperation.TryLaunch(operation.version, operation.quickPlay))
+                },
+                onCancel = {
+                    launchGameViewModel.updateOperation(LaunchGameOperation.None)
+                }
+            )
+        }
         is LaunchGameOperation.TryLaunch -> {
             LaunchedEffect(Unit) {
                 val version = operation.version ?: run {
@@ -296,8 +317,14 @@ fun LaunchGameOperation(
 
                 val quickPlay = operation.quickPlay
 
-                AccountsManager.currentAccountFlow.value ?: run {
+                val launchAccount = AccountsManager.currentAccountFlow.value ?: run {
                     launchGameViewModel.updateOperation(LaunchGameOperation.NoAccount)
+                    return@LaunchedEffect
+                }
+
+                //Tokito Launcher: a TokiAuth account with a password asks for it before the game opens
+                if (launchAccount.isTokiAuthAccount() && TokiAuthPasswords.needsUnlock(launchAccount.username)) {
+                    launchGameViewModel.updateOperation(LaunchGameOperation.TokiAuthLocked(launchAccount, version, quickPlay))
                     return@LaunchedEffect
                 }
 

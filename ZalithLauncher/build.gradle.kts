@@ -131,7 +131,9 @@ android {
     defaultConfig {
         //Tokito Launcher: own application id, so it installs next to the official apps.
         //The Kotlin/JNI package (namespace) stays unchanged on purpose.
-        applicationId = "com.tokito.laucher"
+        //Tokito Preview (test channel) sets "launcher_application_id" in gradle.properties, so that it installs
+        //next to the stable Tokito Launcher instead of replacing it.
+        applicationId = project.findProperty("launcher_application_id") as? String ?: "com.tokito.laucher"
         minSdk = 26
         targetSdk = 34
         versionCode = launcherVersionCode

@@ -129,8 +129,9 @@ class GameHandler(
 
             loadLanguage(version.getVersionInfo()!!.minecraftVersion)
 
-            //Tokito Launcher: optimization modes change some options (or put them back when the mode is off)
-            OptimizationProfile.applyToGameOptions(activity, version)
+            //Tokito Launcher: the modes do not change the options of the game; this only puts back what the
+            //modes of an older version changed
+            OptimizationProfile.restoreOldOptionChanges(version)
             save()
         }
 

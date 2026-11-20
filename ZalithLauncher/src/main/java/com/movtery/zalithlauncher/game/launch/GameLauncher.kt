@@ -272,6 +272,8 @@ class GameLauncher(
 
     override fun progressFinalUserArgs(args: MutableList<String>, ramAllocation: Int) {
         super.progressFinalUserArgs(args, version.getRamAllocation(activity))
+        //Tokito Launcher: light and fast chunks (Brutal mode) tune the JVM against freezes when a chunk loads
+        OptimizationProfile.applyJvmArgs(args)
         if (Renderers.isCurrentRendererValid()) {
             args.add("-Dorg.lwjgl.opengl.libname=${getGameRendererLibrary(version, configuredRenderer)}")
         }

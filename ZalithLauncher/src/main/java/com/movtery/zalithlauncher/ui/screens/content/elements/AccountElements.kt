@@ -142,6 +142,7 @@ import com.movtery.zalithlauncher.ui.components.ButtonPosition
 import com.movtery.zalithlauncher.ui.components.IconTextButton
 import com.movtery.zalithlauncher.ui.components.ImePanContainer
 import com.movtery.zalithlauncher.ui.components.MarqueeText
+import com.movtery.zalithlauncher.tokito.TokiAuthPasswords
 import com.movtery.zalithlauncher.ui.components.OwnOutlinedTextField
 import com.movtery.zalithlauncher.ui.components.PetModelView
 import com.movtery.zalithlauncher.ui.components.PositionButton
@@ -831,6 +832,13 @@ fun LocalLoginDialog(
 
     var editUUID by rememberSaveable { mutableStateOf(false) }
 
+    //Tokito Launcher: password of a TokiAuth account
+    var tokiPassword by remember { mutableStateOf("") }
+    var tokiPasswordAgain by remember { mutableStateOf("") }
+    val tokiPasswordOk = !tokiAuth || (
+        TokiAuthPasswords.isValidPassword(tokiPassword) && tokiPassword == tokiPasswordAgain
+    )
+
     Dialog(
         onDismissRequest = onDismissRequest,
         properties = DialogProperties(decorFitsSystemWindows = false)
@@ -927,6 +935,46 @@ fun LocalLoginDialog(
                             singleLine = true,
                             shape = MaterialTheme.shapes.large
                         )
+
+                        //Tokito Launcher: password of the TokiAuth account (saved only as a hash)
+                        if (tokiAuth) {
+                            OwnOutlinedTextField(
+                                modifier = Modifier.fillMaxWidth(),
+                                value = tokiPassword,
+                                onValueChange = { tokiPassword = it.take(TokiAuthPasswords.MAX_LENGTH) },
+                                isError = tokiPassword.isNotEmpty() && !TokiAuthPasswords.isValidPassword(tokiPassword),
+                                label = { Text(text = stringResource(R.string.tokiauth_password_label)) },
+                                supportingText = {
+                                    Text(text = stringResource(R.string.tokiauth_password_short))
+                                },
+                                visualTransformation = PasswordVisualTransformation(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                                singleLine = true,
+                                shape = MaterialTheme.shapes.large
+                            )
+                            OwnOutlinedTextField(
+                                modifier = Modifier.fillMaxWidth(),
+                                value = tokiPasswordAgain,
+                                onValueChange = { tokiPasswordAgain = it.take(TokiAuthPasswords.MAX_LENGTH) },
+                                isError = tokiPasswordAgain.isNotEmpty() && tokiPasswordAgain != tokiPassword,
+                                label = { Text(text = stringResource(R.string.tokiauth_password_confirm)) },
+                                supportingText = {
+                                    if (tokiPasswordAgain.isNotEmpty() && tokiPasswordAgain != tokiPassword) {
+                                        Text(text = stringResource(R.string.tokiauth_password_mismatch))
+                                    }
+                                },
+                                visualTransformation = PasswordVisualTransformation(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                                singleLine = true,
+                                shape = MaterialTheme.shapes.large
+                            )
+                            IconTextButton(
+                                onClick = { openLink(TokiAuthPasswords.SITE_URL) },
+                                painter = painterResource(R.drawable.ic_link),
+                                contentDescription = null,
+                                text = stringResource(R.string.tokiauth_open_site)
+                            )
+                        }
 
                         FlowRow(
                             modifier = Modifier.fillMaxWidth(),
@@ -1043,8 +1091,10 @@ fun LocalLoginDialog(
                         }
                         Button(
                             modifier = Modifier.weight(1f),
+                            enabled = tokiPasswordOk,
                             onClick = {
                                 if (userName.isNotEmpty()) {
+                                    if (tokiAuth) TokiAuthPasswords.stage(userName, tokiPassword)
                                     if (userUUID.isNotEmpty()) {
                                         runCatching {
                                             val uuid = accountUUID(userUUID)

@@ -2,12 +2,31 @@
 
 Launcher de **Minecraft: Java Edition para Android** (motor PojavLauncher), com visual próprio em vermelho, rosa e roxo, vários estilos de launcher, **modos de otimização** para ganhar fluidez, **pop-ups com fotos e vídeos** na tela inicial, biblioteca de **skins** e a conta própria **TokiAuth**.
 
-Versão atual: **0.11.4**
+Versão de teste (branch `preview`): **Tokito Preview t0.0.1** — instala ao lado do Tokito Launcher estável (outro ID de aplicativo: `com.tokito.preview`).
+
+Versão estável (branch `main`): **0.11.4**
 
 Criadores: **Claude, pedznb**
 
 > **Versão Modificada Não Oficial** do [Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2).
 > Não é afiliada nem endossada pelos desenvolvedores do Zalith Launcher.
+
+## Tokito Preview t0.0.1 (versão de teste)
+
+Esta branch (`preview`) gera o **Tokito Preview**: um app separado (`com.tokito.preview`), com nome e versão próprios, que **instala ao lado** do Tokito Launcher estável e não mexe nos dados dele. Serve para testar as novidades antes de irem para a `main`. Pode ter bugs.
+
+- **Modos de otimização só no launcher.** Nada é escrito nas opções de dentro do jogo (distância de renderização, shaders, gráficos ficam como você escolheu). Se uma versão antiga do Tokito tinha mudado o `options.txt`, o que foi mudado volta ao normal.
+  - **FPS de 10 em 10:** o limitador de FPS do launcher sobe e desce de 10 em 10. Com o celular quente o limite cai (cerca de 80, depois 70, depois menos); quando ele não segura o FPS pedido, o limite desce para o que ele segura; quando segura por um tempo, tenta 10 a mais (com pausa maior depois de cada queda).
+  - **Benchmark do aparelho** (cerca de 2 s: processador, chip gráfico, memória e taxa da tela) que define o FPS de partida. Funciona em celulares fracos e com tela abaixo de 120 Hz: a lista de taxas vem da própria tela.
+  - **Mesmo Hz e FPS em tempo real:** a cada mudança de limite a tela é posta na taxa que combina com o FPS (60 FPS em tela de 120 Hz usa 60 Hz, 90 usa 90...). O status (limite, Hz da tela e calor) aparece no menu do jogo.
+  - **PVP:** FPS estável pelo controle acima, desempenho sustentado, launcher e boneco menores.
+  - **Survival:** o mesmo controle, mais calmo (teto de 90 FPS), calibra o FPS (guarda o que o celular segurou e começa dali), cache de shaders maior e, com o jogo em segundo plano, cai para 10 FPS.
+  - **Brutal:** tudo isso mais as **chunks leves e rápidas**: a JVM é ajustada (pausas curtas do coletor de lixo e limpeza de classes) para uma chunk que carrega não travar nem derrubar o jogo.
+  - Quantos FPS cada modo ganha depende do celular: não existe número garantido.
+- **Gaveta de puxar para baixo:** uma aba fica parada no canto superior direito da tela inicial. Puxe para baixo (ou toque) e abre a gaveta com as **Principais coisas** (modos, skins, pop-ups, novidades, senha do TokiAuth) e os **pop-ups**. Os vídeos só tocam com a gaveta aberta, um de cada vez.
+- **Skins com categorias:** *Minhas skins* (com filtro pelo nome) e *Pesquisar*: digite o nome de um jogador de Minecraft Java, veja a skin, guarde ou use. A consulta usa o serviço de perfis da Mojang e baixa só a imagem da skin.
+- **TokiAuth com senha:** a senha (mínimo 6 caracteres) é guardada neste aparelho só como hash (PBKDF2-HMAC-SHA256, sal aleatório) e é pedida antes de abrir o jogo (uma vez a cada vez que o launcher abre). Contas TokiAuth antigas podem ganhar senha pela gaveta. Há um botão para abrir o site https://tokitolauncher.base44.app. **A conta ainda não conversa com o site** (veja *Notas*).
+- **Aberturas mais rápidas:** a troca entre telas ficou cerca de 40% mais rápida, a animação de entrada é bem mais curta e o cache de imagens foi aumentado.
 
 ## Novidades da 0.11.4
 
@@ -65,6 +84,7 @@ Arquivos novos da 0.11.4: `tokito/TokitoPopups.kt`, `tokito/TokitoSkins.kt`, `to
 ## Notas
 
 - **JNA em outras marcas de celular:** o launcher agora decide se o processo é 32 ou 64 bits pelo próprio processo (não pelo modelo do aparelho), escolhe a biblioteca nativa do JNA mais próxima da versão que o jogo pede, confere e repara os arquivos antes de abrir o jogo e define `jna.nosys=true` para não usar uma biblioteca do sistema. Não foi possível reproduzir o problema em aparelhos reais, então, se ele continuar numa marca específica, envie o log do launcher e o texto do erro (marca e modelo do celular ajudam).
+- **Site do TokiAuth (Preview):** o site https://tokitolauncher.base44.app não pôde ser lido daqui (a página não carregou para o assistente) e o contrato dele (endereços, cadastro, login) não foi informado. Por isso a senha do TokiAuth vale **neste aparelho** e o site só abre por link. Para a conta conversar de verdade com o site é preciso saber como o site cria e valida contas (por exemplo, a API do app Base44).
 - **Compilação:** o projeto só é compilado no GitHub Actions. Se o *Build CI* acusar erro, o texto do erro mostra o arquivo e a linha para corrigir.
 
 ## Como gerar o APK (sem PC)

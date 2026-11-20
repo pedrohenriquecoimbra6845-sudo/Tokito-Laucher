@@ -37,6 +37,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -66,6 +67,8 @@ import com.movtery.zalithlauncher.game.account.AccountsManager
 import com.movtery.zalithlauncher.game.account.isLocalAccount
 import com.movtery.zalithlauncher.game.account.wardrobe.isSlimModel
 import com.movtery.zalithlauncher.tokito.SkinImportResult
+import com.movtery.zalithlauncher.tokito.SkinSearchResult
+import com.movtery.zalithlauncher.tokito.TokitoSkinSearch
 import com.movtery.zalithlauncher.tokito.TokitoSkins
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -170,6 +173,9 @@ fun TokitoSkinsDialog(onDismiss: () -> Unit) {
     var message by remember { mutableStateOf<String?>(null) }
     //goes up every time a skin is put on the account, to draw the picture of the current skin again
     var appliedCount by remember { mutableStateOf(0) }
+    //0 = my skins (library), 1 = search
+    var category by remember { mutableStateOf(0) }
+    var filter by remember { mutableStateOf("") }
 
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null && !busy) {
@@ -221,34 +227,58 @@ fun TokitoSkinsDialog(onDismiss: () -> Unit) {
                     )
                 }
 
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    IconTextButton(
-                        onClick = { picker.launch(arrayOf("*/*")) },
-                        painter = painterResource(R.drawable.ic_add),
-                        text = stringResource(R.string.tokito_skins_add),
-                        enabled = !busy
+                //categories of the Skins section
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CheckChip(
+                        selected = category == 0,
+                        onClick = { category = 0 },
+                        label = { Text(text = stringResource(R.string.tokito_skins_cat_mine)) }
                     )
-                    IconTextButton(
-                        onClick = {
-                            val target = current ?: return@IconTextButton
-                            busy = true
-                            message = null
-                            scope.launch {
-                                val saved = TokitoSkins.saveCurrent(target)
-                                skins = TokitoSkins.list()
-                                message = context.getString(
-                                    if (saved) R.string.tokito_skins_saved else R.string.tokito_skins_save_failed
-                                )
-                                busy = false
-                            }
-                        },
-                        painter = painterResource(R.drawable.ic_save_filled),
-                        text = stringResource(R.string.tokito_skins_save_current),
-                        enabled = local && !busy
+                    CheckChip(
+                        selected = category == 1,
+                        onClick = { category = 1 },
+                        label = { Text(text = stringResource(R.string.tokito_skins_cat_search)) }
+                    )
+                }
+
+                if (category == 0) {
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        IconTextButton(
+                            onClick = { picker.launch(arrayOf("*/*")) },
+                            painter = painterResource(R.drawable.ic_add),
+                            text = stringResource(R.string.tokito_skins_add),
+                            enabled = !busy
+                        )
+                        IconTextButton(
+                            onClick = {
+                                val target = current ?: return@IconTextButton
+                                busy = true
+                                message = null
+                                scope.launch {
+                                    val saved = TokitoSkins.saveCurrent(target)
+                                    skins = TokitoSkins.list()
+                                    message = context.getString(
+                                        if (saved) R.string.tokito_skins_saved else R.string.tokito_skins_save_failed
+                                    )
+                                    busy = false
+                                }
+                            },
+                            painter = painterResource(R.drawable.ic_save_filled),
+                            text = stringResource(R.string.tokito_skins_save_current),
+                            enabled = local && !busy
+                        )
+                    }
+
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = filter,
+                        onValueChange = { filter = it.take(40) },
+                        singleLine = true,
+                        label = { Text(text = stringResource(R.string.tokito_skins_filter_hint)) }
                     )
                 }
 
@@ -263,7 +293,25 @@ fun TokitoSkinsDialog(onDismiss: () -> Unit) {
                     )
                 }
 
-                if (skins.isEmpty()) {
+                if (category == 1) {
+                    SkinSearchSection(
+                        canUse = local && !busy,
+                        onKeep = { skins = TokitoSkins.list() },
+                        onUse = { file ->
+                            val target = current ?: return@SkinSearchSection
+                            busy = true
+                            message = null
+                            scope.launch {
+                                val applied = TokitoSkins.apply(target, file)
+                                if (applied) appliedCount++
+                                message = context.getString(
+                                    if (applied) R.string.tokito_skins_applied else R.string.tokito_skins_apply_failed
+                                )
+                                busy = false
+                            }
+                        }
+                    )
+                } else if (skins.isEmpty()) {
                     Text(
                         text = stringResource(R.string.tokito_skins_empty),
                         style = MaterialTheme.typography.bodyMedium,
@@ -275,7 +323,7 @@ fun TokitoSkinsDialog(onDismiss: () -> Unit) {
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        skins.forEach { file ->
+                        skins.filter { filter.isBlank() || TokitoSkins.nameOf(it).contains(filter.trim(), ignoreCase = true) }.forEach { file ->
                             SkinTile(
                                 file = file,
                                 canUse = local && !busy,
@@ -304,6 +352,135 @@ fun TokitoSkinsDialog(onDismiss: () -> Unit) {
         },
         onDismiss = onDismiss
     )
+}
+
+/**
+ * Search category: type the name of a Minecraft Java player, see the skin and keep it in the library
+ * or use it on the current account.
+ */
+@Composable
+private fun SkinSearchSection(
+    canUse: Boolean,
+    onKeep: () -> Unit,
+    onUse: (File) -> Unit
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var query by remember { mutableStateOf("") }
+    var searching by remember { mutableStateOf(false) }
+    var found by remember { mutableStateOf<SkinSearchResult.Found?>(null) }
+    var status by remember { mutableStateOf<String?>(null) }
+
+    fun search() {
+        if (searching) return
+        searching = true
+        status = null
+        found = null
+        scope.launch {
+            when (val result = TokitoSkinSearch.search(query)) {
+                is SkinSearchResult.Found -> found = result
+                SkinSearchResult.NotFound -> status = context.getString(R.string.tokito_skins_search_notfound)
+                SkinSearchResult.OldFormat -> status = context.getString(R.string.tokito_skins_search_old)
+                SkinSearchResult.BadName -> status = context.getString(R.string.tokito_skins_search_badname)
+                SkinSearchResult.Failed -> status = context.getString(R.string.tokito_skins_search_error)
+            }
+            searching = false
+        }
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = stringResource(R.string.tokito_skins_search_source),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedTextField(
+                modifier = Modifier.weight(1f),
+                value = query,
+                onValueChange = { query = it.take(16) },
+                singleLine = true,
+                label = { Text(text = stringResource(R.string.tokito_skins_search_hint)) }
+            )
+            TextButton(
+                onClick = { search() },
+                enabled = !searching && query.isNotBlank()
+            ) {
+                Text(text = stringResource(R.string.tokito_skins_search_button))
+            }
+        }
+        if (searching) {
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        }
+        status?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+        found?.let { result ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(MaterialTheme.shapes.large)
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f))
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                SkinFrontPreview(
+                    modifier = Modifier.size(width = 48.dp, height = 96.dp),
+                    file = result.file
+                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.tokito_skins_search_found, result.name),
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        TextButton(
+                            onClick = {
+                                scope.launch {
+                                    val kept = TokitoSkins.addDownloaded(result.file, result.name)
+                                    status = context.getString(
+                                        if (kept != null) R.string.tokito_skins_saved else R.string.tokito_skins_save_failed
+                                    )
+                                    onKeep()
+                                }
+                            }
+                        ) {
+                            Text(text = stringResource(R.string.tokito_skins_keep))
+                        }
+                        TextButton(
+                            onClick = {
+                                scope.launch {
+                                    val kept = TokitoSkins.addDownloaded(result.file, result.name)
+                                    onKeep()
+                                    if (kept != null) {
+                                        onUse(kept)
+                                    } else {
+                                        //the library is full: the skin is still put on the account from the temporary file
+                                        onUse(result.file)
+                                    }
+                                }
+                            },
+                            enabled = canUse
+                        ) {
+                            Text(text = stringResource(R.string.tokito_skins_use))
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable

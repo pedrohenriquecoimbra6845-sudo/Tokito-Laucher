@@ -32,15 +32,24 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
+import com.movtery.zalithlauncher.game.launch.DeviceBenchmark
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.OptimizationMode
+import kotlinx.coroutines.launch
 
 /**
  * Tokito Launcher: one row for each optimization mode (name and what it does). Tap to choose it.
@@ -137,6 +146,81 @@ fun LightChunksRow(
 }
 
 /**
+ * Tokito Launcher: the benchmark of the device. It runs once by itself the first time a mode is chosen, and
+ * can be run again (for example after the phone gets a new system version).
+ */
+@Composable
+fun BenchmarkRow(
+    mode: OptimizationMode,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var running by remember { mutableStateOf(false) }
+    val tier = AllSettings.tokitoBenchmarkTier.state
+    val fps = AllSettings.tokitoBenchmarkFps.state
+    val calibrated = AllSettings.tokitoCalibratedFps.state
+
+    fun measure() {
+        if (running) return
+        running = true
+        scope.launch {
+            try {
+                DeviceBenchmark.run(context.applicationContext)
+            } catch (_: Exception) {
+                //the settings stay as they were
+            } finally {
+                running = false
+            }
+        }
+    }
+
+    LaunchedEffect(mode) {
+        if (mode.isActive && tier < 0) measure()
+    }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.tokito_bench_title),
+                style = MaterialTheme.typography.titleSmall
+            )
+            val tierName = when (tier) {
+                0 -> stringResource(R.string.tokito_bench_tier_0)
+                1 -> stringResource(R.string.tokito_bench_tier_1)
+                else -> stringResource(R.string.tokito_bench_tier_2)
+            }
+            val text = when {
+                running -> stringResource(R.string.tokito_bench_running)
+                tier < 0 -> stringResource(R.string.tokito_bench_idle)
+                else -> stringResource(R.string.tokito_bench_result, tierName, fps) +
+                    if (calibrated > 0) " " + stringResource(R.string.tokito_bench_calibrated, calibrated) else ""
+            }
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        androidx.compose.material3.TextButton(
+            onClick = { measure() },
+            enabled = !running
+        ) {
+            Text(stringResource(if (tier < 0) R.string.tokito_bench_run else R.string.tokito_bench_rerun))
+        }
+    }
+}
+
+/**
  * Tokito Launcher: the modes and the light chunks switch in one window
  * (opened from the chip on the home screen).
  */
@@ -158,6 +242,7 @@ fun OptimizationDialog(onDismiss: () -> Unit) {
                 )
                 HorizontalDivider()
                 LightChunksRow(mode = mode)
+                BenchmarkRow(mode = mode)
             }
         },
         onDismiss = onDismiss

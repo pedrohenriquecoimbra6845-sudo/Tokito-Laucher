@@ -206,6 +206,17 @@ object TokitoSkins {
         }
     }
 
+    /**
+     * Adds a skin file that was downloaded (the search of skins). The file is copied into the library.
+     * @return the file in the library, or null when it is not a valid 64x64 skin or the library is full
+     */
+    suspend fun addDownloaded(file: File, name: String): File? = withContext(Dispatchers.IO) {
+        if (list().size >= MAX_SKINS) return@withContext null
+        if (validateSkinFile(file) != SkinType.DualLayer) return@withContext null
+        dir.mkdirs()
+        file.copyTo(uniqueFile(sanitize(name)), overwrite = false)
+    }
+
     private const val ADDED = 1
     private const val OLD_FORMAT = 2
     private const val INVALID = 3

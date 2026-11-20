@@ -56,8 +56,12 @@ data class TokitoNotice(
  * and only while the repository is public.
  */
 object TokitoNotices {
-    const val NOTICE_URL =
-        "https://raw.githubusercontent.com/pedrohenriquecoimbra6845-sudo/Tokito-Laucher/main/tokito-update.json"
+    /** Tokito Preview (version name "t0.0.1") reads the file of its own branch, so it never gets the notices of the stable version */
+    private val isPreview: Boolean = com.movtery.zalithlauncher.BuildConfig.VERSION_NAME.startsWith("t")
+
+    val NOTICE_URL: String =
+        "https://raw.githubusercontent.com/pedrohenriquecoimbra6845-sudo/Tokito-Laucher/" +
+            (if (isPreview) "preview" else "main") + "/tokito-update.json"
 
     private const val CHECK_INTERVAL_MS = 6L * 60L * 60L * 1000L
     private const val MAX_CHARS = 64 * 1024

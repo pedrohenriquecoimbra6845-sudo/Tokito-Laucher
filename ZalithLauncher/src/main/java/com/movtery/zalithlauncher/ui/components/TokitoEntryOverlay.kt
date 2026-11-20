@@ -120,26 +120,26 @@ fun TokitoEntryOverlay(
     var leaving by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        launch { logo.animateTo(1f, tween(durationMillis = 550, easing = FastOutSlowInEasing)) }
+        launch { logo.animateTo(1f, tween(durationMillis = 350, easing = FastOutSlowInEasing)) }
+        delay(120)
+        launch { name.animateTo(1f, tween(durationMillis = 250, easing = FastOutSlowInEasing)) }
         delay(250)
-        launch { name.animateTo(1f, tween(durationMillis = 400, easing = FastOutSlowInEasing)) }
-        delay(450)
         ready = true
     }
 
     LaunchedEffect(ready) {
         if (!ready) return@LaunchedEffect
-        content.animateTo(1f, tween(durationMillis = 300))
+        content.animateTo(1f, tween(durationMillis = 180))
         //signed in already: say hello and open the launcher by itself
         if (AccountsManager.currentAccountFlow.value != null) {
-            delay(700)
+            delay(350)
             leaving = true
         }
     }
 
     LaunchedEffect(leaving) {
         if (!leaving) return@LaunchedEffect
-        fade.animateTo(0f, tween(durationMillis = 300))
+        fade.animateTo(0f, tween(durationMillis = 180))
         visible = false
         TokitoEntry.finished.value = true
     }
@@ -214,7 +214,7 @@ fun TokitoEntryOverlay(
                         maxLines = 1
                     )
                     Text(
-                        text = "v" + BuildConfig.VERSION_NAME.substringBefore("-"),
+                        text = BuildConfig.VERSION_NAME.substringBefore("-").let { if (it.firstOrNull()?.isDigit() == true) "v$it" else it },
                         style = MaterialTheme.typography.labelLarge,
                         color = primary,
                         maxLines = 1

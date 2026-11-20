@@ -28,6 +28,7 @@
 #include <environ/environ.h>
 #include <android/dlext.h>
 #include <time.h>
+#include <errno.h>
 #include "utils.h"
 #include "ctxbridges/bridge_tbl.h"
 #include "ctxbridges/osm_bridge.h"
@@ -263,6 +264,46 @@ EXTERNAL_API void pojavSetWindowHint(int hint, int value) {
     }
 }
 
+/*
+ * Tokito Launcher: frame limiter of the launcher (the optimization modes use it instead of changing the
+ * options of the game). The limit is set from Java (ZLBridge.setFpsLimit) and can change at any moment.
+ * 0 means no limit. A frame that is late by more than 3 frames (for example while a chunk loads) does not
+ * make the next ones run faster to catch up.
+ */
+static volatile int g_fpsLimit = 0;
+static long long g_nextFrameNs = 0;
+
+static long long tokito_now_ns(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (long long) ts.tv_sec * 1000000000LL + ts.tv_nsec;
+}
+
+static void tokito_pace_frame(void) {
+    int limit = g_fpsLimit;
+    if (limit <= 0) {
+        g_nextFrameNs = 0;
+        return;
+    }
+    long long interval = 1000000000LL / limit;
+    long long now = tokito_now_ns();
+    if (g_nextFrameNs == 0 || now - g_nextFrameNs > interval * 3 || g_nextFrameNs - now > interval * 4) {
+        g_nextFrameNs = now;
+    }
+    g_nextFrameNs += interval;
+    if (g_nextFrameNs > now) {
+        struct timespec ts;
+        ts.tv_sec = (time_t) (g_nextFrameNs / 1000000000LL);
+        ts.tv_nsec = (long) (g_nextFrameNs % 1000000000LL);
+        while (clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, NULL) == EINTR) {
+        }
+    }
+}
+
+JNIEXPORT void JNICALL Java_com_movtery_zalithlauncher_bridge_ZLBridge_setFpsLimit(JNIEnv* env, ABI_COMPAT jclass clazz, jint limit) {
+    g_fpsLimit = limit < 0 ? 0 : limit;
+}
+
 EXTERNAL_API void pojavSwapBuffers() {
     calculateFPS();
 
@@ -277,6 +318,7 @@ EXTERNAL_API void pojavSwapBuffers() {
         virglSwapBuffers();
     }
 
+    tokito_pace_frame();
 }
 
 EXTERNAL_API void pojavMakeCurrent(void* window) {

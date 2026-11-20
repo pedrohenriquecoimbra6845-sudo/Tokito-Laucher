@@ -408,6 +408,21 @@ object AllSettings : SettingsRegistry() {
     val tokitoLightChunks = boolSetting("tokitoLightChunks", false)
 
     /**
+     * Tokito Launcher: highest FPS that the benchmark of the device found it can hold (0 = benchmark not run yet)
+     */
+    val tokitoBenchmarkFps = intSetting("tokitoBenchmarkFps", 0)
+
+    /**
+     * Tokito Launcher: tier found by the benchmark (-1 = not run, 0 = weak, 1 = medium, 2 = strong)
+     */
+    val tokitoBenchmarkTier = intSetting("tokitoBenchmarkTier", -1)
+
+    /**
+     * Tokito Launcher: FPS that the device really held in the last games (learned while playing; 0 = unknown)
+     */
+    val tokitoCalibratedFps = intSetting("tokitoCalibratedFps", 0)
+
+    /**
      * Tokito Launcher: items of the "Principais coisas" panel on the home screen, in order.
      * An id with a "!" in front is hidden. Empty means the default panel.
      */

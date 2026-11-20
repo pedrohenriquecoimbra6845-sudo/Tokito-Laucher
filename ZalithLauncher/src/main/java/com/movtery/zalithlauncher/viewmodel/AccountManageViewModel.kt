@@ -736,6 +736,8 @@ class AccountManageViewModel @AssistedInject constructor(
             userUUID,
             if (tokiAuth) AccountType.TOKIAUTH else AccountType.LOCAL
         )
+        //Tokito Launcher: the password that was typed for a TokiAuth account
+        if (tokiAuth) com.movtery.zalithlauncher.tokito.TokiAuthPasswords.commitStaged(userName)
         onIntent(AccountManageIntent.UpdateLocalLoginOp(LocalLoginOperation.None))
     }
 

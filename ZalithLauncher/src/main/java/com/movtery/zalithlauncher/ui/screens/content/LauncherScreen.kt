@@ -98,7 +98,7 @@ import com.movtery.zalithlauncher.ui.components.ScreenType
 import com.movtery.zalithlauncher.ui.components.ScreenTypeLayout
 import com.movtery.zalithlauncher.ui.components.TokitoEntry
 import com.movtery.zalithlauncher.ui.components.TokitoNoticeHost
-import com.movtery.zalithlauncher.ui.components.TokitoPopupLayer
+import com.movtery.zalithlauncher.ui.components.TokitoPullDown
 import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.rememberAnimatedContext
 import com.movtery.zalithlauncher.ui.guide.GuideKeys
@@ -262,13 +262,8 @@ fun LauncherScreen(
                 }
             }
 
-            //pop-ups with photos and videos, above everything else of the home screen
-            TokitoPopupLayer(
-                isVisible = isVisible,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(10.dp)
-            )
+            //pull-down drawer: a tab parked in the corner; drag it down for the Main things and the pop-ups
+            TokitoPullDown(isVisible = isVisible)
 
             //"Novidades" after an update and the announcements of the creators
             TokitoNoticeHost(isVisible = isVisible)

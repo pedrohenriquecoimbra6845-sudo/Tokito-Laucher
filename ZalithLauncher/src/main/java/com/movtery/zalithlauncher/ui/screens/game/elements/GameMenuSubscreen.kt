@@ -56,6 +56,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
+import com.movtery.zalithlauncher.game.launch.FpsGovernorState
 import com.movtery.zalithlauncher.game.sdl.SdlBridge
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.FpsDisplayMode
@@ -305,6 +306,33 @@ private fun GameActionContent(
                 contentColor = contentColor,
                 enabled = AllSettings.showMenuBall.state
             )
+        }
+        //Tokito Launcher: what the FPS governor of the optimization mode is doing (same Hz and FPS, live)
+        item {
+            val optMode = AllSettings.launcherOptimizationMode.state
+            if (optMode.isActive) {
+                val heatName = stringResource(
+                    when (FpsGovernorState.heat) {
+                        0 -> R.string.tokito_heat_0
+                        1 -> R.string.tokito_heat_1
+                        2 -> R.string.tokito_heat_2
+                        3 -> R.string.tokito_heat_3
+                        else -> R.string.tokito_heat_4
+                    }
+                )
+                Text(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp),
+                    text = stringResource(
+                        R.string.tokito_game_status,
+                        stringResource(optMode.labelRes),
+                        FpsGovernorState.targetFps,
+                        FpsGovernorState.displayHz,
+                        heatName
+                    ),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = contentColor
+                )
+            }
         }
         //帧率显示
         item {

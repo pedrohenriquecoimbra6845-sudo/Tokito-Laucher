@@ -102,6 +102,8 @@ import com.movtery.zalithlauncher.game.account.Account
 import com.movtery.zalithlauncher.game.input.AWTCharSender
 import com.movtery.zalithlauncher.game.input.CharacterSenderStrategy
 import com.movtery.zalithlauncher.game.input.LWJGLCharSender
+import com.movtery.zalithlauncher.game.launch.DisplayRates
+import com.movtery.zalithlauncher.game.launch.FpsGovernor
 import com.movtery.zalithlauncher.game.launch.GameLauncher
 import com.movtery.zalithlauncher.game.launch.GameService
 import com.movtery.zalithlauncher.game.launch.JvmLaunchInfo
@@ -149,6 +151,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.roundToInt
 import org.libsdl.app.SDLActivity
 import org.libsdl.app.SDLSurface
 import org.lwjgl.glfw.CallbackBridge
@@ -480,6 +483,8 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
         //设置画面渲染输出回调
         CallbackBridge.setGraphicOutputListener {
             withHandler { onGraphicOutput() }
+            //Tokito Launcher: the game drew its first frame, the FPS governor of the optimization mode can start
+            runOnUiThread { startFpsGovernor() }
         }
 
         window?.apply {
@@ -615,6 +620,7 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
 
     override fun onResume() {
         super.onResume()
+        fpsGovernor?.setBackground(false)
         withHandler { onResume() }
         CallbackBridge.nativeSetWindowAttrib(LwjglGlfwKeycode.GLFW_FOCUSED, 1)
         CallbackBridge.nativeSetWindowAttrib(LwjglGlfwKeycode.GLFW_HOVERED, 1)
@@ -622,6 +628,7 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
 
     override fun onPause() {
         super.onPause()
+        fpsGovernor?.setBackground(true)
         withHandler { onPause() }
         CallbackBridge.resetInputState()
         CallbackBridge.nativeSetWindowAttrib(LwjglGlfwKeycode.GLFW_FOCUSED, 0)
@@ -720,6 +727,8 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
     }
 
     override fun onDestroy() {
+        fpsGovernor?.stop()
+        fpsGovernor = null
         getSystemService(DisplayManager::class.java)?.unregisterDisplayListener(displayListener)
         stopAllService()
         withHandler { onDestroy() }
@@ -841,8 +850,16 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
      */
     fun applyMaxRefreshRatePolicy() {
         val display = currentDisplay() ?: return
-        //Tokito Launcher: the PVP and Brutal modes always ask for the highest refresh rate of the screen
-        if (!AllSettings.requestMaxRefreshRate.getValue() && !OptimizationProfile.wantsMaxRefreshRate()) {
+        //Tokito Launcher: with an optimization mode the screen follows the FPS limit of the governor
+        val governorTarget = governorFps
+        if (governorTarget > 0 && OptimizationProfile.currentMode().limitsFps) {
+            val fit = DisplayRates.bestModeFor(display, governorTarget)
+            requestedRefreshRate = fit.refreshRate
+            setPreferredDisplayModeId(fit.modeId)
+            voteDisplayRefreshRate(governorTarget.toFloat())
+            return
+        }
+        if (!AllSettings.requestMaxRefreshRate.getValue() && !OptimizationProfile.currentMode().limitsFps) {
             requestedRefreshRate = 0f
             setPreferredDisplayModeId(0)
             clearSurfaceFrameRate()
@@ -874,13 +891,44 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
     /** surface 级投票：请求系统将屏幕切换到设备支持的最高刷新率，避免游戏帧率被系统限制在自选的较低刷新档位 */
     private fun voteMaxDisplayRefreshRate() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
-        val surface = gameSurface ?: return
         val display = currentDisplay() ?: return
-        surface.setFrameRate(
-            maxRefreshRateMode(display).refreshRate,
-            Surface.FRAME_RATE_COMPATIBILITY_DEFAULT,
-            Surface.CHANGE_FRAME_RATE_ALWAYS
+        voteDisplayRefreshRate(maxRefreshRateMode(display).refreshRate)
+    }
+
+    /** Tokito Launcher: tells the system which frame rate the game surface draws, so the screen can match it */
+    private fun voteDisplayRefreshRate(rate: Float) {
+        val surface = gameSurface ?: return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            surface.setFrameRate(
+                rate,
+                Surface.FRAME_RATE_COMPATIBILITY_DEFAULT,
+                Surface.CHANGE_FRAME_RATE_ALWAYS
+            )
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            surface.setFrameRate(rate, Surface.FRAME_RATE_COMPATIBILITY_DEFAULT)
+        }
+    }
+
+    /** Tokito Launcher: FPS governor of the optimization mode (null while the mode is off or before the first frame) */
+    private var fpsGovernor: FpsGovernor? = null
+
+    /** FPS limit that the governor asked for (the screen refresh rate follows it); 0 = none yet */
+    private var governorFps = 0
+
+    private fun startFpsGovernor() {
+        if (fpsGovernor != null) return
+        val governor = FpsGovernor(
+            context = this,
+            scope = lifecycleScope,
+            maxDisplayHz = { currentDisplay()?.let { DisplayRates.maxHz(it) } ?: 60 },
+            currentDisplayHz = { currentDisplay()?.mode?.refreshRate?.roundToInt() ?: 0 },
+            applyRefresh = { fps ->
+                governorFps = fps
+                applyMaxRefreshRatePolicy()
+            }
         )
+        fpsGovernor = governor
+        governor.start()
     }
 
     /** modeId 传 0 表示清除窗口的显示模式偏好 */

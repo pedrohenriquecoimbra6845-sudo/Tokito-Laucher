@@ -125,7 +125,7 @@ class ZLApplication : Application(), SingletonImageLoader.Factory {
             .memoryCachePolicy(CachePolicy.ENABLED)
             .memoryCache {
                 MemoryCache.Builder()
-                    .maxSizeBytes(20L * 1024 * 1024) // 20MB
+                    .maxSizeBytes(48L * 1024 * 1024) // Tokito: 48MB (was 20MB), screens with many icons open faster
                     .weakReferencesEnabled(true) //弱引用
                     .build()
             }

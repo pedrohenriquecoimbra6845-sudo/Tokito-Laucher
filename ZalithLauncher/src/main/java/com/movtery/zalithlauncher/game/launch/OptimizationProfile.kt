@@ -74,7 +74,7 @@ object OptimizationProfile {
      * and `IgnoreUnrecognizedVMOptions` makes the JVM skip an option that it does not know (the JVMs of the
      * launcher are not all the same).
      *
-     * - **Fast boot** (every mode but Off): the bytecode of the game is not verified again at every start
+     * - **Fast boot** (its own switch, on by default): the bytecode of the game is not verified again at every start
      *   (it is the same jar that already ran), which makes the game open sooner.
      * - **Light and fast chunks:** the G1 garbage collector tuned for short pauses. A chunk that loads makes a lot
      *   of short lived objects; with these settings the collector cleans them in small bites, so the game does not
@@ -83,14 +83,15 @@ object OptimizationProfile {
     fun applyJvmArgs(args: MutableList<String>) {
         val mode = currentMode()
         val light = lightChunks(mode)
-        if (!mode.isActive && !light) return
+        val fastBoot = AllSettings.tokitoFastBoot.getValue()
+        if (!mode.isActive && !light && !fastBoot) return
         fun has(prefix: String) = args.any { it.startsWith(prefix) }
 
         if (!has("-XX:+IgnoreUnrecognizedVMOptions") && !has("-XX:-IgnoreUnrecognizedVMOptions")) {
             args.add("-XX:+IgnoreUnrecognizedVMOptions")
         }
 
-        if (mode.isActive && !has("-XX:-BytecodeVerificationRemote") && !has("-XX:+BytecodeVerificationRemote")) {
+        if (fastBoot && !has("-XX:-BytecodeVerificationRemote") && !has("-XX:+BytecodeVerificationRemote")) {
             args.add("-XX:-BytecodeVerificationRemote")
         }
 

@@ -439,6 +439,12 @@ object AllSettings : SettingsRegistry() {
     val tokitoSyncHz = boolSetting("tokitoSyncHz", false)
 
     /**
+     * Tokito Launcher: fast boot. The check of the game files is skipped when the same version was checked in the
+     * last days, and the JVM does not verify the bytecode of the game again. The goal is to open in 35 seconds.
+     */
+    val tokitoFastBoot = boolSetting("tokitoFastBoot", true)
+
+    /**
      * Tokito Launcher: items of the "Principais coisas" panel on the home screen, in order.
      * An id with a "!" in front is hidden. Empty means the default panel.
      */

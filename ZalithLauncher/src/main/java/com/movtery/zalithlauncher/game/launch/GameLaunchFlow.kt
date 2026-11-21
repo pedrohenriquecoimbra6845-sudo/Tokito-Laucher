@@ -19,6 +19,8 @@
 package com.movtery.zalithlauncher.game.launch
 
 import android.content.Context
+import com.movtery.zalithlauncher.tokito.TokitoBoot
+import com.movtery.zalithlauncher.tokito.TokitoFastBoot
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.coroutine.Task
 import com.movtery.zalithlauncher.coroutine.TaskFlowExecutor
@@ -99,6 +101,8 @@ class GameLaunchFlow(scope: CoroutineScope) {
         }
 
         val account = AccountsManager.currentAccountFlow.value ?: return
+        //Tokito Launcher: the time to open the game is counted from here
+        TokitoBoot.markPress()
         var errorReported = false
         val handleError: (ErrorViewModel.ThrowableMessage) -> Unit = { message ->
             if (!errorReported) {
@@ -213,7 +217,9 @@ class GameLaunchFlow(scope: CoroutineScope) {
                 }
             }
 
-            if (!version.skipGameIntegrityCheck()) {
+            //Tokito Launcher: fast boot skips the check of the files when this version was checked in the last days
+            val checkFiles = !version.skipGameIntegrityCheck() && !TokitoFastBoot.canSkipVerify(version)
+            if (checkFiles) {
                 //校验并修复游戏文件
                 addTask(
                     icon = R.drawable.ic_assignment_filled,
@@ -239,6 +245,8 @@ class GameLaunchFlow(scope: CoroutineScope) {
                             .build()
                     )
                 }
+                //the files were checked now and are fine: the next launches can skip the check for some days
+                if (checkFiles) TokitoFastBoot.markVerified(version)
                 runGame(context, version, account)
                 exitActivity()
             }

@@ -104,6 +104,7 @@ import com.movtery.zalithlauncher.ui.control.input.TextInputMode
 import com.movtery.zalithlauncher.ui.control.mouse.SwitchableMouseLayout
 import com.movtery.zalithlauncher.ui.screens.game.elements.DraggableGameBall
 import com.movtery.zalithlauncher.ui.screens.game.elements.TokitoGameSheet
+import com.movtery.zalithlauncher.ui.screens.game.elements.TokitoLoadingOverlay
 import com.movtery.zalithlauncher.ui.screens.game.elements.ForceCloseOperation
 import com.movtery.zalithlauncher.ui.screens.game.elements.GameMenuSubscreen
 import com.movtery.zalithlauncher.ui.screens.game.elements.GamepadModePromptDialog
@@ -752,6 +753,9 @@ fun GameScreen(
             visible = showGameInfo,
             onClose = onInfoBoxClose
         )
+
+        //Tokito Launcher: the loading screen covers the loading bar of Minecraft until the game is ready
+        TokitoLoadingOverlay()
 
         LogBox(
             enableLog = !viewModel.isEditingLayout && logState.value,

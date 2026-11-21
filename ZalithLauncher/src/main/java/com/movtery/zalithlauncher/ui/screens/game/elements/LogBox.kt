@@ -52,7 +52,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
-import com.movtery.zalithlauncher.bridge.LoggerBridge
+import com.movtery.zalithlauncher.tokito.TokitoLogHub
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.screens.game.elements.log_parser.LogHighlighter
 import kotlinx.coroutines.CancellationException
@@ -77,6 +77,9 @@ private const val MAX_LOG_LINES = 2048
  * 单条游戏日志
  */
 private data class LogLine(val id: Long, val text: AnnotatedString)
+
+/** Tokito Launcher: key of the log window in [TokitoLogHub] */
+private const val LOG_BOX_HUB_KEY = "log-box"
 
 @Composable
 fun LogBox(
@@ -106,7 +109,7 @@ fun LogBox(
         if (enableLog) {
             scrollChannel.value = Channel(capacity = 100)
 
-            LoggerBridge.setListener { log ->
+            TokitoLogHub.set(LOG_BOX_HUB_KEY) { log ->
                 synchronized(buffer) {
                     buffer.add(log)
                 }
@@ -162,7 +165,7 @@ fun LogBox(
             }
         } else {
             scrollChannel.value = null
-            LoggerBridge.setListener(null)
+            TokitoLogHub.remove(LOG_BOX_HUB_KEY)
             logList.clear()
             buffer.clear()
         }

@@ -321,6 +321,15 @@ fun TokitoStyleSettings(
             }
         }
 
+        //fast boot: the game opens sooner (goal: 35 seconds)
+        SwitchSettingsCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Middle,
+            unit = AllSettings.tokitoFastBoot,
+            title = stringResource(R.string.tokito_fastboot_title),
+            summary = stringResource(R.string.tokito_fastboot_summary)
+        )
+
         //game controls in the style of the launcher
         SwitchSettingsCard(
             modifier = Modifier.fillMaxWidth(),

@@ -96,6 +96,8 @@ import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.bridge.CURSOR_DISABLED
 import com.movtery.zalithlauncher.bridge.FliteTts
 import com.movtery.zalithlauncher.bridge.LoggerBridge
+import com.movtery.zalithlauncher.tokito.TokitoBoot
+import com.movtery.zalithlauncher.tokito.TokitoLogHub
 import com.movtery.zalithlauncher.bridge.ZLBridge
 import com.movtery.zalithlauncher.bridge.ZLBridgeStates
 import com.movtery.zalithlauncher.coroutine.DataBridge
@@ -504,6 +506,12 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
         logFile.parentFile?.mkdirs() // 换过一次日志文件路径，此处创建父目录是必要的
         if (!logFile.exists() && !logFile.createNewFile()) throw IOException("Failed to create a new log file")
         LoggerBridge.start(logFile.absolutePath)
+
+        //Tokito Launcher: the lines of the game go to the log window and to the loading screen
+        TokitoLogHub.install()
+        if (intent.getBooleanExtra(INTENT_RUN_GAME, false)) {
+            TokitoBoot.begin(intent.getLongExtra(TokitoBoot.INTENT_PRESS_MS, 0L))
+        }
 
         //错误信息展示
         lifecycleScope.launch {
@@ -1209,6 +1217,8 @@ fun runGame(
     val intent = Intent(context, VMActivity::class.java).apply {
         putExtra(INTENT_RUN_GAME, true)
         putExtra(INTENT_GAME_CONFIG, LaunchConfig(version, account))
+        //Tokito Launcher: when the player tapped PLAY (the loading screen counts the time from it)
+        putExtra(TokitoBoot.INTENT_PRESS_MS, TokitoBoot.pressMs)
     }
     context.startActivity(intent)
 }

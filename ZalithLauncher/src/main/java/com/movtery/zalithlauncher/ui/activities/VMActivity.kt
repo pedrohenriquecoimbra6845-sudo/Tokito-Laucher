@@ -87,6 +87,7 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.jakewharton.processphoenix.ProcessPhoenix
@@ -148,6 +149,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -850,9 +852,10 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
      */
     fun applyMaxRefreshRatePolicy() {
         val display = currentDisplay() ?: return
-        //Tokito Launcher: with an optimization mode the screen follows the FPS limit of the governor
+        //Tokito Launcher: with an optimization mode, and only when the player turned on "same Hz as the FPS"
+        //in the game menu, the screen follows the FPS limit of the governor
         val governorTarget = governorFps
-        if (governorTarget > 0 && OptimizationProfile.currentMode().limitsFps) {
+        if (governorTarget > 0 && OptimizationProfile.currentMode().limitsFps && AllSettings.tokitoSyncHz.getValue()) {
             val fit = DisplayRates.bestModeFor(display, governorTarget)
             requestedRefreshRate = fit.refreshRate
             setPreferredDisplayModeId(fit.modeId)
@@ -925,10 +928,30 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
             applyRefresh = { fps ->
                 governorFps = fps
                 applyMaxRefreshRatePolicy()
+            },
+            onDanger = {
+                runOnUiThread {
+                    Toast.makeText(this, R.string.tokito_danger_toast, Toast.LENGTH_LONG).show()
+                }
             }
         )
         fpsGovernor = governor
         governor.start()
+
+        //the mode and the "same Hz as the FPS" option can be changed from the game menu while the game runs
+        lifecycleScope.launch {
+            snapshotFlow { AllSettings.launcherOptimizationMode.state }
+                .drop(1)
+                .collect {
+                    fpsGovernor?.restart()
+                    applyMaxRefreshRatePolicy()
+                }
+        }
+        lifecycleScope.launch {
+            snapshotFlow { AllSettings.tokitoSyncHz.state }
+                .drop(1)
+                .collect { applyMaxRefreshRatePolicy() }
+        }
     }
 
     /** modeId 传 0 表示清除窗口的显示模式偏好 */

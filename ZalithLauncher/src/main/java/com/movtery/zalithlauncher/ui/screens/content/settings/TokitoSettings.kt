@@ -74,7 +74,7 @@ import com.movtery.zalithlauncher.tokito.PackImportResult
 import com.movtery.zalithlauncher.tokito.TokitoPack
 import com.movtery.zalithlauncher.ui.components.IconTextButton
 import com.movtery.zalithlauncher.ui.components.LightChunksRow
-import com.movtery.zalithlauncher.ui.components.OptimizationModeList
+import com.movtery.zalithlauncher.ui.components.OptimizationPanel
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.ui.components.TitleAndSummary
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.CardPosition
@@ -307,7 +307,6 @@ fun TokitoStyleSettings(
             modifier = Modifier.fillMaxWidth(),
             position = CardPosition.Middle
         ) {
-            val optimization = AllSettings.launcherOptimizationMode.state
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -318,12 +317,7 @@ fun TokitoStyleSettings(
                     title = stringResource(R.string.tokito_opt_title),
                     summary = stringResource(R.string.tokito_opt_summary)
                 )
-                OptimizationModeList(
-                    selected = optimization,
-                    onSelect = { AllSettings.launcherOptimizationMode.save(it) }
-                )
-                HorizontalDivider()
-                LightChunksRow(mode = optimization)
+                OptimizationPanel()
             }
         }
 

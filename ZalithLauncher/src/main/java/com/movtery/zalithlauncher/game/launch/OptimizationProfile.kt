@@ -70,19 +70,48 @@ object OptimizationProfile {
     }
 
     /**
-     * JVM arguments of the light and fast chunks. They are only added when the player did not set
-     * the same thing, and `IgnoreUnrecognizedVMOptions` makes the JVM skip an option that it does not know
-     * (the JVMs of the launcher are not all the same).
+     * JVM arguments of the optimization modes. They are only added when the player did not set the same thing,
+     * and `IgnoreUnrecognizedVMOptions` makes the JVM skip an option that it does not know (the JVMs of the
+     * launcher are not all the same).
+     *
+     * - **Fast boot** (every mode but Off): the bytecode of the game is not verified again at every start
+     *   (it is the same jar that already ran), which makes the game open sooner.
+     * - **Light and fast chunks:** the G1 garbage collector tuned for short pauses. A chunk that loads makes a lot
+     *   of short lived objects; with these settings the collector cleans them in small bites, so the game does not
+     *   freeze (and the FPS does not fall) at the moment a chunk arrives.
      */
     fun applyJvmArgs(args: MutableList<String>) {
-        if (!lightChunks()) return
+        val mode = currentMode()
+        val light = lightChunks(mode)
+        if (!mode.isActive && !light) return
         fun has(prefix: String) = args.any { it.startsWith(prefix) }
 
         if (!has("-XX:+IgnoreUnrecognizedVMOptions") && !has("-XX:-IgnoreUnrecognizedVMOptions")) {
             args.add("-XX:+IgnoreUnrecognizedVMOptions")
         }
-        //shorter garbage collector pauses: a chunk that loads makes a lot of short lived objects
-        if (!has("-XX:MaxGCPauseMillis")) args.add("-XX:MaxGCPauseMillis=40")
+
+        if (mode.isActive && !has("-XX:-BytecodeVerificationRemote") && !has("-XX:+BytecodeVerificationRemote")) {
+            args.add("-XX:-BytecodeVerificationRemote")
+        }
+
+        if (!light) return
+        if (!has("-XX:+UnlockExperimentalVMOptions")) args.add("-XX:+UnlockExperimentalVMOptions")
+        if (!has("-XX:+UseG1GC") && !has("-XX:+UseSerialGC") && !has("-XX:+UseParallelGC") &&
+            !has("-XX:+UseZGC") && !has("-XX:+UseShenandoahGC") && !has("-XX:+UseConcMarkSweepGC")
+        ) {
+            args.add("-XX:+UseG1GC")
+        }
+        //shorter garbage collector pauses
+        if (!has("-XX:MaxGCPauseMillis")) args.add("-XX:MaxGCPauseMillis=30")
+        if (!has("-XX:G1NewSizePercent")) args.add("-XX:G1NewSizePercent=30")
+        if (!has("-XX:G1MaxNewSizePercent")) args.add("-XX:G1MaxNewSizePercent=45")
+        if (!has("-XX:G1ReservePercent")) args.add("-XX:G1ReservePercent=20")
+        if (!has("-XX:G1MixedGCCountTarget")) args.add("-XX:G1MixedGCCountTarget=4")
+        if (!has("-XX:InitiatingHeapOccupancyPercent")) args.add("-XX:InitiatingHeapOccupancyPercent=20")
+        if (!has("-XX:G1MixedGCLiveThresholdPercent")) args.add("-XX:G1MixedGCLiveThresholdPercent=90")
+        if (!has("-XX:G1RSetUpdatingPauseTimePercent")) args.add("-XX:G1RSetUpdatingPauseTimePercent=5")
+        if (!has("-XX:SurvivorRatio")) args.add("-XX:SurvivorRatio=32")
+        if (!has("-XX:MaxTenuringThreshold")) args.add("-XX:MaxTenuringThreshold=1")
         if (!has("-XX:+ParallelRefProcEnabled") && !has("-XX:-ParallelRefProcEnabled")) {
             args.add("-XX:+ParallelRefProcEnabled")
         }

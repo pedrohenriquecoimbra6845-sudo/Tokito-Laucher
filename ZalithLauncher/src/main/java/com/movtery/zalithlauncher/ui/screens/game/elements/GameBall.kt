@@ -18,19 +18,12 @@
 
 package com.movtery.zalithlauncher.ui.screens.game.elements
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.expandIn
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkOut
-import androidx.compose.foundation.layout.Box
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,21 +31,25 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
+import com.movtery.zalithlauncher.game.launch.FpsGovernorState
 import com.movtery.zalithlauncher.setting.enums.FpsDisplayMode
 import com.movtery.zalithlauncher.ui.components.FloatingBall
+import com.movtery.zalithlauncher.ui.components.FpsColoredText
+import com.movtery.zalithlauncher.ui.components.FpsRed
+import com.movtery.zalithlauncher.ui.components.gameFpsColor
 import com.movtery.zalithlauncher.ui.screens.content.elements.MemoryPreview
 
 @Composable
@@ -92,6 +89,11 @@ fun DraggableGameBall(
     }
 }
 
+/**
+ * Tokito Launcher: the menu ball of the game is the flower of the launcher, and the FPS is under it with the
+ * color of its level (10 FPS is red, then orange, yellow, green, cyan, and rainbow from 100 FPS).
+ * The flower turns a quarter when the menu is open. An old phone that is in danger gets a red warning sign.
+ */
 @Composable
 private fun GameBallContent(
     gameFps: () -> Int?,
@@ -106,118 +108,66 @@ private fun GameBallContent(
     val history = fpsHistory()
     val fpsMaxValue = fpsMax()
     val fpsMinValue = fpsMin()
+    val spin by animateFloatAsState(
+        targetValue = if (opened) 90f else 0f,
+        animationSpec = tween(durationMillis = 260),
+        label = "flower-spin"
+    )
 
-    val showFps = remember(fps) {
-        fps != null
-    }
-
-    Row(
-        modifier = Modifier.padding(all = 2.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 6.dp, vertical = 4.dp)
+            .animateContentSize()
+            .width(IntrinsicSize.Max),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val showIcon = !(showMemory || (showFps && fpsDisplayMode == FpsDisplayMode.CHART))
-
-        AnimatedVisibility(
-            visible = showIcon
-        ) {
-            Box(
-                modifier = Modifier.size(28.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Crossfade(opened) { state ->
-                    Icon(
-                        modifier = Modifier.size(24.dp),
-                        painter = painterResource(
-                            if (state) {
-                                R.drawable.ic_menu_open
-                            } else {
-                                R.drawable.ic_menu
-                            }
-                        ),
-                        contentDescription = null
-                    )
-                }
-            }
-        }
-
-        AnimatedVisibility(
-            visible = showFps || showMemory
-        ) {
-            Spacer(Modifier.width(4.dp))
-        }
-
-        //实际内容
-        Column(
+        Image(
             modifier = Modifier
-                .wrapContentSize()
-                .animateContentSize()
-                .width(IntrinsicSize.Max)
-        ) {
-            CustomAnimatedVisibility(
-                visible = showFps || showMemory
-            ) {
-                Spacer(Modifier.height(4.dp))
-            }
-            //帧率显示
-            CustomAnimatedVisibility(
-                visible = showFps
-            ) {
-                if (fpsDisplayMode == FpsDisplayMode.CHART) {
-                    //帧率图表
-                    FpsChart(
-                        modifier = Modifier.padding(end = 4.dp),
-                        history = history,
-                        fpsMax = fpsMaxValue,
-                        fpsMin = fpsMinValue
-                    )
-                } else {
-                    Text(
-                        modifier = Modifier.padding(end = 4.dp),
-                        text = "FPS: ${fps ?: 0}",
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
-            }
-            CustomAnimatedVisibility(
-                visible = showFps && showMemory
-            ) {
-                Spacer(Modifier.height(4.dp))
-            }
-            //内存显示
-            CustomAnimatedVisibility(
-                visible = showMemory
-            ) {
-                MemoryPreview(
-                    modifier = Modifier
-                        .defaultMinSize(minWidth = 168.dp)
-                        .fillMaxWidth()
-                        .padding(end = 4.dp),
-                    mainColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                    backgroundColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                    textStyle = MaterialTheme.typography.labelSmall,
-                    usedText = { usedMemory, totalMemory ->
-                        "${usedMemory.toInt()}MB/${totalMemory.toInt()}MB"
-                    }
+                .size(30.dp)
+                .graphicsLayer { rotationZ = spin },
+            painter = painterResource(R.drawable.tokito_logo),
+            contentDescription = null
+        )
+
+        if (fps != null) {
+            Spacer(Modifier.height(2.dp))
+            if (fpsDisplayMode == FpsDisplayMode.CHART) {
+                FpsChart(
+                    history = history,
+                    fpsMax = fpsMaxValue,
+                    fpsMin = fpsMinValue
+                )
+            } else {
+                FpsColoredText(
+                    text = fps.toString(),
+                    color = gameFpsColor(fps),
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Black),
+                    shadow = true
                 )
             }
-            CustomAnimatedVisibility(
-                visible = showFps || showMemory
-            ) {
-                Spacer(Modifier.height(4.dp))
-            }
+        }
+
+        if (FpsGovernorState.danger) {
+            Text(
+                text = "\u26A0",
+                style = MaterialTheme.typography.labelMedium,
+                color = FpsRed
+            )
+        }
+
+        if (showMemory) {
+            Spacer(Modifier.height(4.dp))
+            MemoryPreview(
+                modifier = Modifier
+                    .defaultMinSize(minWidth = 168.dp)
+                    .fillMaxWidth(),
+                mainColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                backgroundColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                textStyle = MaterialTheme.typography.labelSmall,
+                usedText = { usedMemory, totalMemory ->
+                    "${usedMemory.toInt()}MB/${totalMemory.toInt()}MB"
+                }
+            )
         }
     }
-}
-
-@Composable
-private fun ColumnScope.CustomAnimatedVisibility(
-    visible: Boolean,
-    content: @Composable (AnimatedVisibilityScope.() -> Unit)
-) {
-    AnimatedVisibility(
-        visible = visible,
-        enter = expandIn(expandFrom = Alignment.CenterStart) + fadeIn(),
-        exit = shrinkOut(shrinkTowards = Alignment.CenterStart) + fadeOut(),
-        content = content
-    )
 }

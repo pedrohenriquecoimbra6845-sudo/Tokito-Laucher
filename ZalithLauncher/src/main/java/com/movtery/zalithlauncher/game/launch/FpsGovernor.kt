@@ -28,6 +28,7 @@ import android.os.PowerManager
 import android.os.SystemClock
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.movtery.zalithlauncher.bridge.ZLBridge
 import com.movtery.zalithlauncher.setting.AllSettings
@@ -58,10 +59,14 @@ object FpsGovernorState {
     /** Heat of the phone: 0 = cool ... 4 = critical */
     var heat by mutableIntStateOf(0)
 
+    /** An old phone (2020 or before) that is hot or had to go below 60 FPS: the player is warned */
+    var danger by mutableStateOf(false)
+
     fun reset() {
         targetFps = 0
         currentFps = 0
         heat = 0
+        danger = false
     }
 }
 
@@ -69,12 +74,16 @@ object FpsGovernorState {
  * Tokito Launcher: the FPS governor of the optimization modes. It runs in the game process and does what the
  * old modes did by changing the options of the game, but on the side of the launcher:
  *
- * - The FPS limit is set in the native frame limiter ([ZLBridge.setFpsLimit]) and moves **in steps of 10**.
- * - **Heat:** hot phone, lower limit (about 80, then 70, then less; see [heatCap]).
+ * - The FPS limit is set in the native frame limiter ([ZLBridge.setFpsLimit]) and moves **in steps of 10**
+ *   (5 on Xiaomi, Infinix and RedMagic, see [DeviceProfile]).
+ * - **Floor:** the limit does not go below 60 FPS. Only phones from 2020 or before may go lower, and then
+ *   the player is warned that the phone is in danger ([FpsGovernorState.danger]).
+ * - **Heat:** hot phone, lower limit (about 80, then 70, then 60; see [heatCap]).
  * - **Real FPS:** when the phone cannot hold the limit, the limit goes down to what it holds (steady frames
- *   are better than frames that jump). When it holds it for a while, it tries 10 more. After a drop it waits
- *   (60 s, then more) before it tries again.
- * - **Same Hz as the FPS:** at every change the screen is put at the refresh rate that fits the limit.
+ *   are better than frames that jump). When it holds it for a while, it tries one step more. A limit that
+ *   failed is not tried again for a long time, so the FPS stays locked instead of going up and down.
+ * - **Same Hz as the FPS:** only when the player turns it on (`tokitoSyncHz`): at every change the screen is
+ *   put at the refresh rate that fits the limit.
  * - **Calibration:** the FPS that the phone held is saved (`tokitoCalibratedFps`) and is where the next game starts.
  * - **Background:** in Survival and Brutal, when the game goes to the background the limit goes to 10 FPS.
  *
@@ -89,9 +98,21 @@ class FpsGovernor(
     private val scope: CoroutineScope,
     private val maxDisplayHz: () -> Int,
     private val currentDisplayHz: () -> Int,
-    private val applyRefresh: (fps: Int) -> Unit
+    private val applyRefresh: (fps: Int) -> Unit,
+    private val onDanger: () -> Unit = {}
 ) {
     private var job: Job? = null
+
+    /** The FPS limit moves in steps of this many FPS (10, or 5 on some brands) */
+    private val step = DeviceProfile.fpsStep
+
+    /** Lowest FPS limit on this phone (60, or lower on a phone from 2020 or before) */
+    private val floor = DeviceProfile.floorFps
+
+    /** Lowest limit that failed to hold; it and everything above it is not tried until [failedUntil] */
+    private var failedAt = Int.MAX_VALUE
+    private var failedUntil = 0L
+    private var lastDangerWarning = 0L
     private var mode = OptimizationMode.OFF
     private var ceiling = 60
     private var cap = 0
@@ -106,6 +127,10 @@ class FpsGovernor(
     private val samples = ArrayDeque<Int>()
     private var lastSavedCalibration = 0
 
+    /** "Light and fast chunks" is on: dips of a chunk that loads are even less able to lower the limit */
+    private var lightChunks = false
+    private var startedAt = 0L
+
     fun start() {
         if (job?.isActive == true) return
         mode = OptimizationProfile.currentMode()
@@ -114,13 +139,16 @@ class FpsGovernor(
             FpsGovernorState.reset()
             return
         }
+        failedAt = Int.MAX_VALUE
+        lightChunks = OptimizationProfile.lightChunks(mode)
+        startedAt = SystemClock.elapsedRealtime()
         ceiling = computeCeiling()
         val calibrated = AllSettings.tokitoCalibratedFps.getValue()
         val benchmark = AllSettings.tokitoBenchmarkFps.getValue()
         val start = if (calibrated > 0) calibrated else if (benchmark > 0) benchmark else DEFAULT_START_FPS
         lastSavedCalibration = calibrated
         val heat = readHeat()
-        cap = round10(minOf(start, heatCap(ceiling, heat), ceiling)).coerceAtLeast(MIN_FPS)
+        cap = DeviceProfile.roundToStep(minOf(start, heatCap(ceiling, heat), ceiling)).coerceAtLeast(floor)
         apply(cap)
         Logger.info(TAG, "Mode $mode started: ceiling=$ceiling start=$cap heat=$heat")
 
@@ -130,6 +158,12 @@ class FpsGovernor(
                 runCatching { tick() }.onFailure { Logger.warning(TAG, "Governor tick failed", it) }
             }
         }
+    }
+
+    /** The mode was changed while the game runs (from the game menu): start again with the new one */
+    fun restart() {
+        stop()
+        start()
     }
 
     fun stop() {
@@ -153,12 +187,23 @@ class FpsGovernor(
         }
     }
 
+    /**
+     * Highest FPS the governor may try: what the screen can show (the benchmark only decides where it starts,
+     * the governor finds the real limit by itself, so the phone is never held below what it can do).
+     */
     private fun computeCeiling(): Int {
-        val displayMax = round10(maxDisplayHz())
-        val benchmark = AllSettings.tokitoBenchmarkFps.getValue().takeIf { it > 0 } ?: DEFAULT_START_FPS
-        //the benchmark is an estimate: the governor may try a bit above it
-        val limit = minOf(displayMax, mode.fpsCeilingCap, benchmark + PROBE_ABOVE_BENCHMARK)
-        return round10(limit).coerceAtLeast(MIN_FPS)
+        val limit = minOf(maxDisplayHz(), mode.fpsCeilingCap)
+        return DeviceProfile.roundToStep(limit).coerceAtLeast(floor)
+    }
+
+    /** An old phone that is hot or below 60 FPS: warn the player (at most once in a while) */
+    private fun updateDanger(heat: Int, now: Long) {
+        val danger = DeviceProfile.isOldPhone && (heat >= 3 || (cap in 1 until DANGER_BELOW_FPS))
+        if (danger != FpsGovernorState.danger) FpsGovernorState.danger = danger
+        if (danger && now - lastDangerWarning > DANGER_WARNING_GAP_MS) {
+            lastDangerWarning = now
+            onDanger()
+        }
     }
 
     private fun tick() {
@@ -168,6 +213,7 @@ class FpsGovernor(
         FpsGovernorState.heat = heat
         FpsGovernorState.currentFps = fps
         FpsGovernorState.displayHz = currentDisplayHz()
+        updateDanger(heat, now)
         if (inBackground || fps <= 0) return
 
         //1. heat
@@ -178,27 +224,39 @@ class FpsGovernor(
         }
 
         //2. what the phone really holds
+        val windowSeconds = if (lightChunks) LIGHT_WINDOW_SECONDS else WINDOW_SECONDS
         samples.addLast(fps)
-        while (samples.size > WINDOW_SECONDS) samples.removeFirst()
-        if (samples.size < WINDOW_SECONDS) return
+        while (samples.size > windowSeconds) samples.removeFirst()
+        if (samples.size < windowSeconds) return
         val average = samples.average()
+        //the middle value of the window: a chunk that loads makes the FPS fall for a second or two,
+        //and that dip alone must not lower the limit (the limit only goes down when most of the window is low)
+        val typical = samples.sorted()[samples.size / 2]
+        //the game is still loading (world, resources): the FPS of this time says nothing about the phone
+        val loadingGrace = now - startedAt < GRACE_SECONDS * 1000L
 
         when {
             //loading the world or a menu is not a sign that the phone cannot hold the limit
-            average < LOADING_FPS -> {
+            typical < LOADING_FPS -> {
                 steadySeconds = 0
             }
-            average < cap * 0.85 -> {
+            typical < cap * 0.85 -> {
                 steadySeconds = 0
-                val holdable = round10(average.toInt() + 5).coerceIn(MIN_FPS, cap)
-                val target = if (holdable >= cap) cap - STEP else holdable
-                if (target >= MIN_FPS && target < cap) {
+                if (loadingGrace) return
+                val holdable = DeviceProfile.roundToStep(typical + step / 2).coerceIn(floor, cap)
+                val wanted = if (holdable >= cap) cap - step else holdable
+                //it goes down at most two steps at a time, so the FPS does not fall at once
+                val target = maxOf(wanted, cap - 2 * step).coerceAtLeast(floor)
+                if (target >= floor && target < cap) {
+                    //this limit failed: neither it nor a higher one is tried again for a good while
+                    failedAt = minOf(failedAt, cap)
+                    failedUntil = now + FAILED_BAN_SECONDS * 1000L
                     holdSeconds = if (now - lastLowerAt < 5 * 60_000L) {
                         (holdSeconds * 2).coerceAtMost(HOLD_MAX_SECONDS)
                     } else {
                         HOLD_START_SECONDS
                     }
-                    lowerTo(target, now, "load (${average.toInt()} fps)")
+                    lowerTo(target, now, "load ($typical fps)")
                 }
             }
             average >= cap - 2 -> {
@@ -207,8 +265,10 @@ class FpsGovernor(
                     steadySeconds = 0
                     rememberStable(cap)
                 }
-                if (cap < hardCap && now >= holdUntil) {
-                    cap = minOf(cap + STEP, hardCap)
+                if (now >= failedUntil) failedAt = Int.MAX_VALUE
+                val next = minOf(cap + step, hardCap)
+                if (next > cap && next < failedAt && now >= holdUntil) {
+                    cap = next
                     samples.clear()
                     holdUntil = now + PROBE_PAUSE_SECONDS * 1000L
                     apply(cap)
@@ -220,7 +280,7 @@ class FpsGovernor(
     }
 
     private fun lowerTo(target: Int, now: Long, reason: String) {
-        cap = target.coerceAtLeast(MIN_FPS)
+        cap = target.coerceAtLeast(floor)
         samples.clear()
         steadySeconds = 0
         lastLowerAt = now
@@ -276,34 +336,34 @@ class FpsGovernor(
         return maxOf(heat, byBattery)
     }
 
+    /**
+     * Highest FPS that is fine for a heat level: warm = 80, hot = 70, very hot = 60 (50 on a phone from 2020
+     * or before), critical = the floor of the phone. Always in steps of the phone and never below the floor.
+     */
+    private fun heatCap(ceiling: Int, heat: Int): Int {
+        val raw = when {
+            heat <= 0 -> ceiling
+            heat == 1 -> minOf(ceiling, 80)
+            heat == 2 -> minOf(ceiling, 70)
+            heat == 3 -> minOf(ceiling, if (DeviceProfile.isOldPhone) 50 else 60)
+            else -> floor
+        }
+        return DeviceProfile.roundToStep(raw).coerceAtLeast(floor)
+    }
+
     companion object {
-        private const val STEP = 10
-        private const val MIN_FPS = 30
         private const val DEFAULT_START_FPS = 60
-        private const val PROBE_ABOVE_BENCHMARK = 20
         private const val BACKGROUND_FPS = 10
         private const val LOADING_FPS = 15
         private const val WINDOW_SECONDS = 4
+        private const val LIGHT_WINDOW_SECONDS = 10
+        private const val GRACE_SECONDS = 45
         private const val HOLD_START_SECONDS = 60
-        private const val HOLD_MAX_SECONDS = 300
+        private const val HOLD_MAX_SECONDS = 600
+        private const val FAILED_BAN_SECONDS = 600
         private const val PROBE_PAUSE_SECONDS = 8
         private const val SAVE_AFTER_STEADY_SECONDS = 20
-
-        private fun round10(value: Int): Int = value / 10 * 10
-
-        /**
-         * Highest FPS that is fine for a heat level, in steps of 10: warm = 80, hot = 70 (or 10 below the ceiling
-         * on phones that stay under it), very hot = 50 (or 20 below), critical = 30.
-         */
-        fun heatCap(ceiling: Int, heat: Int): Int {
-            val raw = when {
-                heat <= 0 -> ceiling
-                heat == 1 -> minOf(ceiling, 80)
-                heat == 2 -> minOf(ceiling - 10, 70)
-                heat == 3 -> minOf(ceiling - 20, 50)
-                else -> MIN_FPS
-            }
-            return round10(raw).coerceAtLeast(MIN_FPS)
-        }
+        private const val DANGER_BELOW_FPS = 60
+        private const val DANGER_WARNING_GAP_MS = 3 * 60_000L
     }
 }

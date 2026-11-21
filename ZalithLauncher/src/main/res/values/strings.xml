@@ -3155,9 +3155,9 @@
 
     <!-- Tokito Launcher 0.11.4 begin -->
     <string name="tokito_bench_title">Device benchmark</string>
-    <string name="tokito_bench_idle">Not measured yet. It takes about 2 seconds and gives the FPS that the modes start from.</string>
+    <string name="tokito_bench_idle">Not measured yet. It takes about 10 seconds and gives the FPS that the modes start from.</string>
     <string name="tokito_bench_running">Measuring your device...</string>
-    <string name="tokito_bench_result">Device: %1$s. Starts at %2$d FPS (it goes up or down by 10 while you play).</string>
+    <string name="tokito_bench_result">Device: %1$s. The modes start at %2$d FPS and go up or down by %3$d while you play.</string>
     <string name="tokito_bench_calibrated">It held %1$d FPS in the last games.</string>
     <string name="tokito_bench_run">Measure</string>
     <string name="tokito_bench_rerun">Measure again</string>
@@ -3201,6 +3201,24 @@
     <string name="tokito_light_chunks_title">Light and fast chunks</string>
     <string name="tokito_light_chunks_summary">Tunes the JVM (short garbage collector pauses and cleaning of unused classes) so a chunk that loads does not freeze or crash the game. It changes no option inside the game. Already part of Brutal.</string>
     <string name="tokito_light_chunks_included">Already part of Brutal mode.</string>
+    <string name="tokito_danger_toast">Your phone is in danger: it is too hot or cannot hold 60 FPS. Lower the graphics or take a break.</string>
+    <string name="tokito_sync_hz_title">Same Hz as the FPS</string>
+    <string name="tokito_sync_hz_summary">The screen uses the same Hz as the FPS limit of the mode, which keeps the FPS locked. Off: the screen keeps its normal Hz.</string>
+    <string name="tokito_opt_tab_modes">Modes</string>
+    <string name="tokito_opt_tab_bench">Benchmark</string>
+    <string name="tokito_bench_phase_cpu">Processor</string>
+    <string name="tokito_bench_phase_gpu">Graphics chip</string>
+    <string name="tokito_bench_phase_both">Everything together (heat test)</string>
+    <string name="tokito_bench_ready">Tap Measure to see how many FPS your phone holds.</string>
+    <string name="tokito_bench_detail">Test: %1$d FPS. It fell %2$d%% when everything ran together.</string>
+    <string name="tokito_bench_floor_new">The limit does not go below 60 FPS on your phone.</string>
+    <string name="tokito_bench_floor_old">Phone from 2020 or before: the limit may go below 60 FPS, and you are warned when the phone is in danger.</string>
+    <string name="tokito_bench_scale">Red: under 60 FPS. Yellow: 60 or more. Green: 100 or more. Rainbow: 200 or more.</string>
+    <string name="tokito_sheet_title">Tokito menu</string>
+    <string name="tokito_sheet_modes">Optimization modes</string>
+    <string name="tokito_sheet_actions">Quick actions</string>
+    <string name="tokito_sheet_more">More options</string>
+    <string name="tokito_sheet_more_hint">Pull the handle up to open all the options, or down to close.</string>
     <string name="account_type_tokiauth">TokiAuth · Active</string>
     <string name="account_tokiauth_menu_title">TokiAuth</string>
     <string name="account_tokiauth_create_account">Create a TokiAuth account</string>

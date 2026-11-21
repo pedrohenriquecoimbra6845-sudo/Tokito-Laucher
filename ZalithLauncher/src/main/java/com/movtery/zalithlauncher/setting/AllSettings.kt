@@ -423,6 +423,22 @@ object AllSettings : SettingsRegistry() {
     val tokitoCalibratedFps = intSetting("tokitoCalibratedFps", 0)
 
     /**
+     * Tokito Launcher: FPS of the last benchmark test (0 = not run yet)
+     */
+    val tokitoBenchmarkScore = intSetting("tokitoBenchmarkScore", 0)
+
+    /**
+     * Tokito Launcher: how much the FPS fell in the last benchmark when everything ran together (percent)
+     */
+    val tokitoBenchmarkThrottle = intSetting("tokitoBenchmarkThrottle", 0)
+
+    /**
+     * Tokito Launcher: put the screen at the same Hz as the FPS limit of the optimization mode.
+     * It is an option of the game menu (off by default).
+     */
+    val tokitoSyncHz = boolSetting("tokitoSyncHz", false)
+
+    /**
      * Tokito Launcher: items of the "Principais coisas" panel on the home screen, in order.
      * An id with a "!" in front is hidden. Empty means the default panel.
      */

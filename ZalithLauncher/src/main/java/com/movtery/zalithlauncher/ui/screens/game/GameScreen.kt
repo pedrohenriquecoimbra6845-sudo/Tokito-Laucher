@@ -103,6 +103,7 @@ import com.movtery.zalithlauncher.ui.control.hotbarPercentage
 import com.movtery.zalithlauncher.ui.control.input.TextInputMode
 import com.movtery.zalithlauncher.ui.control.mouse.SwitchableMouseLayout
 import com.movtery.zalithlauncher.ui.screens.game.elements.DraggableGameBall
+import com.movtery.zalithlauncher.ui.screens.game.elements.TokitoGameSheet
 import com.movtery.zalithlauncher.ui.screens.game.elements.ForceCloseOperation
 import com.movtery.zalithlauncher.ui.screens.game.elements.GameMenuSubscreen
 import com.movtery.zalithlauncher.ui.screens.game.elements.GamepadModePromptDialog
@@ -150,6 +151,8 @@ private class GameViewModel(
 ) : ViewModel() {
     /** 游戏菜单操作状态 */
     var gameMenuState by mutableStateOf(MenuState.NONE)
+    /** Tokito Launcher: the full (two sided) menu is open; the menu starts as the sheet at the bottom */
+    var tokitoFullMenu by mutableStateOf(false)
     /** 游戏菜单-控制设置区域Tab选择的索引 */
     var controlMenuTabIndex by mutableIntStateOf(0)
     /** 强制关闭弹窗操作状态 */
@@ -758,12 +761,39 @@ fun GameScreen(
             modifier = Modifier.fillMaxSize()
         )
 
+        //Tokito Launcher: the menu opens as a sheet at the bottom of the screen (drag it); "more options"
+        //(or pulling it up) opens the full menu
+        LaunchedEffect(viewModel.gameMenuState) {
+            if (viewModel.gameMenuState != MenuState.SHOW) viewModel.tokitoFullMenu = false
+        }
+        TokitoGameSheet(
+            visible = viewModel.gameMenuState == MenuState.SHOW && !viewModel.tokitoFullMenu,
+            onClose = { viewModel.gameMenuState = MenuState.HIDE },
+            onMore = { viewModel.tokitoFullMenu = true },
+            onSwitchLog = {
+                onLogStateChange(logState.next())
+                viewModel.gameMenuState = MenuState.HIDE
+            },
+            onInputMethod = {
+                eventViewModel.sendEvent(EventViewModel.Event.Game.SwitchIme(null))
+                viewModel.gameMenuState = MenuState.HIDE
+            },
+            onSendKeycode = {
+                viewModel.sendKeycodeState = SendKeycodeState.ShowDialog
+                viewModel.gameMenuState = MenuState.HIDE
+            },
+            onForceClose = { viewModel.forceCloseState = ForceCloseOperation.Show }
+        )
+
         GameMenuSubscreen(
-            state = viewModel.gameMenuState,
+            state = if (viewModel.tokitoFullMenu) viewModel.gameMenuState else MenuState.HIDE,
             controlMenuTabIndex = viewModel.controlMenuTabIndex,
             onControlMenuTabChange = { viewModel.controlMenuTabIndex = it },
             gamepadViewModel = gamepadViewModel,
-            closeScreen = { viewModel.gameMenuState = MenuState.HIDE },
+            closeScreen = {
+                viewModel.gameMenuState = MenuState.HIDE
+                viewModel.tokitoFullMenu = false
+            },
             onForceClose = { viewModel.forceCloseState = ForceCloseOperation.Show },
             onSwitchLog = { onLogStateChange(logState.next()) },
             enableTerracotta = AllSettings.enableTerracotta.state,

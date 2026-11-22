@@ -50,7 +50,7 @@ object DeviceProfile {
 
     /** The Android version (API level) that the phone was made with */
     private fun initialSdk(): Int {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) return Build.VERSION.DEVICE_INITIAL_SDK_INT
+        // Build.VERSION.DEVICE_INITIAL_SDK_INT is not resolvable at this compileSdk, so the property is read directly
         val fromProperty = readProperty("ro.product.first_api_level")?.toIntOrNull()
         return fromProperty?.takeIf { it > 0 } ?: Build.VERSION.SDK_INT
     }

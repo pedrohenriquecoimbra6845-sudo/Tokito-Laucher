@@ -1,0 +1,55 @@
+name: "TokiAuth: emitir licença"
+
+# Roda só quando o admin aperta "Run workflow" (Actions > TokiAuth: emitir licença).
+# A chave aparece no resumo do job. Precisa do segredo TOKIAUTH_SIGNING_KEY (chave privada .pem).
+on:
+  workflow_dispatch:
+    inputs:
+      player:
+        description: "Nome do jogador (3 a 16 letras, números ou _)"
+        required: true
+        type: string
+      kind:
+        description: "std = pago (R$ 3) | admin = grátis"
+        required: true
+        default: std
+        type: choice
+        options:
+          - std
+          - admin
+
+permissions:
+  contents: read
+
+jobs:
+  license:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Emitir a chave
+        env:
+          TOKIAUTH_SIGNING_KEY: ${{ secrets.TOKIAUTH_SIGNING_KEY }}
+          PLAYER: ${{ inputs.player }}
+          KIND: ${{ inputs.kind }}
+        run: |
+          if [ -z "$TOKIAUTH_SIGNING_KEY" ]; then
+            echo "::error::Falta o segredo TOKIAUTH_SIGNING_KEY (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+          umask 077
+          printf '%s\n' "$TOKIAUTH_SIGNING_KEY" > "$RUNNER_TEMP/tokiauth.pem"
+          key="$(bash tools/tokiauth-license.sh "$PLAYER" "$KIND" "$RUNNER_TEMP/tokiauth.pem")"
+          rm -f "$RUNNER_TEMP/tokiauth.pem"
+          {
+            echo "## Licença TokiAuth Original"
+            echo
+            echo "Jogador: \`$PLAYER\` ($KIND)"
+            echo
+            echo "Copie a chave inteira e mande para o jogador:"
+            echo
+            echo '```'
+            echo "$key"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "Licença emitida para $PLAYER ($KIND). A chave está no resumo do job."

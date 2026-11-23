@@ -20,6 +20,7 @@ package com.movtery.zalithlauncher.path
 
 import com.movtery.zalithlauncher.BuildConfig
 import com.movtery.zalithlauncher.BuildKeys
+import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.utils.network.ResilientDns
 import com.movtery.zalithlauncher.utils.network.TLSSecurity
 import io.ktor.client.HttpClient
@@ -71,6 +72,19 @@ private fun isCurseForgeHost(host: String): Boolean =
             host.endsWith(".$CURSEFORGE_CDN_SUFFIX")
 
 /**
+ * Tokito Launcher: the CurseForge API key.
+ *
+ * The key built into the app wins. A build made by a fork has no key (the CURSEFORGE_API_KEY secret is not set), and
+ * then CurseForge refuses every request and the list of mods comes empty. In that case the key typed by the player in
+ * the settings is used (free keys: https://console.curseforge.com/).
+ */
+fun curseForgeApiKey(): String {
+    val fromBuild = BuildKeys.CURSEFORGE_API.trim()
+    if (fromBuild.isNotEmpty()) return fromBuild
+    return runCatching { AllSettings.tokitoCurseForgeKey.getValue().trim() }.getOrDefault("")
+}
+
+/**
  * An [Interceptor] for CurseForge API requests.
  *
  * It automatically injects the `x-api-key` header when the request targets a
@@ -79,7 +93,7 @@ private fun isCurseForgeHost(host: String): Boolean =
 private val CURSEFORGE_INTERCEPTOR = Interceptor { chain ->
     val request = chain.request()
     if (isCurseForgeHost(request.url.host)) {
-        val apiKey = BuildKeys.CURSEFORGE_API
+        val apiKey = curseForgeApiKey()
         if (apiKey.isNotBlank()) {
             val newRequest = request.newBuilder()
                 .header("x-api-key", apiKey)
@@ -144,7 +158,7 @@ val GLOBAL_CLIENT = HttpClient(OkHttp) {
 }.apply {
     requestPipeline.intercept(HttpRequestPipeline.State) {
         if (isCurseForgeHost(context.url.host)) {
-            val apiKey = BuildKeys.CURSEFORGE_API
+            val apiKey = curseForgeApiKey()
             if (apiKey.isNotBlank()) {
                 context.header("x-api-key", apiKey)
             }

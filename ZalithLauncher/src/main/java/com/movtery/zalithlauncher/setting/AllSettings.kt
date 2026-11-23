@@ -445,6 +445,18 @@ object AllSettings : SettingsRegistry() {
     val tokitoFastBoot = boolSetting("tokitoFastBoot", true)
 
     /**
+     * Tokito Launcher: the CurseForge API key typed by the player. It is used only when the build itself has no key
+     * (a fork without the CURSEFORGE_API_KEY secret). Free keys: https://console.curseforge.com/
+     */
+    val tokitoCurseForgeKey = stringSetting("tokitoCurseForgeKey", "")
+
+    /**
+     * Tokito Launcher: the player already went through the Discord invite of the launcher
+     * (the invite screen is not shown again). Discord cannot tell the launcher who joined, so this is a soft gate.
+     */
+    val tokitoDiscordDone = boolSetting("tokitoDiscordDone", false)
+
+    /**
      * Tokito Launcher: items of the "Principais coisas" panel on the home screen, in order.
      * An id with a "!" in front is hidden. Empty means the default panel.
      */

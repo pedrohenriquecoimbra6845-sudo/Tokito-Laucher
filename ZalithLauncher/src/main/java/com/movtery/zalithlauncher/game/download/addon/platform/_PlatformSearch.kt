@@ -29,6 +29,7 @@ import com.movtery.zalithlauncher.game.download.addon.platform.modrinth.MCIM_MOD
 import com.movtery.zalithlauncher.game.download.addon.platform.modrinth.ModrinthSearcher
 import com.movtery.zalithlauncher.game.download.addon.platform.modrinth.models.ModrinthVersion
 import com.movtery.zalithlauncher.game.download.addon.utils.localizedModSearchKeywords
+import com.movtery.zalithlauncher.path.curseForgeApiKey
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.screens.content.download.addon.elements.DownloadAddonState
 import com.movtery.zalithlauncher.ui.screens.content.download.addon.elements.SearchAddonState
@@ -112,6 +113,12 @@ suspend fun <E: AbstractPlatformSearcher, T> mirroredPlatformSearcher(
 fun mirroredCurseForgeSource(
     enabledMirror: Boolean = isChinaMainland()
 ): List<CurseForgeSearcher> {
+    //Tokito Launcher: without any API key (neither in the build nor typed by the player) the official CurseForge API
+    //refuses every request and the list of mods comes empty, so the mirror is tried first and the official source
+    //stays as the second try. With a key, nothing changes.
+    if (curseForgeApiKey().isBlank()) {
+        return listOf(mirrorCurseForgeSearcher, curseForgeSearcher)
+    }
     val source = resolveMirrorPriority(AllSettings.addonPlatformSource.getValue(), mainland = enabledMirror)
     val mirrorSource = mirrorCurseForgeSearcher.takeIf { enabledMirror }
     return when (source) {

@@ -21,9 +21,13 @@ package com.movtery.zalithlauncher.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,14 +35,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
 import com.movtery.zalithlauncher.R
+import com.movtery.zalithlauncher.tokito.TokiAuthLicense
 import com.movtery.zalithlauncher.tokito.TokiAuthPasswords
+import com.movtery.zalithlauncher.tokito.TokitoLinks
 
 /**
  * Tokito Launcher: asks for the password of a TokiAuth account before the game opens.
@@ -187,4 +195,119 @@ private fun PasswordField(
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
         label = { Text(text = label) }
     )
+}
+
+/**
+ * Tokito Launcher: activates (or buys) the license of "TokiAuth Original" for the player [userName].
+ * The key is checked on the device; the payment is made on the Discord of the project and the admin sends the key.
+ */
+@Composable
+fun TokiAuthLicenseDialog(
+    userName: String,
+    onActivated: () -> Unit,
+    onCancel: () -> Unit
+) {
+    val context = LocalContext.current
+    var key by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<Int?>(null) }
+
+    fun activate() {
+        val cleaned = TokiAuthLicense.clean(key)
+        when {
+            !TokiAuthLicense.verify(userName, cleaned) -> error = R.string.tokiauth_license_invalid
+            TokiAuthLicense.activate(userName, cleaned) -> onActivated()
+            else -> error = R.string.tokiauth_license_save_failed
+        }
+    }
+
+    SimpleAlertDialog(
+        title = stringResource(R.string.tokiauth_license_title),
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = stringResource(R.string.tokiauth_license_text, TokiAuthLicense.PRICE_BRL),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = stringResource(R.string.tokiauth_license_for, userName),
+                    style = MaterialTheme.typography.labelLarge
+                )
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = key,
+                    onValueChange = {
+                        key = it.take(700)
+                        error = null
+                    },
+                    maxLines = 3,
+                    isError = error != null,
+                    label = { Text(text = stringResource(R.string.tokiauth_license_key_label)) },
+                    placeholder = { Text(text = stringResource(R.string.tokiauth_license_key_hint)) },
+                    supportingText = {
+                        error?.let { Text(text = stringResource(it, userName)) }
+                    }
+                )
+                FilledTonalButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { TokitoLinks.open(context, TokiAuthLicense.PAY_URL) }
+                ) {
+                    Text(text = stringResource(R.string.tokiauth_license_buy, TokiAuthLicense.PRICE_BRL))
+                }
+                Text(
+                    text = stringResource(R.string.tokiauth_license_buy_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        confirmText = stringResource(R.string.tokiauth_license_activate),
+        onConfirm = { activate() },
+        onCancel = onCancel,
+        onDismissRequest = onCancel
+    )
+}
+
+/**
+ * Tokito Launcher: one line that tells if [userName] has the TokiAuth Original license
+ * and opens the activation when it does not.
+ */
+@Composable
+fun TokiAuthLicenseRow(
+    userName: String,
+    licensed: Boolean,
+    onActivate: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val admin = licensed && TokiAuthLicense.isAdmin(userName)
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = if (licensed) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.errorContainer,
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 12.dp, top = 4.dp, bottom = 4.dp, end = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                modifier = Modifier.weight(1f),
+                text = when {
+                    admin -> stringResource(R.string.tokiauth_license_active_admin)
+                    licensed -> stringResource(R.string.tokiauth_license_active)
+                    else -> stringResource(R.string.tokiauth_license_needed, TokiAuthLicense.PRICE_BRL)
+                },
+                style = MaterialTheme.typography.labelLarge
+            )
+            if (!licensed) {
+                TextButton(
+                    enabled = userName.isNotBlank(),
+                    onClick = onActivate
+                ) {
+                    Text(text = stringResource(R.string.tokiauth_license_activate))
+                }
+            }
+        }
+    }
 }

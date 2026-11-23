@@ -142,12 +142,15 @@ import com.movtery.zalithlauncher.ui.components.ButtonPosition
 import com.movtery.zalithlauncher.ui.components.IconTextButton
 import com.movtery.zalithlauncher.ui.components.ImePanContainer
 import com.movtery.zalithlauncher.ui.components.MarqueeText
+import com.movtery.zalithlauncher.tokito.TokiAuthLicense
 import com.movtery.zalithlauncher.tokito.TokiAuthPasswords
 import com.movtery.zalithlauncher.ui.components.OwnOutlinedTextField
 import com.movtery.zalithlauncher.ui.components.PetModelView
 import com.movtery.zalithlauncher.ui.components.PositionButton
 import com.movtery.zalithlauncher.ui.components.PositionFilledTonalButton
 import com.movtery.zalithlauncher.ui.components.RadioCard
+import com.movtery.zalithlauncher.ui.components.TokiAuthLicenseDialog
+import com.movtery.zalithlauncher.ui.components.TokiAuthLicenseRow
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.ui.components.SimpleListDialog
 import com.movtery.zalithlauncher.ui.components.SingleLineTextCheck
@@ -839,6 +842,21 @@ fun LocalLoginDialog(
         TokiAuthPasswords.isValidPassword(tokiPassword) && tokiPassword == tokiPasswordAgain
     )
 
+    //Tokito Launcher: TokiAuth Original needs the license of the typed player name (R$ 3, free for the admin's player)
+    var showLicense by remember { mutableStateOf(false) }
+    var licenseTick by remember { mutableStateOf(0) }
+    val tokiLicensed = !tokiAuth || (licenseTick >= 0 && TokiAuthLicense.isLicensed(userName))
+    if (showLicense) {
+        TokiAuthLicenseDialog(
+            userName = userName,
+            onActivated = {
+                showLicense = false
+                licenseTick++
+            },
+            onCancel = { showLicense = false }
+        )
+    }
+
     Dialog(
         onDismissRequest = onDismissRequest,
         properties = DialogProperties(decorFitsSystemWindows = false)
@@ -891,6 +909,12 @@ fun LocalLoginDialog(
                                 )
                             }
                         }
+                        Spacer(modifier = Modifier.size(8.dp))
+                        TokiAuthLicenseRow(
+                            userName = userName,
+                            licensed = tokiLicensed,
+                            onActivate = { showLicense = true }
+                        )
                         Spacer(modifier = Modifier.size(12.dp))
                     }
 
@@ -1091,7 +1115,7 @@ fun LocalLoginDialog(
                         }
                         Button(
                             modifier = Modifier.weight(1f),
-                            enabled = tokiPasswordOk,
+                            enabled = tokiPasswordOk && tokiLicensed,
                             onClick = {
                                 if (userName.isNotEmpty()) {
                                     if (tokiAuth) TokiAuthPasswords.stage(userName, tokiPassword)

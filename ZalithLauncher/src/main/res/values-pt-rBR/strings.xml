@@ -1627,6 +1627,20 @@
     <string name="tokito_controls_style_summary">Os botões e joysticks da tela usam as cores e os cantos do estilo escolhido. O seu layout não é alterado e, ao desligar, ele volta exatamente como foi salvo. O estilo Zalith mantém o visual original.</string>
 
     <!-- Tokito Launcher 0.11.4 begin -->
+    <string name="account_type_tokiauth_original">TokiAuth Original</string>
+    <string name="tokiauth_license_title">TokiAuth Original</string>
+    <string name="tokiauth_license_text">O TokiAuth Original é a conta verificada do Tokito Launcher: o seu nome de jogador fica protegido e você ganha o selo ✔ no chat. Pagamento único de R$ %1$d. Não é uma licença da Mojang / Microsoft: servidores que verificam o login premium não a aceitam.</string>
+    <string name="tokiauth_license_for">Licença para o jogador %1$s</string>
+    <string name="tokiauth_license_key_label">Chave de licença</string>
+    <string name="tokiauth_license_key_hint">Cole a chave que você recebeu (TKA1.…)</string>
+    <string name="tokiauth_license_activate">Ativar</string>
+    <string name="tokiauth_license_buy">Comprar por R$ %1$d</string>
+    <string name="tokiauth_license_buy_hint">Pague no Discord do projeto e o admin envia a sua chave. Uma conta Offline normal continua grátis.</string>
+    <string name="tokiauth_license_invalid">Essa chave não vale para o jogador %1$s</string>
+    <string name="tokiauth_license_save_failed">Não deu para salvar a chave</string>
+    <string name="tokiauth_license_active">TokiAuth Original ativo ✔</string>
+    <string name="tokiauth_license_active_admin">TokiAuth Original ativo ✔ (admin, grátis)</string>
+    <string name="tokiauth_license_needed">Precisa da licença TokiAuth Original (R$ %1$d)</string>
     <string name="tokito_bench_title">Benchmark do aparelho</string>
     <string name="tokito_bench_idle">Ainda não medido. Leva cerca de 10 segundos e dá o FPS de partida dos modos.</string>
     <string name="tokito_bench_running">Medindo o seu aparelho...</string>
@@ -1706,6 +1720,19 @@
     <string name="tokito_boot_tip_3">Dica: o número embaixo da flor é o seu FPS. Vermelho é baixo, arco-íris é altíssimo.</string>
     <string name="tokito_fastboot_title">Abertura rápida</string>
     <string name="tokito_fastboot_summary">Abre o jogo mais rápido (meta: 35 segundos): a verificação dos arquivos é pulada quando a mesma versão foi verificada nos últimos 7 dias, e o bytecode do jogo não é verificado de novo a cada abertura.</string>
+    <string name="tokito_curseforge_title">Chave do CurseForge</string>
+    <string name="tokito_curseforge_summary">O CurseForge só mostra os mods para apps que têm uma chave. É grátis: entre em console.curseforge.com, crie uma chave e cole aqui.</string>
+    <string name="tokito_curseforge_label">Chave (API key)</string>
+    <string name="tokito_curseforge_get">Pegar chave grátis</string>
+    <string name="tokito_curseforge_status_build">Esta versão já tem uma chave do CurseForge.</string>
+    <string name="tokito_curseforge_status_saved">Chave salva. Os mods do CurseForge usam a sua chave.</string>
+    <string name="tokito_curseforge_status_none">Sem chave: o launcher tenta um espelho, que pode não responder. Cole uma chave para garantir.</string>
+    <string name="tokito_discord_title">Entre no nosso Discord</string>
+    <string name="tokito_discord_text">As novidades, atualizações, ajuda e testes acontecem no Discord. Entre no servidor para usar o launcher.</string>
+    <string name="tokito_discord_join">Entrar no Discord</string>
+    <string name="tokito_discord_done">Já entrei, continuar</string>
+    <string name="tokito_discord_wait">Abra o Discord primeiro e depois volte aqui.</string>
+    <string name="tokito_discord_failed">Não foi possível abrir o link. Copie o endereço acima e abra no navegador.</string>
     <string name="account_type_tokiauth">TokiAuth · Ativa</string>
     <string name="account_tokiauth_menu_title">TokiAuth</string>
     <string name="account_tokiauth_create_account">Criar uma conta TokiAuth</string>

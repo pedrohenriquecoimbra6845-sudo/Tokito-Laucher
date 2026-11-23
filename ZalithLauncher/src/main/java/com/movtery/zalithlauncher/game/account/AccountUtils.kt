@@ -23,6 +23,7 @@ import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.movtery.zalithlauncher.R
+import com.movtery.zalithlauncher.tokito.TokiAuthLicense
 import com.movtery.zalithlauncher.context.COPY_LABEL_DEVICE_CODE
 import com.movtery.zalithlauncher.coroutine.Task
 import com.movtery.zalithlauncher.coroutine.TaskSystem
@@ -452,7 +453,9 @@ fun getAccountTypeName(account: Account): String {
     return if (account.isMicrosoftAccount()) {
         stringResource(R.string.account_type_microsoft)
     } else if (account.isTokiAuthAccount()) {
-        stringResource(R.string.account_type_tokiauth)
+        //Tokito Launcher: the licensed TokiAuth account is "TokiAuth Original"
+        if (TokiAuthLicense.isLicensed(account.username)) stringResource(R.string.account_type_tokiauth_original)
+        else stringResource(R.string.account_type_tokiauth)
     } else if (account.isAuthServerAccount()) {
         account.accountType ?: "Unknown"
     } else {

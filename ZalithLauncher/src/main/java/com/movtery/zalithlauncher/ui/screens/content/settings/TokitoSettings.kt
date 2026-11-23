@@ -330,6 +330,12 @@ fun TokitoStyleSettings(
             summary = stringResource(R.string.tokito_fastboot_summary)
         )
 
+        //CurseForge needs a key: without it the list of mods comes empty
+        CurseForgeKeyCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Middle
+        )
+
         //game controls in the style of the launcher
         SwitchSettingsCard(
             modifier = Modifier.fillMaxWidth(),

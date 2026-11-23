@@ -73,7 +73,9 @@ import com.movtery.zalithlauncher.game.account.accountErrorText
 import com.movtery.zalithlauncher.game.account.auth_server.AuthServerHelper
 import com.movtery.zalithlauncher.game.account.isMicrosoftAccount
 import com.movtery.zalithlauncher.game.account.isTokiAuthAccount
+import com.movtery.zalithlauncher.tokito.TokiAuthLicense
 import com.movtery.zalithlauncher.tokito.TokiAuthPasswords
+import com.movtery.zalithlauncher.ui.components.TokiAuthLicenseDialog
 import com.movtery.zalithlauncher.ui.components.TokiAuthUnlockDialog
 import com.movtery.zalithlauncher.game.account.microsoftLogin
 import com.movtery.zalithlauncher.game.plugin.ApkPlugin
@@ -157,6 +159,13 @@ sealed interface LaunchGameOperation {
         val version: Version,
         val quickPlay: QuickPlay?
     ): LaunchGameOperation
+
+    /** Tokito Launcher: the TokiAuth account has no TokiAuth Original license for its player name */
+    data class TokiAuthNoLicense(
+        val account: Account,
+        val version: Version,
+        val quickPlay: QuickPlay?
+    ) : LaunchGameOperation
 
     /** Tokito Launcher: the TokiAuth account has a password that was not typed yet */
     data class TokiAuthLocked(
@@ -290,6 +299,17 @@ fun LaunchGameOperation(
                 }
             )
         }
+        is LaunchGameOperation.TokiAuthNoLicense -> {
+            TokiAuthLicenseDialog(
+                userName = operation.account.username,
+                onActivated = {
+                    launchGameViewModel.updateOperation(LaunchGameOperation.TryLaunch(operation.version, operation.quickPlay))
+                },
+                onCancel = {
+                    launchGameViewModel.updateOperation(LaunchGameOperation.None)
+                }
+            )
+        }
         is LaunchGameOperation.TokiAuthLocked -> {
             TokiAuthUnlockDialog(
                 userName = operation.account.username,
@@ -319,6 +339,12 @@ fun LaunchGameOperation(
 
                 val launchAccount = AccountsManager.currentAccountFlow.value ?: run {
                     launchGameViewModel.updateOperation(LaunchGameOperation.NoAccount)
+                    return@LaunchedEffect
+                }
+
+                //Tokito Launcher: TokiAuth Original needs its license (R$ 3, free for the admin's player)
+                if (launchAccount.isTokiAuthAccount() && !TokiAuthLicense.isLicensed(launchAccount.username)) {
+                    launchGameViewModel.updateOperation(LaunchGameOperation.TokiAuthNoLicense(launchAccount, version, quickPlay))
                     return@LaunchedEffect
                 }
 

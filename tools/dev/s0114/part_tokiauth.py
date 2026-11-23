@@ -1,0 +1,23 @@
+# TokiAuth account
+S = [
+ ('account_type_tokiauth', 'TokiAuth · Active', 'TokiAuth · Ativa'),
+ ('account_tokiauth_menu_title', 'TokiAuth', 'TokiAuth'),
+ ('account_tokiauth_create_account', 'Create a TokiAuth account', 'Criar uma conta TokiAuth'),
+ ('account_tokiauth_info',
+  'TokiAuth is the own account of Tokito Launcher. It has a password, kept on this device only as a hash, and it is asked before the game opens (once each time the launcher starts). It is an offline kind of account, so servers that check the online (premium) login do not accept it. You can give it a skin in the Skins library. Account site: tokitolauncher.base44.app.',
+  'O TokiAuth é a conta própria do Tokito Launcher. Ela tem senha, guardada neste aparelho só como hash, e a senha é pedida antes de abrir o jogo (uma vez cada vez que o launcher abre). É uma conta do tipo offline, então servidores que verificam o login online (premium) não a aceitam. Você pode dar uma skin a ela na biblioteca de Skins. Site da conta: tokitolauncher.base44.app.'),
+ ('tokiauth_password_label', 'Password', 'Senha'),
+ ('tokiauth_password_confirm', 'Repeat the password', 'Repita a senha'),
+ ('tokiauth_password_current', 'Current password', 'Senha atual'),
+ ('tokiauth_password_short', 'At least 6 characters', 'Pelo menos 6 caracteres'),
+ ('tokiauth_password_mismatch', 'The passwords are not the same', 'As senhas não são iguais'),
+ ('tokiauth_password_save_failed', 'Could not save the password', 'Não deu para salvar a senha'),
+ ('tokiauth_password_remove', 'Remove the password', 'Remover a senha'),
+ ('tokiauth_open_site', 'Open the TokiAuth site', 'Abrir o site do TokiAuth'),
+ ('tokiauth_unlock_title', 'TokiAuth password', 'Senha do TokiAuth'),
+ ('tokiauth_unlock_text', 'Type the password of %1$s to open the game.', 'Digite a senha de %1$s para abrir o jogo.'),
+ ('tokiauth_unlock_button', 'Unlock', 'Desbloquear'),
+ ('tokiauth_unlock_wrong', 'Wrong password', 'Senha errada'),
+ ('tokiauth_set_title', 'TokiAuth password', 'Senha do TokiAuth'),
+ ('tokiauth_set_text', 'Set or change the password of %1$s. It is saved only as a hash on this device.', 'Defina ou troque a senha de %1$s. Ela é guardada só como hash neste aparelho.'),
+]

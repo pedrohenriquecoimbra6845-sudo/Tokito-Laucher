@@ -24,6 +24,7 @@
 
 ## 4. PENDING, in recommended order (each has a brief in tools/dev/tasks/; run each as a fresh sub-agent in its own worktree or as its own small chat)
 1. **GAME fixes** (`tasks/game.md`): 35 s boot/loading crash, heavy chunks/PVP crash, swipeable left categories in the in-game full menu, Bedrock-style controls.
+1b. **MODS in-game** (`tasks/mods-ingame.md`, user request 11-24): enable/disable mods (rename .jar <-> .jar.disabled), download mods/textures/shaders from inside the game, "Aplicar e reiniciar" fast restart (heavy mods take longer; 35 s was only the first-launch goal).
 2. **POLISH + perf** (`tasks/polish.md`, item 0 = the user's newest request "melhore tudo do Launcher, o mais detalhado e otimizado possível"): whole-launcher perf + detail pass, 60 Hz lock, global press animations + Liquid Glass polish, Benchmark dimension backdrops (1+ Nether, 60+ Overworld, 100+ End, 200+ Aether), mods/textures tabs layout.
 3. **HOME layout** (`tasks/home.md`): "Principais coisas" strip on top, remove pull-down arrow, small PLAY+character card bottom-right (~490 px, slider), customizable photo/video backdrop, single still mini wallpaper with flower-bubble reveal.
 4. **PANORAMAS** (`pano/SPEC.md`): six real voxel-world 360° strips (cherry [still default], sakura, cave, snow, pale, bawmc) with BSL-style lighting; engine NOT written yet (old flat art in the scratchpad was rejected by the user: "tem que ser que nem do Minecraft, parecendo que está em um mundo com bloco girando e coloca o Shaders BSL"). Then **integration + BawMC theme** (`tasks/panorama-bawmc.md`).
@@ -50,3 +51,8 @@ Home layout; mini wallpaper still photo; "Principais coisas" on top; remove pull
 - CurseForge: key from build secret CURSEFORGE_API_KEY or the in-app field `tokitoCurseForgeKey`; MCIM mirror fallback (unverified).
 - Panorama render design (cylindrical 360° strip 4096x704, DDA voxel ray caster in C, soft shadows, AO, god rays, bloom) is in `pano/SPEC.md`; in-app `PanoramaView` draws the strip twice with a slow horizontal scroll (~120-180 s/turn), still for cherry.
 - Check scripts compare against base commit e028ebc (env TOKITO_BASE); worktree-friendly (env TOKITO_REPO).
+
+## 8. Usage-limit log (why chats stall)
+- 11-23 and 11-24: the free 5-hour limit was hit again on the first turn after each long pause. After a pause the chat context (~300k tokens) is re-read at FULL price, which alone uses most of a window; sub-agents then fail instantly with HTTP 429. THE OLD CHAT MUST NOT BE USED ANY MORE: the user should open a NEW chat/session on the repo (branch `wip/t003`) and say "Continue a t0.0.3, leia tools/dev/HANDOFF.md". In a small chat, steps cost ~10x less.
+- Worktrees from the old container (/home/claude/wt/*) are gone in a new container; their branches were never pushed (no work was lost: the agents never started). Recreate with `git worktree add`.
+- `gh` token (GH_TOKEN) was reported invalid on 11-23; `git push` still worked. If `gh run list` fails, re-attach the repo with push access (add_repo) or poll CI another way.

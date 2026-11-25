@@ -311,6 +311,31 @@ fun GamePathOperation(
     }
 }
 
+/** Tokito: chip de família de versão (1.8.x) na barra das versões instaladas */
+@Composable
+fun VersionFamilyItem(
+    modifier: Modifier = Modifier,
+    text: String,
+    count: Int,
+    selected: Boolean,
+    onClick: () -> Unit = {}
+) {
+    val style = MaterialTheme.typography.labelMedium
+    TextRailItem(
+        modifier = modifier,
+        text = {
+            Text(text = text, style = style)
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(text = "($count)", style = style)
+        },
+        onClick = onClick,
+        selected = selected,
+        shape = MaterialTheme.shapes.large,
+        selectedContentColor = MaterialTheme.colorScheme.onSurface,
+        unselectedContentColor = MaterialTheme.colorScheme.onSurface
+    )
+}
+
 @Composable
 fun VersionCategoryItem(
     modifier: Modifier = Modifier,

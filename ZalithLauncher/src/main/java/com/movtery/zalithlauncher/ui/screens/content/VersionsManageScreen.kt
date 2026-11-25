@@ -102,6 +102,13 @@ import com.movtery.zalithlauncher.ui.screens.content.elements.GamePathItemLayout
 import com.movtery.zalithlauncher.ui.screens.content.elements.GamePathOperation
 import com.movtery.zalithlauncher.ui.screens.content.elements.VersionCategory
 import com.movtery.zalithlauncher.ui.screens.content.elements.VersionCategoryItem
+import com.movtery.zalithlauncher.ui.screens.content.elements.VersionFamilyItem
+import com.movtery.zalithlauncher.ui.screens.content.download.game.VersionFamily
+import com.movtery.zalithlauncher.ui.screens.content.download.game.countFamilyKeys
+import com.movtery.zalithlauncher.ui.screens.content.download.game.installedFamilyKey
+import com.movtery.zalithlauncher.ui.screens.content.download.game.versionFamilyLabel
+import com.movtery.zalithlauncher.ui.components.BackdropSection
+import com.movtery.zalithlauncher.ui.components.TokitoSectionBackdrop
 import com.movtery.zalithlauncher.ui.screens.content.elements.VersionItemLayout
 import com.movtery.zalithlauncher.ui.screens.content.elements.VersionsOperation
 import com.movtery.zalithlauncher.ui.screens.content.elements.backgroundGlass
@@ -131,6 +138,12 @@ private class VersionsScreenViewModel : ViewModel() {
 
     /** 游戏路径相关操作 */
     var gamePathOperation by mutableStateOf<GamePathOperation>(GamePathOperation.None)
+
+    /** Tokito: família escolhida na barra de versões ("" = todas) */
+    var versionFamily by mutableStateOf("")
+
+    /** Tokito: famílias (1.21.x, 1.8.x ...) das versões instaladas, depois do filtro de categoria */
+    var installedFamilies by mutableStateOf<List<VersionFamily>>(emptyList())
 
     /** 全部版本的数量 */
     var allVersionsCount by mutableIntStateOf(0)
@@ -226,8 +239,9 @@ private fun rememberVersions(
     val vers by versions.collectAsStateWithLifecycle()
     val category = viewModel.versionCategory
     val resortKey = viewModel.resortKey
+    val family = viewModel.versionFamily
 
-    return remember(vers, category, resortKey) {
+    return remember(vers, category, resortKey, family) {
         derivedStateOf {
             viewModel.allVersionsCount = vers.size
 
@@ -238,11 +252,22 @@ private fun rememberVersions(
                 .filter { ver -> ver.versionType == VersionType.MODLOADERS }
                 .also { viewModel.modloaderVersionsCount = it.size }
 
-            when (category) {
+            val byCategory = when (category) {
                 VersionCategory.ALL -> vers
                 VersionCategory.VANILLA -> vanillaVersions
                 VersionCategory.MODLOADER -> modloaderVersions
-            }.sortedWith(VersionComparator)
+            }
+
+            //Tokito: separa por família (1.8.x, 1.9.x ...) e mostra só a família escolhida
+            val keyed = byCategory.map { it to it.installedFamilyKey() }
+            val families = keyed.map { it.second }.countFamilyKeys()
+            if (viewModel.installedFamilies != families) viewModel.installedFamilies = families
+            val activeFamily = if (families.any { it.key == family }) family else ""
+
+            keyed
+                .filter { activeFamily.isEmpty() || it.second == activeFamily }
+                .map { it.first }
+                .sortedWith(VersionComparator)
         }
     }
 }
@@ -271,7 +296,11 @@ fun VersionsManageScreen(
         screenKey = NormalNavKey.VersionsManager,
         currentKey = backScreenViewModel.mainScreen.currentKey
     ) { isVisible ->
-        Row {
+        TokitoSectionBackdrop(
+            section = BackdropSection.VERSIONS,
+            modifier = Modifier.fillMaxSize()
+        ) {
+        Row(modifier = Modifier.fillMaxSize()) {
             LeftMenu(
                 isVisible = isVisible,
                 isRefreshing = isRefreshing,
@@ -307,6 +336,9 @@ fun VersionsManageScreen(
                 currentVersion = currentVersion,
                 versionCategory = viewModel.versionCategory,
                 onCategoryChange = { viewModel.changeCategory(it) },
+                installedFamilies = viewModel.installedFamilies,
+                selectedFamily = viewModel.versionFamily,
+                onFamilyChange = { viewModel.versionFamily = it },
                 allVersionsCount = viewModel.allVersionsCount,
                 vanillaVersionsCount = viewModel.vanillaVersionsCount,
                 modloaderVersionsCount = viewModel.modloaderVersionsCount,
@@ -344,6 +376,7 @@ fun VersionsManageScreen(
                 },
                 submitError = submitError
             )
+        }
         }
     }
 }
@@ -452,6 +485,9 @@ private fun VersionsLayout(
     currentVersion: Version?,
     versionCategory: VersionCategory,
     onCategoryChange: (VersionCategory) -> Unit,
+    installedFamilies: List<VersionFamily>,
+    selectedFamily: String,
+    onFamilyChange: (String) -> Unit,
     allVersionsCount: Int,
     vanillaVersionsCount: Int,
     modloaderVersionsCount: Int,
@@ -673,6 +709,17 @@ private fun VersionsLayout(
                                     selected = versionCategory == VersionCategory.MODLOADER,
                                     onClick = { onCategoryChange(VersionCategory.MODLOADER) }
                                 )
+                                //Tokito: famílias (1.21.x, 1.8.x ...): toque numa para ver só as versões dela
+                                if (installedFamilies.size > 1) {
+                                    installedFamilies.forEach { family ->
+                                        VersionFamilyItem(
+                                            text = versionFamilyLabel(family),
+                                            count = family.count,
+                                            selected = selectedFamily == family.key,
+                                            onClick = { onFamilyChange(if (selectedFamily == family.key) "" else family.key) }
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

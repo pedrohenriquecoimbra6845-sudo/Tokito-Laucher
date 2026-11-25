@@ -3154,6 +3154,12 @@
     <string name="tokito_controls_style_summary">The on-screen buttons and joysticks use the colors and corners of the style you chose. Your layout is not changed, and turning this off brings it back exactly as saved. The Zalith style keeps the original look.</string>
 
     <!-- Tokito Launcher 0.11.4 begin -->
+    <string name="bd_family_all">All</string>
+    <string name="bd_family_snapshots">Snapshots</string>
+    <string name="bd_family_beta">Beta</string>
+    <string name="bd_family_alpha">Alpha</string>
+    <string name="bd_family_classic">Classic</string>
+    <string name="bd_family_other">Other</string>
     <string name="account_type_tokiauth_original">TokiAuth Original</string>
     <string name="tokiauth_license_title">TokiAuth Original</string>
     <string name="tokiauth_license_text">TokiAuth Original is the verified account of Tokito Launcher: your player name is protected and you get the ✔ seal in the chat. One-time payment of R$ %1$d. It is not a Mojang / Microsoft license: servers that check the premium login do not accept it.</string>

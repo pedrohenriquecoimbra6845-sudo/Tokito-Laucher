@@ -55,6 +55,8 @@ import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.fadeEdge
 import com.movtery.zalithlauncher.ui.components.rememberAnimatedContext
 import com.movtery.zalithlauncher.ui.screens.NestedNavDisplay
+import com.movtery.zalithlauncher.ui.components.TokitoSectionBackdrop
+import com.movtery.zalithlauncher.ui.components.downloadBackdropSection
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
@@ -136,6 +138,10 @@ fun DownloadScreen(
         currentKey = backScreenViewModel.mainScreen.currentKey,
         useClassEquality = true
     ) { isVisible: Boolean ->
+        TokitoSectionBackdrop(
+            section = downloadBackdropSection(backScreenViewModel.downloadScreen.currentKey),
+            modifier = Modifier.fillMaxSize()
+        ) {
         Row(modifier = Modifier.fillMaxSize()) {
             TabMenu(
                 modifier = Modifier.fillMaxHeight(),
@@ -152,6 +158,7 @@ fun DownloadScreen(
                 submitError = submitError,
                 modifier = Modifier.fillMaxHeight()
             )
+        }
         }
     }
 }

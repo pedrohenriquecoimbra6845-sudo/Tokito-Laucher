@@ -18,6 +18,8 @@
 
 package com.movtery.zalithlauncher.ui.screens.content
 
+import com.movtery.zalithlauncher.ui.components.BackdropSection
+import com.movtery.zalithlauncher.ui.components.TokitoSectionBackdrop
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -295,6 +297,10 @@ private fun NavigationUI(
                     )
                 }
                 entry(NormalNavKey.Versions.ModsManager) {
+                    TokitoSectionBackdrop(
+                        section = BackdropSection.MODS,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
                     ModsManagerScreen(
                         mainScreenKey = mainScreenKey,
                         versionsScreenKey = versionsScreenKey,
@@ -314,6 +320,7 @@ private fun NavigationUI(
                         eventViewModel = eventViewModel,
                         submitError = submitError
                     )
+                    }
                 }
                 entry<NormalNavKey.Versions.SavesManager> {
                     SavesManagerScreen(

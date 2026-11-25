@@ -131,7 +131,9 @@ private data class VersionFilter(
     val snapshot: Boolean = false,
     val aprilFools: Boolean = false,
     val old: Boolean = false,
-    val id: String = ""
+    val id: String = "",
+    /** Tokito: família escolhida, por exemplo "1.8" (vazio = todas) */
+    val family: String = ""
 )
 
 private class VersionsViewModel: ViewModel() {
@@ -142,10 +144,20 @@ private class VersionsViewModel: ViewModel() {
     var versionFilter by mutableStateOf(VersionFilter())
         private set
 
+    /** Tokito: famílias (1.21.x, 1.8.x...) das versões que passam no filtro de tipo */
+    var versionFamilies by mutableStateOf<List<VersionFamily>>(emptyList())
+        private set
+
     fun filterWith(filter: VersionFilter) {
         versionFilter = filter
         viewModelScope.launch {
             val allVersions = MinecraftVersions.allVersions.value
+            val families = allVersions.familiesFor(filter)
+            versionFamilies = families
+            //Se a família escolhida sumiu (o tipo mudou), volta para "Todas"
+            if (filter.family.isNotEmpty() && families.none { it.key == filter.family }) {
+                versionFilter = filter.copy(family = "")
+            }
             versionState = VersionState.None(
                 versions = allVersions.filterVersions(versionFilter)
             )
@@ -158,6 +170,7 @@ private class VersionsViewModel: ViewModel() {
             versionState = runCatching {
                 MinecraftVersions.refreshVersions(forceReload)
                 val allVersions = MinecraftVersions.allVersions.value
+                versionFamilies = allVersions.familiesFor(versionFilter)
                 VersionState.None(allVersions.filterVersions(versionFilter))
             }.getOrElse { e ->
                 Logger.warning(TAG, "Failed to get version manifest!", e)
@@ -315,6 +328,15 @@ private fun SelectGameVersionContent(
                             }
                         )
 
+                        VersionFamilyRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                            families = viewModel.versionFamilies,
+                            selected = viewModel.versionFilter.family,
+                            onSelect = { viewModel.filterWith(viewModel.versionFilter.copy(family = it)) }
+                        )
+
                         VersionList(
                             modifier = Modifier.weight(1f),
                             versions = state.versions,
@@ -346,7 +368,21 @@ private fun List<MinecraftVersion>.filterVersions(
     //Fix：单独过滤版本名称
     val versionId = versionFilter.id
     versionId.isEmptyOrBlank() || version.version.id.contains(versionId)
+}.filter { version ->
+    //Tokito: só a família escolhida (1.8 -> 1.8, 1.8.1, 1.8.2 ...)
+    versionFilter.family.isEmpty() || version.version.id.versionFamilyKey() == versionFilter.family
 }
+
+/** Tokito: famílias de versão disponíveis (depois do filtro de tipo, antes da busca e da família) */
+private fun List<MinecraftVersion>.familiesFor(versionFilter: VersionFilter): List<VersionFamily> =
+    this.filter { version ->
+        version.isType(
+            release = versionFilter.release,
+            snapshot = versionFilter.snapshot,
+            aprilFools = versionFilter.aprilFools,
+            old = versionFilter.old
+        )
+    }.map { it.version.id }.toVersionFamilies()
 
 @Composable
 private fun VersionHeader(
@@ -443,6 +479,41 @@ private fun VersionHeader(
             modifier = Modifier.fillMaxWidth(),
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
         )
+    }
+}
+
+/** Tokito: linha de famílias (Todas, 1.21.x, 1.8.x ...): toque numa para ver só as versões dela */
+@Composable
+private fun VersionFamilyRow(
+    modifier: Modifier = Modifier,
+    families: List<VersionFamily>,
+    selected: String,
+    onSelect: (String) -> Unit
+) {
+    if (families.size < 2) return
+    val scrollState = rememberScrollState()
+    Row(
+        modifier = modifier
+            .fadeEdge(
+                state = scrollState,
+                direction = EdgeDirection.Horizontal
+            )
+            .horizontalScroll(scrollState),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        VersionTypeItem(
+            selected = selected.isEmpty(),
+            onClick = { onSelect("") },
+            text = stringResource(R.string.bd_family_all) + " (" + families.sumOf { it.count } + ")"
+        )
+        families.forEach { family ->
+            VersionTypeItem(
+                selected = selected == family.key,
+                onClick = { onSelect(if (selected == family.key) "" else family.key) },
+                text = versionFamilyLabel(family) + " (" + family.count + ")"
+            )
+        }
     }
 }
 

@@ -3160,6 +3160,7 @@
     <string name="bd_family_alpha">Alpha</string>
     <string name="bd_family_classic">Classic</string>
     <string name="bd_family_other">Other</string>
+    <string name="tokito_driver_benched">The graphics driver %1$s kept the game from opening several times in a row, so Tokito set it aside and used the default driver. Choose it again in Settings > Renderer to try it again.</string>
     <string name="account_type_tokiauth_original">TokiAuth Original</string>
     <string name="tokiauth_license_title">TokiAuth Original</string>
     <string name="tokiauth_license_text">TokiAuth Original is the verified account of Tokito Launcher: your player name is protected and you get the ✔ seal in the chat. One-time payment of R$ %1$d. It is not a Mojang / Microsoft license: servers that check the premium login do not accept it.</string>

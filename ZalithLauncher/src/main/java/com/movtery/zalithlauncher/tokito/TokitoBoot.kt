@@ -112,6 +112,7 @@ object TokitoBoot {
         stage = Stage.SOUND
         progress = 0.96f
         ready = true
+        TokitoDriverGuard.noteFirstFrame()
     }
 
     /**
@@ -146,6 +147,7 @@ object TokitoBoot {
                 stage = Stage.SOUND
                 progress = 0.96f
                 ready = true
+                TokitoDriverGuard.noteFirstFrame()
             }
             line.contains("-atlas") || line.contains("textures/atlas") -> {
                 atlases++

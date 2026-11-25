@@ -42,6 +42,7 @@ import com.movtery.zalithlauncher.game.multirt.Runtime
 import com.movtery.zalithlauncher.game.multirt.RuntimesManager
 import com.movtery.zalithlauncher.game.plugin.Plugin
 import com.movtery.zalithlauncher.game.plugin.driver.DriverPluginManager
+import com.movtery.zalithlauncher.tokito.TokitoDriverGuard
 import com.movtery.zalithlauncher.game.plugin.renderer.RendererPluginManager
 import com.movtery.zalithlauncher.game.renderer.ConfigurableRenderer
 import com.movtery.zalithlauncher.game.renderer.RendererLaunchConfig
@@ -229,7 +230,8 @@ class GameLauncher(
     override fun initEnv(screenSize: IntSize): MutableMap<String, String> {
         val envMap = super.initEnv(screenSize)
 
-        envMap["DRIVER_PATH"] = DriverPluginManager.getDriver(version.getDriver()).path
+        //Tokito: a custom driver that kept the game from opening several times in a row is set aside
+        envMap["DRIVER_PATH"] = TokitoDriverGuard.begin(DriverPluginManager.getDriver(version.getDriver())).path
 
         checkAndUsedJSPH(envMap, runtime)
         version.getVersionInfo()?.loaderInfos?.forEach { info ->

@@ -64,6 +64,7 @@ import com.movtery.zalithlauncher.ui.base.ObserveFullScreenSetting
 import com.movtery.zalithlauncher.ui.buildAppendedText
 import com.movtery.zalithlauncher.ui.components.PrestigieLaunchAnimation
 import com.movtery.zalithlauncher.ui.components.TokitoDiscordGate
+import com.movtery.zalithlauncher.ui.components.TokitoDriverGuardNotice
 import com.movtery.zalithlauncher.ui.components.TokitoEntryOverlay
 import com.movtery.zalithlauncher.ui.screens.content.FirstLoginMenu
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
@@ -380,6 +381,9 @@ class MainActivity : BaseAppCompatActivity() {
 
                     //Tokito Launcher: invitation to the Discord, shown until the player has opened the invite
                     TokitoDiscordGate()
+
+                    //Tokito Launcher: a graphics driver that was set aside because the game could not open with it
+                    TokitoDriverGuardNotice()
 
                     //节日彩蛋效果层
                     FestivalEffects(

@@ -19,6 +19,7 @@
 
 package com.movtery.zalithlauncher.ui.components
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -258,17 +259,42 @@ fun BenchmarkPanel(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            FpsColoredText(
-                text = shownInt.toString(),
-                color = benchmarkFpsColor(shownInt),
-                style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Black)
-            )
+        //Tokito: a Minecraft dimension behind the FPS: 1+ Nether, 60+ Overworld, 100+ End, 200+ Aether
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(132.dp)
+                .clip(MaterialTheme.shapes.medium),
+            contentAlignment = Alignment.Center
+        ) {
+            TokitoDimensionBackdrop(fps = shownInt, modifier = Modifier.matchParentSize())
+            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                FpsColoredText(
+                    text = shownInt.toString(),
+                    color = benchmarkFpsColor(shownInt),
+                    style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Black)
+                )
+                Text(
+                    modifier = Modifier.padding(bottom = 10.dp),
+                    text = "FPS",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.85f)
+                )
+            }
             Text(
-                modifier = Modifier.padding(bottom = 10.dp),
-                text = "FPS",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 10.dp, bottom = 6.dp),
+                text = stringResource(
+                    when {
+                        shownInt >= 200 -> R.string.bd_dim_aether
+                        shownInt >= 100 -> R.string.bd_dim_end
+                        shownInt >= 60 -> R.string.bd_dim_overworld
+                        else -> R.string.bd_dim_nether
+                    }
+                ),
+                style = MaterialTheme.typography.labelSmall,
+                color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.85f)
             )
         }
 

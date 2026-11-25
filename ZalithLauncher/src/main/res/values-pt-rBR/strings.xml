@@ -1633,6 +1633,10 @@
     <string name="bd_family_alpha">Alpha</string>
     <string name="bd_family_classic">Clássicas</string>
     <string name="bd_family_other">Outras</string>
+    <string name="bd_dim_nether">Nether</string>
+    <string name="bd_dim_overworld">Mundo normal</string>
+    <string name="bd_dim_end">The End</string>
+    <string name="bd_dim_aether">Aether</string>
     <string name="tokito_driver_benched">O driver gráfico %1$s impediu o jogo de abrir várias vezes seguidas, então o Tokito o desligou e usou o driver padrão. Escolha ele de novo em Configurações > Renderizador para tentar de novo.</string>
     <string name="account_type_tokiauth_original">TokiAuth Original</string>
     <string name="tokiauth_license_title">TokiAuth Original</string>

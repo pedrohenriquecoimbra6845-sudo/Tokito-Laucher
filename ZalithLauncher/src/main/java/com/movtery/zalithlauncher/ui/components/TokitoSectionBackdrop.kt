@@ -51,7 +51,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /** Seções do launcher que ganham um fundo próprio (Minecraft em pixel art). */
-enum class BackdropSection { VERSIONS, MODS, TEXTURES, SHADERS, MODPACKS, GAMES, SAVES }
+enum class BackdropSection { VERSIONS, MODS, TEXTURES, SHADERS, MODPACKS, GAMES, SAVES, NETHER, OVERWORLD, END, AETHER }
 
 /** Escolhe o fundo pela tela de download aberta (o nome da chave de navegação). */
 fun downloadBackdropSection(key: Any?): BackdropSection {
@@ -91,6 +91,34 @@ fun TokitoSectionBackdrop(
         }
         Canvas(modifier = Modifier.matchParentSize()) { drawRect(brush = scrim) }
         content()
+    }
+}
+
+/**
+ * Fundo do Benchmark, atrás do número de FPS: de 1 FPS é o Nether, de 60 o Overworld, de 100 o End e de 200 o Aether.
+ * Troca com uma transição suave quando o FPS passa de uma faixa para a outra.
+ */
+@Composable
+fun TokitoDimensionBackdrop(fps: Int, modifier: Modifier = Modifier) {
+    val dimension = when {
+        fps >= 200 -> BackdropSection.AETHER
+        fps >= 100 -> BackdropSection.END
+        fps >= 60 -> BackdropSection.OVERWORLD
+        else -> BackdropSection.NETHER
+    }
+    Box(modifier = modifier) {
+        Crossfade(
+            targetState = dimension,
+            modifier = Modifier.matchParentSize(),
+            animationSpec = tween(durationMillis = 600),
+            label = "tokito_dimension_backdrop"
+        ) { target ->
+            SectionScene(section = target, modifier = Modifier.fillMaxSize())
+        }
+        val scrim = remember {
+            Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.10f), Color.Black.copy(alpha = 0.38f)))
+        }
+        Canvas(modifier = Modifier.matchParentSize()) { drawRect(brush = scrim) }
     }
 }
 
@@ -454,6 +482,104 @@ private fun Pix.sceneNight() {
     }
 }
 
+private fun Pix.sceneNether() {
+    sky(argb(34, 6, 8), argb(96, 18, 14), argb(190, 52, 18), 81)
+    glow(w / 2, 74, 90f, argb(255, 110, 20), 0.55f)
+    for (i in 0 until 6) {
+        val cx = 14 + i * 34 + (rnd(i, 1, 82) * 10).toInt()
+        val pw = 8 + (rnd(i, 2, 82) * 8).toInt()
+        val top = 38 + (rnd(i, 3, 82) * 22).toInt()
+        for (y in top until h) for (x in cx - pw / 2..cx + pw / 2) {
+            put(x, y, shade(argb(70, 24, 24), 0.7f + 0.5f * rnd(x, y / 2, 83)))
+        }
+    }
+    for (x in 0 until w) {
+        val base = 8 + (4 * sin(x * 0.09f) + 3 * sin(x * 0.23f + 1f)).toInt()
+        val drip = if (rnd(x / 3, 1, 84) > 0.72f) (rnd(x / 3, 2, 84) * 16).toInt() else 0
+        for (y in 0..base + drip) {
+            val n = rnd(x / 2, y / 2, 85)
+            put(x, y, shade(mix(argb(110, 38, 38), argb(150, 54, 50), n), 0.7f + 0.5f * rnd(x, y, 86)))
+        }
+    }
+    for (i in 0 until 5) {
+        val gx = 20 + i * 40 + (rnd(i, 4, 87) * 12).toInt()
+        val gy = 14 + (rnd(i, 5, 87) * 8).toInt()
+        for (yy in gy..gy + 5) for (xx in gx..gx + 6) put(xx, yy, mix(argb(255, 210, 110), argb(255, 160, 60), rnd(xx, yy, 88)))
+        glow(gx + 3, gy + 3, 22f, argb(255, 190, 80), 0.75f)
+    }
+    for (y in 78 until h) for (x in 0 until w) {
+        val wave = sin(x * 0.2f + y * 0.5f).coerceIn(0f, 1f)
+        put(x, y, mix(argb(255, 90, 10), argb(255, 200, 70), rnd(x / 2, y, 89) * 0.8f + 0.2f * wave))
+    }
+    for (i in 0 until 40) {
+        blend((rnd(i, 1, 90) * w).toInt(), (rnd(i, 2, 90) * 80).toInt(), argb(255, 160, 50), 0.4f + 0.5f * rnd(i, 3, 90))
+    }
+}
+
+private fun Pix.sceneEnd() {
+    sky(argb(8, 4, 20), argb(30, 14, 56), argb(62, 28, 98), 91)
+    stars(150, 0.85f, 92)
+    glow(w / 2, 70, 80f, argb(120, 40, 200), 0.45f)
+    val cx = w / 2
+    for (y in 62 until 92) {
+        val t = (y - 62) / 30f
+        val half = (62 * (1f - t * t * 0.95f)).toInt()
+        for (x in cx - half..cx + half) {
+            put(x, y, shade(mix(argb(222, 226, 160), argb(188, 192, 120), t), 0.8f + 0.35f * rnd(x / 2, y / 2, 93)))
+        }
+    }
+    for (i in 0 until 5) {
+        val px = cx - 44 + i * 22 + (rnd(i, 1, 94) * 6).toInt()
+        val ph = 22 + (rnd(i, 2, 94) * 22).toInt()
+        for (y in 62 - ph until 64) for (x in px..px + 4) put(x, y, shade(argb(26, 12, 44), 0.7f + 0.8f * rnd(x, y, 95)))
+        glow(px + 2, 62 - ph - 3, 14f, argb(255, 60, 220), 0.9f)
+        rect(px + 1, 62 - ph - 5, px + 3, 62 - ph - 2, argb(255, 150, 240))
+    }
+    val islands = listOf(Triple(22, 38, 14), Triple(165, 30, 12), Triple(40, 70, 9), Triple(176, 62, 10))
+    for ((ix, iy, r) in islands) {
+        for (y in iy until iy + r / 2 + 2) {
+            val t = (y - iy) / (r / 2f + 2f)
+            val half = (r * (1f - t * 0.9f)).toInt()
+            for (x in ix - half..ix + half) put(x, y, shade(argb(214, 218, 150), 0.75f + 0.4f * rnd(x, y, 96)))
+        }
+    }
+    for (i in 0 until 50) {
+        blend((rnd(i, 1, 97) * w).toInt(), (rnd(i, 2, 97) * h).toInt(), argb(190, 110, 255), 0.35f + 0.5f * rnd(i, 3, 97))
+    }
+}
+
+private fun Pix.sceneAether() {
+    sky(argb(70, 160, 255), argb(140, 210, 255), argb(230, 245, 255), 101)
+    glow(150, 18, 60f, argb(255, 250, 200), 0.6f)
+    sun(150, 18, 7, argb(255, 254, 230), argb(255, 250, 200))
+    cloud(30, 22, 34, argb(255, 238, 190), 0.9f)
+    cloud(95, 14, 28, argb(255, 255, 255), 0.9f)
+    cloud(170, 34, 30, argb(255, 232, 170), 0.85f)
+    val islands = listOf(Triple(48, 62, 34), Triple(128, 48, 28), Triple(176, 74, 22), Triple(14, 40, 14))
+    for ((ix, iy, r) in islands) {
+        val depth = r / 2 + 6
+        for (y in iy until iy + depth) {
+            val t = (y - iy) / depth.toFloat()
+            val half = (r * (1f - t * t)).toInt()
+            for (x in ix - half..ix + half) {
+                val n = rnd(x / 2, y / 2, 102)
+                val c = if (y < iy + 3) shade(argb(70, 190, 120), 0.85f + 0.3f * n)
+                else shade(mix(argb(200, 210, 226), argb(140, 160, 190), t), 0.85f + 0.3f * n)
+                put(x, y, c)
+            }
+        }
+        val tx = ix + (rnd(ix, 1, 103) * r / 2).toInt() - r / 4
+        rect(tx, iy - 8, tx + 1, iy - 1, argb(130, 96, 50))
+        for (yy in iy - 16..iy - 7) for (xx in tx - 5..tx + 6) {
+            if (rnd(xx, yy, 104) > 0.2f) put(xx, yy, shade(argb(255, 200, 60), 0.8f + 0.4f * rnd(xx + 3, yy, 105)))
+        }
+        glow(tx + 1, iy - 11, 14f, argb(255, 220, 90), 0.35f)
+    }
+    for (i in 0 until 30) {
+        blend((rnd(i, 1, 106) * w).toInt(), (rnd(i, 2, 106) * h).toInt(), argb(255, 255, 220), 0.8f)
+    }
+}
+
 private fun buildScene(section: BackdropSection): Bitmap {
     val g = Pix(SW, SH)
     when (section) {
@@ -464,6 +590,10 @@ private fun buildScene(section: BackdropSection): Bitmap {
         BackdropSection.MODPACKS -> g.scenePortal()
         BackdropSection.GAMES -> g.sceneDay()
         BackdropSection.SAVES -> g.sceneNight()
+        BackdropSection.NETHER -> g.sceneNether()
+        BackdropSection.OVERWORLD -> g.sceneDay()
+        BackdropSection.END -> g.sceneEnd()
+        BackdropSection.AETHER -> g.sceneAether()
     }
     val bmp = Bitmap.createBitmap(SW, SH, Bitmap.Config.ARGB_8888)
     bmp.setPixels(g.px, 0, SW, 0, 0, SW, SH)

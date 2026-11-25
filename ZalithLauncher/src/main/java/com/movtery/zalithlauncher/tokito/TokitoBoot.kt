@@ -96,6 +96,24 @@ object TokitoBoot {
     private var beginMs = 0L
     private var atlases = 0
 
+    /** When the last line of the log of the game arrived (elapsedRealtime), 0 = none yet */
+    @Volatile
+    private var lastLineMs = 0L
+
+    /** Milliseconds without any new line in the log of the game (0 while no line arrived yet) */
+    fun quietMillis(): Long = if (lastLineMs == 0L) 0L else SystemClock.elapsedRealtime() - lastLineMs
+
+    /**
+     * The game stopped writing in the log after it built its textures: it is at the title screen (some setups never
+     * print the sound engine line). The loading screen can go away.
+     */
+    fun markReadyByQuiet() {
+        if (!loading || ready) return
+        stage = Stage.SOUND
+        progress = 0.96f
+        ready = true
+    }
+
     /**
      * The game process starts: the loading screen comes up and starts to listen to the log of the game.
      * @param pressMsFromIntent the time that the player tapped PLAY, 0 if unknown
@@ -108,6 +126,7 @@ object TokitoBoot {
             now - (SystemClock.elapsedRealtime() - Process.getStartElapsedRealtime())
         }
         atlases = 0
+        lastLineMs = 0L
         progress = 0.05f
         stage = Stage.START
         ready = false
@@ -119,6 +138,7 @@ object TokitoBoot {
     fun elapsedSeconds(): Int = ((System.currentTimeMillis() - beginMs) / 1000L).toInt().coerceAtLeast(0)
 
     private fun onLogLine(line: String) {
+        lastLineMs = SystemClock.elapsedRealtime()
         if (!loading || ready) return
         when {
             //the sound engine is the last thing that starts before the title screen

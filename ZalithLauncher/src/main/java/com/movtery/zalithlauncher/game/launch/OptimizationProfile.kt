@@ -74,8 +74,8 @@ object OptimizationProfile {
      * and `IgnoreUnrecognizedVMOptions` makes the JVM skip an option that it does not know (the JVMs of the
      * launcher are not all the same).
      *
-     * - **Fast boot** (its own switch, on by default): the bytecode of the game is not verified again at every start
-     *   (it is the same jar that already ran), which makes the game open sooner.
+     * - **Fast boot** (its own switch, on by default): the check of the game files is skipped when the same version
+     *   was checked without problems in the last days (see [com.movtery.zalithlauncher.tokito.TokitoFastBoot]).
      * - **Light and fast chunks:** the G1 garbage collector tuned for short pauses. A chunk that loads makes a lot
      *   of short lived objects; with these settings the collector cleans them in small bites, so the game does not
      *   freeze (and the FPS does not fall) at the moment a chunk arrives.
@@ -91,33 +91,23 @@ object OptimizationProfile {
             args.add("-XX:+IgnoreUnrecognizedVMOptions")
         }
 
-        if (fastBoot && !has("-XX:-BytecodeVerificationRemote") && !has("-XX:+BytecodeVerificationRemote")) {
-            args.add("-XX:-BytecodeVerificationRemote")
-        }
+        // The fast boot does NOT turn the bytecode verifier off any more (-XX:-BytecodeVerificationRemote): with it
+        // off, a mod with a bad class makes the JVM crash for real instead of showing a normal error, and that was
+        // one of the crashes reported while playing. What stays of the fast boot is the skipped file check.
 
         if (!light) return
-        if (!has("-XX:+UnlockExperimentalVMOptions")) args.add("-XX:+UnlockExperimentalVMOptions")
+        // "Light and fast chunks": only options that every JVM of the launcher understands and that cannot make the
+        // game crash. The old "server style" set (IHOP 20, tenuring 1, survivor ratio 32, mixed GC targets...) was
+        // removed: on a phone it kept the collector working all the time and took CPU from the render thread.
         if (!has("-XX:+UseG1GC") && !has("-XX:+UseSerialGC") && !has("-XX:+UseParallelGC") &&
             !has("-XX:+UseZGC") && !has("-XX:+UseShenandoahGC") && !has("-XX:+UseConcMarkSweepGC")
         ) {
-            args.add("-XX:+UseG1GC")
+            args.add("-XX:+UseG1GC") // short pauses (the default collector of Java 8 pauses for long)
         }
-        //shorter garbage collector pauses
-        if (!has("-XX:MaxGCPauseMillis")) args.add("-XX:MaxGCPauseMillis=30")
-        if (!has("-XX:G1NewSizePercent")) args.add("-XX:G1NewSizePercent=30")
-        if (!has("-XX:G1MaxNewSizePercent")) args.add("-XX:G1MaxNewSizePercent=45")
-        if (!has("-XX:G1ReservePercent")) args.add("-XX:G1ReservePercent=20")
-        if (!has("-XX:G1MixedGCCountTarget")) args.add("-XX:G1MixedGCCountTarget=4")
-        if (!has("-XX:InitiatingHeapOccupancyPercent")) args.add("-XX:InitiatingHeapOccupancyPercent=20")
-        if (!has("-XX:G1MixedGCLiveThresholdPercent")) args.add("-XX:G1MixedGCLiveThresholdPercent=90")
-        if (!has("-XX:G1RSetUpdatingPauseTimePercent")) args.add("-XX:G1RSetUpdatingPauseTimePercent=5")
-        if (!has("-XX:SurvivorRatio")) args.add("-XX:SurvivorRatio=32")
-        if (!has("-XX:MaxTenuringThreshold")) args.add("-XX:MaxTenuringThreshold=1")
+        if (!has("-XX:MaxGCPauseMillis")) args.add("-XX:MaxGCPauseMillis=50") // pause goal of the collector (default 200)
         if (!has("-XX:+ParallelRefProcEnabled") && !has("-XX:-ParallelRefProcEnabled")) {
-            args.add("-XX:+ParallelRefProcEnabled")
+            args.add("-XX:+ParallelRefProcEnabled") // cleans references in parallel: shorter pauses
         }
-        //cleans the classes that are no longer used, so the memory of the game does not fill up with them
-        if (!has("-XX:+ClassUnloading") && !has("-XX:-ClassUnloading")) args.add("-XX:+ClassUnloading")
         Logger.info(TAG, "Light and fast chunks: JVM arguments added")
     }
 

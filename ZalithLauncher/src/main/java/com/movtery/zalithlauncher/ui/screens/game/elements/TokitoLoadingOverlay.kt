@@ -92,6 +92,15 @@ fun TokitoLoadingOverlay() {
             ).show()
         }
     }
+    //the game stopped writing in the log after its textures: it is at the title screen
+    LaunchedEffect(loading) {
+        while (loading) {
+            delay(1000L)
+            if (!TokitoBoot.ready && TokitoBoot.stage >= TokitoBoot.Stage.TEXTURES && TokitoBoot.quietMillis() > 12_000L) {
+                TokitoBoot.markReadyByQuiet()
+            }
+        }
+    }
     //the game never said it: do not keep the player waiting for ever
     LaunchedEffect(loading) {
         if (loading) {
@@ -146,8 +155,15 @@ private fun LoadingContent(onSkip: () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .background(Brush.verticalGradient(listOf(Color(0xFF1E1022), Color(0xFF4A1E3D))))
-            //the loading screen must not let a tap through to the game that is still loading
-            .pointerInput(Unit) { detectTapGestures { } }
+            //the loading screen does not let a tap through to the game only while it starts; after that it never holds
+            //the touch (an unresponsive screen was one of the reported bugs)
+            .then(
+                if (elapsed < TokitoBoot.SKIP_AFTER_SECONDS) {
+                    Modifier.pointerInput(Unit) { detectTapGestures { } }
+                } else {
+                    Modifier
+                }
+            )
     ) {
         Column(
             modifier = Modifier

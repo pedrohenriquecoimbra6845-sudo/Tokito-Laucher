@@ -32,3 +32,5 @@ LWJGL/*/build/
 
 .vscode/
 
+
+__pycache__/

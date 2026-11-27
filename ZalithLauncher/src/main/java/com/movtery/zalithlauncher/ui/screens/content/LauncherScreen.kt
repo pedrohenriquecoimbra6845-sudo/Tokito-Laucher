@@ -18,118 +18,89 @@
 
 package com.movtery.zalithlauncher.ui.screens.content
 
-import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.boundsInParent
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.movtery.cardgrid.state.rememberCardGridState
-import com.movtery.guide.GuideSide
 import com.movtery.guide.guideNode
-import com.movtery.petlib.PetAnimation
-import com.movtery.petlib.PetTapReaction
 import com.movtery.zalithlauncher.R
-import com.movtery.zalithlauncher.game.account.Account
-import com.movtery.zalithlauncher.game.account.AccountsManager
-import com.movtery.zalithlauncher.game.account.getAccountTypeName
-import com.movtery.zalithlauncher.game.account.wardrobe.toArmModel
+import com.movtery.zalithlauncher.game.download.addon.platform.Platform
+import com.movtery.zalithlauncher.game.download.addon.platform.PlatformClasses
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.setting.AllSettings
-import com.movtery.zalithlauncher.setting.enums.ActionMenuSide
+import com.movtery.zalithlauncher.tokito.TokitoPackInfo
 import com.movtery.zalithlauncher.ui.base.BaseScreen
-import com.movtery.zalithlauncher.ui.components.AnimatedDirection
-import com.movtery.zalithlauncher.ui.components.BackgroundCard
-import com.movtery.zalithlauncher.ui.components.MarqueeText
-import com.movtery.zalithlauncher.ui.components.PetModelView
-import com.movtery.zalithlauncher.ui.components.ScalingActionButton
-import com.movtery.zalithlauncher.ui.components.ScreenType
-import com.movtery.zalithlauncher.ui.components.ScreenTypeLayout
 import com.movtery.zalithlauncher.ui.components.TokitoEntry
 import com.movtery.zalithlauncher.ui.components.TokitoNoticeHost
-import com.movtery.zalithlauncher.ui.components.TokitoPullDown
 import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.rememberAnimatedContext
 import com.movtery.zalithlauncher.ui.guide.GuideKeys
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
-import com.movtery.zalithlauncher.ui.screens.content.elements.CommonVersionInfoLayout
-import com.movtery.zalithlauncher.ui.screens.content.elements.PlayerFace
-import com.movtery.zalithlauncher.ui.screens.content.elements.VersionIconImage
 import com.movtery.zalithlauncher.ui.screens.content.home.HomeGrid
-import com.movtery.zalithlauncher.ui.screens.content.home.LocalActionMenuDrag
-import com.movtery.zalithlauncher.ui.screens.content.home.actionMenuDragAnchor
-import com.movtery.zalithlauncher.ui.screens.content.home.actionMenuDragExclusion
-import com.movtery.zalithlauncher.ui.screens.content.home.rememberActionMenuDragState
-import com.movtery.zalithlauncher.ui.screens.content.home.server.LocalServerCardQuickPlay
-import com.movtery.zalithlauncher.ui.screens.content.home.version.LocalHomeCardLauncher
-import com.movtery.zalithlauncher.ui.screens.content.home.version.LocalHomeCardVersionSettings
 import com.movtery.zalithlauncher.ui.screens.content.home.HomeLibraryCategory
+import com.movtery.zalithlauncher.ui.screens.content.home.HomeMainStrip
+import com.movtery.zalithlauncher.ui.screens.content.home.HomeMiniWallpaper
+import com.movtery.zalithlauncher.ui.screens.content.home.HomeMiniWallpaperDialog
 import com.movtery.zalithlauncher.ui.screens.content.home.LocalHomeLibraryOpener
 import com.movtery.zalithlauncher.ui.screens.content.home.LocalHomeLinkOpener
 import com.movtery.zalithlauncher.ui.screens.content.home.TokitoHero
 import com.movtery.zalithlauncher.ui.screens.content.home.TokitoMainCustomizeDialog
+import com.movtery.zalithlauncher.ui.screens.content.home.server.LocalServerCardQuickPlay
+import com.movtery.zalithlauncher.ui.screens.content.home.version.LocalHomeCardLauncher
+import com.movtery.zalithlauncher.ui.screens.content.home.version.LocalHomeCardVersionSettings
 import com.movtery.zalithlauncher.viewmodel.ScreenBackStackViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withContext
-import kotlin.math.roundToInt
 
-/** Tokito Launcher: width share of the hero (3D skin + PLAY) and of the "Principais coisas" panel */
-private const val HeroWeight = 6f
-private const val NewsWeight = 4f
+/** Tokito Launcher: the PLAY card never gets narrower than this, whatever the player chose (and never wider than 60% of the screen) */
+private val MinHeroWidth = 168.dp
 
+/** Height of the PLAY card, in widths (3D character, name and the PLAY button fit in it) */
+private const val HeroHeightRatio = 1.45f
+
+/**
+ * Tokito Launcher: the home screen.
+ *
+ * - On top: the "Principais coisas" strip (notices, updated modpacks, library, modes, skins, stream, chat...).
+ * - Near the middle: the Mini Wallpaper (one picture that the player chooses).
+ * - Bottom right: the small PLAY card (3D character, PLAY, account and version), with the size and the background that
+ *   the player chose.
+ * - At the bottom: the notice of the unofficial version (the cards of versions and servers are in "Meus cartões").
+ */
 @Composable
 fun LauncherScreen(
     backStackViewModel: ScreenBackStackViewModel,
@@ -166,111 +137,225 @@ fun LauncherScreen(
                 navigateToVersions(version)
             }
         }
+        val openLibrary: (HomeLibraryCategory) -> Unit = { category ->
+            backStackViewModel.navigateToDownload(
+                when (category) {
+                    HomeLibraryCategory.MODS -> backStackViewModel.downloadModScreen
+                    HomeLibraryCategory.RESOURCE_PACKS -> backStackViewModel.downloadResourcePackScreen
+                    HomeLibraryCategory.MODPACKS -> backStackViewModel.downloadModPackScreen
+                    HomeLibraryCategory.SHADERS -> backStackViewModel.downloadShadersScreen
+                    HomeLibraryCategory.WORLDS -> backStackViewModel.downloadSavesScreen
+                }
+            )
+        }
+        //the page of a modpack of Modrinth, where it can be installed again (updated)
+        val openModpackPage: (TokitoPackInfo) -> Unit = { pack ->
+            backStackViewModel.navigateToDownload(
+                targetScreen = backStackViewModel.downloadModPackScreen.apply {
+                    navigateTo(
+                        NormalNavKey.DownloadAddon(
+                            platform = Platform.MODRINTH,
+                            projectId = pack.projectId,
+                            classes = PlatformClasses.MOD_PACK,
+                            iconUrl = pack.iconUrl
+                        )
+                    )
+                }
+            )
+        }
 
         var showCustomize by remember { mutableStateOf(false) }
+        var showWallpaper by remember { mutableStateOf(false) }
+        var showCards by remember { mutableStateOf(false) }
 
-        Box(modifier = Modifier.fillMaxSize()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(10.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                //hero: 3D skin, PLAY button and version list
-                TokitoHero(
-                    modifier = Modifier
-                        .weight(HeroWeight)
-                        .fillMaxHeight(),
-                    onLaunchGame = onLaunchGame,
-                    toAccountManageScreen = toAccountManageScreen,
-                    toVersionManageScreen = toVersionManageScreen,
-                    toVersionSettingsScreen = toVersionSettingsScreen
-                )
-
-                //"Principais coisas" panel: the things the player chose (library, modes, skins, pop-ups, news) and the cards of the user
+        CompositionLocalProvider(
+            LocalUriHandler provides object : UriHandler {
+                override fun openUri(uri: String) {
+                    onOpenLink(uri)
+                }
+            },
+            LocalHomeLinkOpener provides onOpenLink,
+            LocalHomeLibraryOpener provides openLibrary
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
                 Column(
                     modifier = Modifier
-                        .weight(NewsWeight)
-                        .fillMaxHeight()
-                        .guideNode(
-                            key = GuideKeys.Main.Step.CardTip,
-                            holeRadius = 0.dp
-                        )
+                        .fillMaxSize()
+                        .padding(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Row(
+                    //"Principais coisas": one strip at the top, dragged sideways
+                    HomeMainStrip(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            .guideNode(
+                                key = GuideKeys.Main.Step.CardTip,
+                                holeRadius = 0.dp
+                            ),
+                        onOpenLibrary = openLibrary,
+                        onOpenModpackPage = openModpackPage,
+                        onOpenWallpaperSettings = { showWallpaper = true },
+                        onOpenAllCards = { showCards = true },
+                        onCustomize = { showCustomize = true }
+                    )
+
+                    BoxWithConstraints(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
                     ) {
-                        Icon(
-                            modifier = Modifier.size(20.dp),
-                            painter = painterResource(R.drawable.ic_dashboard_outlined),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            modifier = Modifier.weight(1f),
-                            text = stringResource(R.string.tokito_main_title),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        //the player chooses what is shown here and in which order
-                        IconButton(
-                            modifier = Modifier.size(32.dp),
-                            onClick = { showCustomize = true }
+                        //the size that the player chose (in pixels of the screen), kept inside what fits
+                        val chosen = with(LocalDensity.current) { AllSettings.homeHeroWidthPx.state.toDp() }
+                        val heroWidth = chosen.coerceAtLeast(MinHeroWidth).coerceAtMost(maxWidth * 0.6f)
+                        val heroHeight = minOf(heroWidth * HeroHeightRatio, maxHeight)
+
+                        Row(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Icon(
-                                modifier = Modifier.size(18.dp),
-                                painter = painterResource(R.drawable.ic_edit_outlined),
-                                contentDescription = stringResource(R.string.tokito_main_customize),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            //Mini Wallpaper: near the middle, in the space that the PLAY card leaves
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                            ) {
+                                HomeMiniWallpaper(
+                                    visible = isVisible,
+                                    onClick = { showWallpaper = true }
+                                )
+                            }
+
+                            //the small PLAY card, at the bottom right
+                            Box(
+                                modifier = Modifier
+                                    .width(heroWidth)
+                                    .fillMaxHeight(),
+                                contentAlignment = Alignment.BottomEnd
+                            ) {
+                                TokitoHero(
+                                    modifier = Modifier
+                                        .width(heroWidth)
+                                        .height(heroHeight),
+                                    onLaunchGame = onLaunchGame,
+                                    toAccountManageScreen = toAccountManageScreen,
+                                    toVersionManageScreen = toVersionManageScreen,
+                                    toVersionSettingsScreen = toVersionSettingsScreen,
+                                    isVisible = isVisible
+                                )
+                            }
                         }
                     }
 
-                    CompositionLocalProvider(
-                        LocalUriHandler provides object : UriHandler {
-                            override fun openUri(uri: String) {
-                                onOpenLink(uri)
-                            }
-                        }
-                    ) {
-                        ContentMenu(
-                            modifier = Modifier.weight(1f),
-                            isVisible = isVisible,
-                            onLaunchGame = { version ->
-                                onLaunchGame(version)
-                            },
-                            onQuickPlayServer = onQuickPlayServer,
-                            onOpenVersionSettings = navigateToVersions,
-                            onOpenLibrary = { category ->
-                                backStackViewModel.navigateToDownload(
-                                    when (category) {
-                                        HomeLibraryCategory.MODS -> backStackViewModel.downloadModScreen
-                                        HomeLibraryCategory.RESOURCE_PACKS -> backStackViewModel.downloadResourcePackScreen
-                                        HomeLibraryCategory.MODPACKS -> backStackViewModel.downloadModPackScreen
-                                        HomeLibraryCategory.SHADERS -> backStackViewModel.downloadShadersScreen
-                                        HomeLibraryCategory.WORLDS -> backStackViewModel.downloadSavesScreen
-                                    }
-                                )
-                            },
-                            onOpenLink = onOpenLink
+                    //the license asks for this notice to stay visible
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = stringResource(R.string.home_footer_notice),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                //"Novidades" after an update and the announcements of the creators
+                TokitoNoticeHost(isVisible = isVisible)
+            }
+
+            if (showCustomize) {
+                TokitoMainCustomizeDialog(onDismiss = { showCustomize = false })
+            }
+            if (showWallpaper) {
+                HomeMiniWallpaperDialog(onDismiss = { showWallpaper = false })
+            }
+            if (showCards) {
+                AllCardsDialog(
+                    onLaunchGame = onLaunchGame,
+                    onQuickPlayServer = onQuickPlayServer,
+                    onOpenVersionSettings = navigateToVersions,
+                    onOpenLibrary = openLibrary,
+                    onOpenLink = onOpenLink,
+                    onDismiss = { showCards = false }
+                )
+            }
+        }
+    }
+}
+
+/**
+ * "Meus cartões": the old grid of the home screen (the versions and the servers of the player, the
+ * license notice) in a window of its own. Anything that leaves the home screen closes it.
+ */
+@Composable
+private fun AllCardsDialog(
+    onLaunchGame: (Version) -> Unit,
+    onQuickPlayServer: (Version?, String) -> Unit,
+    onOpenVersionSettings: (Version) -> Unit,
+    onOpenLibrary: (HomeLibraryCategory) -> Unit,
+    onOpenLink: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth(0.94f)
+                .fillMaxHeight(0.92f),
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Icon(
+                        modifier = Modifier.size(22.dp),
+                        painter = painterResource(R.drawable.ic_dashboard_outlined),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        modifier = Modifier.weight(1f),
+                        text = stringResource(R.string.home_cards),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    IconButton(onClick = onDismiss) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_close),
+                            contentDescription = stringResource(R.string.generic_close)
                         )
                     }
                 }
+                HorizontalDivider()
+
+                ContentMenu(
+                    modifier = Modifier.weight(1f),
+                    isVisible = true,
+                    onLaunchGame = { version ->
+                        onDismiss()
+                        onLaunchGame(version)
+                    },
+                    onQuickPlayServer = { version, address ->
+                        onDismiss()
+                        onQuickPlayServer(version, address)
+                    },
+                    onOpenVersionSettings = { version ->
+                        onDismiss()
+                        onOpenVersionSettings(version)
+                    },
+                    onOpenLibrary = { category ->
+                        onDismiss()
+                        onOpenLibrary(category)
+                    },
+                    onOpenLink = onOpenLink
+                )
             }
-
-            //pull-down drawer: a tab parked in the corner; drag it down for the Main things and the pop-ups
-            TokitoPullDown(isVisible = isVisible)
-
-            //"Novidades" after an update and the announcements of the creators
-            TokitoNoticeHost(isVisible = isVisible)
-        }
-
-        if (showCustomize) {
-            TokitoMainCustomizeDialog(onDismiss = { showCustomize = false })
         }
     }
 }

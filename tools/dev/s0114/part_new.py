@@ -20,8 +20,6 @@ S = [
  ('tokito_heat_2', 'hot', 'quente'),
  ('tokito_heat_3', 'very hot', 'muito quente'),
  ('tokito_heat_4', 'critical', 'crítico'),
- ('tokito_pulldown_open', 'Pull down for Main things and pop-ups', 'Puxe para baixo: Principais coisas e pop-ups'),
- ('tokito_pulldown_popups_off', 'Pop-ups are turned off. Turn them on in the pop-ups window.', 'Os pop-ups estão desligados. Ligue na janela de pop-ups.'),
  ('tokito_skins_cat_mine', 'My skins', 'Minhas skins'),
  ('tokito_skins_cat_search', 'Search', 'Pesquisar'),
  ('tokito_skins_filter_hint', 'Filter by name', 'Filtrar pelo nome'),

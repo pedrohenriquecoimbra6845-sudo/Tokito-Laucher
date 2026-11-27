@@ -214,6 +214,8 @@ class MainActivity : BaseAppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        //Tokito Launcher: the screens of the launcher run at 60 Hz (less heat and battery); the game sets its own rate
+        window.attributes = window.attributes.apply { preferredRefreshRate = 60f }
         //处理外部导入
         val isImporting = handleImportIfNeeded(intent)
 

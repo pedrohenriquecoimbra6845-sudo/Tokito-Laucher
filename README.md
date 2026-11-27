@@ -1,8 +1,8 @@
 # Tokito Launcher
 
-Launcher de **Minecraft: Java Edition para Android** (motor PojavLauncher), com visual próprio em vermelho, rosa e roxo, vários estilos de launcher, **modos de otimização** para ganhar fluidez, **pop-ups com fotos e vídeos** na tela inicial, biblioteca de **skins** e a conta própria **TokiAuth**.
+Launcher de **Minecraft: Java Edition para Android** (motor PojavLauncher), com visual próprio em vermelho, rosa e roxo, vários estilos de launcher, **modos de otimização** para ganhar fluidez, **Mini Wallpaper** e **Painel de Stream**, biblioteca de **skins** e a conta própria **TokiAuth**.
 
-Versão de teste (branch `preview`): **Tokito Preview t0.0.1** — instala ao lado do Tokito Launcher estável (outro ID de aplicativo: `com.tokito.preview`).
+Versão de teste (branch `preview`): **Tokito Preview 0.11.5** — instala ao lado do Tokito Launcher estável (outro ID de aplicativo: `com.tokito.preview`).
 
 Versão estável (branch `main`): **0.11.4**
 
@@ -11,7 +11,7 @@ Criadores: **Claude, pedznb**
 > **Versão Modificada Não Oficial** do [Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2).
 > Não é afiliada nem endossada pelos desenvolvedores do Zalith Launcher.
 
-## Tokito Preview t0.0.1 (versão de teste)
+## Tokito Preview 0.11.5 (versão de teste)
 
 Esta branch (`preview`) gera o **Tokito Preview**: um app separado (`com.tokito.preview`), com nome e versão próprios, que **instala ao lado** do Tokito Launcher estável e não mexe nos dados dele. Serve para testar as novidades antes de irem para a `main`. Pode ter bugs.
 
@@ -23,7 +23,12 @@ Esta branch (`preview`) gera o **Tokito Preview**: um app separado (`com.tokito.
   - **Survival:** o mesmo controle, mais calmo (teto de 90 FPS), calibra o FPS (guarda o que o celular segurou e começa dali), cache de shaders maior e, com o jogo em segundo plano, cai para 10 FPS.
   - **Brutal:** tudo isso mais as **chunks leves e rápidas**: a JVM é ajustada (pausas curtas do coletor de lixo e limpeza de classes) para uma chunk que carrega não travar nem derrubar o jogo.
   - Quantos FPS cada modo ganha depende do celular: não existe número garantido.
-- **Gaveta de puxar para baixo:** uma aba fica parada no canto superior direito da tela inicial. Puxe para baixo (ou toque) e abre a gaveta com as **Principais coisas** (modos, skins, pop-ups, novidades, senha do TokiAuth) e os **pop-ups**. Os vídeos só tocam com a gaveta aberta, um de cada vez.
+- **Tela inicial nova.** O cartão do **PLAY** (boneco 3D, conta e versão) ficou **pequeno no canto inferior direito**: o tamanho (300 a 900 px) e o **fundo (foto ou vídeo da galeria)** são escolhidos por você. O **Mini Wallpaper** é uma imagem só, perto do meio, com uma animação de flores ao abrir (até 50 FPS; depois fica parada e não gasta nada). As **Principais coisas** viraram uma **faixa no topo**, que se arrasta para o lado. A gaveta de puxar para baixo saiu. As cartas de versões e servidores estão em **Meus cartões**.
+- **Avisos e Modpacks atualizados** ficam no começo da faixa: os avisos dos criadores e, ao lado, os seus modpacks que **podem** ter versão nova (é um palpite pelo nome, buscado no Modrinth) e os que foram atualizados há pouco; tocar abre a página do modpack para instalar.
+- **Painel de Stream** (TikTok, YouTube e Twitch): **Modo Live** (FPS no máximo 60, clock estável, chunks leves, cache de shaders maior e jogo sem perder velocidade com o app da live na frente), **teclas** (mutar o microfone, mutar o som, **tela preta**, Modo Live, Discord; também funcionam com as letras M, S, B, L, D num teclado físico), cartões das plataformas com números sugeridos, atalho para abrir o app e copiar o servidor, e a parte de voz (call do Discord, permissão do microfone, mod de chat de voz). **O Tokito ainda não codifica nem envia vídeo sozinho**: a live é enviada pelo app da plataforma. As mesmas teclas estão numa aba do menu do jogo.
+- **Menu do jogo:** as categorias da esquerda agora **deslizam para o lado**.
+- **Fundos** em Mods, Versões (agrupadas por família, como 1.8 a 1.8.9), Texturas, Shaders e Modpacks. Telas do launcher a **60 Hz**.
+- **Início mais seguro:** um driver gráfico que impede o jogo de abrir várias vezes seguidas é deixado de lado (o Rust do Horizon não foi portado: não é portável para este launcher).
 - **Skins com categorias:** *Minhas skins* (com filtro pelo nome) e *Pesquisar*: digite o nome de um jogador de Minecraft Java, veja a skin, guarde ou use. A consulta usa o serviço de perfis da Mojang e baixa só a imagem da skin.
 - **TokiAuth com senha:** a senha (mínimo 6 caracteres) é guardada neste aparelho só como hash (PBKDF2-HMAC-SHA256, sal aleatório) e é pedida antes de abrir o jogo (uma vez a cada vez que o launcher abre). Contas TokiAuth antigas podem ganhar senha pela gaveta. Há um botão para abrir o site https://tokitolauncher.base44.app. **A conta ainda não conversa com o site** (veja *Notas*).
 - **Aberturas mais rápidas:** a troca entre telas ficou cerca de 40% mais rápida, a animação de entrada é bem mais curta e o cache de imagens foi aumentado.

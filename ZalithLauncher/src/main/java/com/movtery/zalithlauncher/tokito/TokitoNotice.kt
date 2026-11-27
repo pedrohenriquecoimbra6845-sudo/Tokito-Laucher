@@ -57,23 +57,26 @@ data class TokitoNotice(
  */
 object TokitoNotices {
     /** Tokito Preview (version name "t0.0.1") reads the file of its own branch, so it never gets the notices of the stable version */
-    private val isPreview: Boolean = com.movtery.zalithlauncher.BuildConfig.VERSION_NAME.startsWith("t")
+    private val isPreview: Boolean = com.movtery.zalithlauncher.BuildConfig.APPLICATION_ID.endsWith(".preview")
 
     val NOTICE_URL: String =
         "https://raw.githubusercontent.com/pedrohenriquecoimbra6845-sudo/Tokito-Laucher/" +
             (if (isPreview) "preview" else "main") + "/tokito-update.json"
 
     private const val CHECK_INTERVAL_MS = 6L * 60L * 60L * 1000L
+
+    /** The newest announcement that was read in this run of the launcher (null until one is read): the "Avisos" tile */
+    val latest = kotlinx.coroutines.flow.MutableStateFlow<TokitoNotice?>(null)
     private const val MAX_CHARS = 64 * 1024
 
     /**
      * @return the announcement when one is published, null when there is none, the check is not due yet
      * or there is no internet
      */
-    suspend fun check(): TokitoNotice? = withContext(Dispatchers.IO) {
+    suspend fun check(force: Boolean = false): TokitoNotice? = withContext(Dispatchers.IO) {
         val now = System.currentTimeMillis()
         val last = AllSettings.tokitoLastNoticeCheck.getValue()
-        if (last in 1..now && now - last < CHECK_INTERVAL_MS) return@withContext null
+        if (!force && last in 1..now && now - last < CHECK_INTERVAL_MS) return@withContext null
 
         try {
             val request = createRequestBuilder(NOTICE_URL)
@@ -83,7 +86,7 @@ object TokitoNotices {
                 AllSettings.tokitoLastNoticeCheck.save(now)
                 if (!response.isSuccessful) return@use null
                 val text = response.body?.string()?.take(MAX_CHARS) ?: return@use null
-                parse(text)
+                parse(text)?.also { latest.value = it }
             }
         } catch (e: CancellationException) {
             throw e

@@ -33,6 +33,9 @@ import com.movtery.zalithlauncher.R
  *   and nothing of the launcher running in the background.
  * - [BRUTAL]: everything of the other modes plus light and fast chunks (JVM tuned so a chunk that loads does
  *   not freeze or crash the game).
+ * - [LIVE]: for streaming (TikTok, YouTube, Twitch) while playing: the FPS never goes over 60 (what the video
+ *   encoder of the phone follows well), steady clock, light chunks, bigger shader cache, and the game keeps its
+ *   speed in the background (the live app may be in front). The Stream panel turns it on.
  *
  * @param labelRes full name of the mode
  * @param chipRes short name, shown on the chip of the home screen
@@ -46,13 +49,19 @@ enum class OptimizationMode(
     OFF(R.string.tokito_opt_off, R.string.tokito_opt_chip_off, R.string.tokito_opt_off_desc),
     PVP(R.string.tokito_opt_pvp, R.string.tokito_opt_chip_pvp, R.string.tokito_opt_pvp_desc),
     SURVIVAL(R.string.tokito_opt_survival, R.string.tokito_opt_chip_survival, R.string.tokito_opt_survival_desc),
-    BRUTAL(R.string.tokito_opt_brutal, R.string.tokito_opt_chip_brutal, R.string.tokito_opt_brutal_desc);
+    BRUTAL(R.string.tokito_opt_brutal, R.string.tokito_opt_chip_brutal, R.string.tokito_opt_brutal_desc),
+    LIVE(R.string.tokito_opt_live, R.string.tokito_opt_chip_live, R.string.tokito_opt_live_desc);
 
     /** The FPS governor (limit in steps of 10, heat and real FPS) runs while the game is open */
     val limitsFps: Boolean get() = this != OFF
 
-    /** Highest FPS of the governor: Survival is calmer (it never asks for more than 90) */
-    val fpsCeilingCap: Int get() = if (this == SURVIVAL) 90 else Int.MAX_VALUE
+    /** Highest FPS of the governor: Survival is calmer (90) and Live stays where the video encoder of the phone follows (60) */
+    val fpsCeilingCap: Int
+        get() = when (this) {
+            SURVIVAL -> 90
+            LIVE -> 60
+            else -> Int.MAX_VALUE
+        }
 
     /** Lower DPI of the launcher and a smaller character on the home screen */
     val shrinksLauncher: Boolean get() = this == PVP || this == BRUTAL
@@ -61,10 +70,10 @@ enum class OptimizationMode(
     val keepsSteadyClock: Boolean get() = this != OFF
 
     /** Bigger shader cache for the Mesa based renderers */
-    val growsShaderCache: Boolean get() = this == SURVIVAL || this == BRUTAL
+    val growsShaderCache: Boolean get() = this == SURVIVAL || this == BRUTAL || this == LIVE
 
     /** Light and fast chunks: JVM tuned against freezes and crashes when a chunk loads */
-    val includesLightChunks: Boolean get() = this == BRUTAL
+    val includesLightChunks: Boolean get() = this == BRUTAL || this == LIVE
 
     /** While the game is in the background the limit drops to 10 FPS (less heat and battery) and comes back when it returns */
     val quietBackground: Boolean get() = this == SURVIVAL || this == BRUTAL

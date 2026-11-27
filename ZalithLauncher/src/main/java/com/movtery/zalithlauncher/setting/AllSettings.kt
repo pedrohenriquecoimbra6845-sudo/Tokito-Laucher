@@ -398,9 +398,15 @@ object AllSettings : SettingsRegistry() {
     val launcherPvpMode = boolSetting("launcherPvpMode", false)
 
     /**
-     * Tokito Launcher: optimization mode (Off, PVP, Survival or Brutal)
+     * Tokito Launcher: optimization mode (Off, PVP, Survival, Brutal or Live)
      */
     val launcherOptimizationMode = enumSetting("launcherOptimizationMode", OptimizationMode.OFF)
+
+    /**
+     * Tokito Launcher: the optimization mode that was on before the Stream panel turned the Live mode on
+     * (it comes back when the Live mode is turned off)
+     */
+    val tokitoStreamPrevMode = enumSetting("tokitoStreamPrevMode", OptimizationMode.PVP)
 
     /**
      * Tokito Launcher: "light and fast chunks", also part of the Survival and Brutal modes
@@ -508,6 +514,43 @@ object AllSettings : SettingsRegistry() {
      * Tokito Launcher: the grid of the home screen moves. Turn it off for a calmer, lighter home screen.
      */
     val homeAnimations = boolSetting("homeAnimations", true)
+
+    /**
+     * Tokito Launcher: width of the small card of the home screen (PLAY + 3D character), in pixels of the screen
+     */
+    val homeHeroWidthPx = intSetting("homeHeroWidthPx", 490, 300, 900)
+
+    /**
+     * Tokito Launcher: what is behind the character on the home screen: "" (the Minecraft-style default),
+     * "photo" or "video" (the file is [homeHeroBackdropFile])
+     */
+    val homeHeroBackdrop = stringSetting("homeHeroBackdrop", "")
+
+    /**
+     * Tokito Launcher: name of the photo or video (inside the Tokito home folder) behind the character
+     */
+    val homeHeroBackdropFile = stringSetting("homeHeroBackdropFile", "")
+
+    /**
+     * Tokito Launcher: the Mini Wallpaper (one still photo near the middle of the home screen) is shown
+     */
+    val homeMiniWallpaperOn = boolSetting("homeMiniWallpaperOn", true)
+
+    /**
+     * Tokito Launcher: id of the ready-made picture of the Mini Wallpaper (empty: the default one)
+     */
+    val homeMiniWallpaper = stringSetting("homeMiniWallpaper", "")
+
+    /**
+     * Tokito Launcher: name of the photo (inside the Tokito home folder) that the player chose for the
+     * Mini Wallpaper. When it is not empty it is used instead of the ready-made picture.
+     */
+    val homeMiniWallpaperFile = stringSetting("homeMiniWallpaperFile", "")
+
+    /**
+     * Tokito Launcher: the flower blows bubbles until the Mini Wallpaper forms (once each time the app opens)
+     */
+    val homeMiniWallpaperIntro = boolSetting("homeMiniWallpaperIntro", true)
 
     /**
      * 自定义颜色主题色

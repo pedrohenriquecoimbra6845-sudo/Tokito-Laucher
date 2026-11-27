@@ -42,6 +42,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -89,6 +90,7 @@ import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.OptimizationMode
 import com.movtery.zalithlauncher.ui.components.OptimizationDialog
 import com.movtery.zalithlauncher.ui.components.PetModelView
+import com.movtery.zalithlauncher.ui.components.TokitoSkinsDialog
 import com.movtery.zalithlauncher.ui.guide.GuideKeys
 import com.movtery.zalithlauncher.ui.screens.content.elements.CommonVersionInfoLayout
 import com.movtery.zalithlauncher.ui.screens.content.elements.PlayerFace
@@ -100,12 +102,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Tokito hero: the big center of the home screen.
+ * Tokito hero: the small card of the home screen (bottom right corner).
  *
- * A perspective grid "floor" with the player's 3D skin standing on it, the player name on top
- * and a big PLAY button (with a version dropdown) at the bottom.
+ * A backdrop (the Minecraft-style default, or a photo or a video that the player chose) with the player's 3D skin
+ * standing on it, the player name on top and the PLAY button (with a version dropdown) at the bottom. Two round
+ * buttons on the sides of the character open the skins and the settings of the card (size and backdrop).
+ * When the card is narrow it switches to a compact layout.
  *
  * @param onLaunchGame starts the game; null means "the selected version"
+ * @param isVisible the home screen is the one that the player is looking at (a video backdrop only plays then)
  */
 @Composable
 fun TokitoHero(
@@ -113,7 +118,8 @@ fun TokitoHero(
     toAccountManageScreen: () -> Unit,
     toVersionManageScreen: () -> Unit,
     toVersionSettingsScreen: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isVisible: Boolean = true
 ) {
     val account by AccountsManager.currentAccountFlow.collectAsStateWithLifecycle()
     val refreshWardrobe by AccountsManager.refreshWardrobe.collectAsStateWithLifecycle()
@@ -125,6 +131,8 @@ fun TokitoHero(
     val optimization = AllSettings.launcherOptimizationMode.state
     val shrink = optimization.shrinksLauncher
     var showOptimization by remember { mutableStateOf(false) }
+    var showSkins by remember { mutableStateOf(false) }
+    var showCardSettings by remember { mutableStateOf(false) }
     //tela inicial mais leve e suave: com as animações desligadas o boneco fica parado e a grade não se move
     val animated = AllSettings.homeAnimations.state
     val backgroundShown = backgroundVisible()
@@ -136,33 +144,51 @@ fun TokitoHero(
             tint = MaterialTheme.colorScheme.surfaceContainerLow
         )
     ) {
-        TokitoGridBackdrop(
-            modifier = Modifier.fillMaxSize(),
+        //a narrow card (the default is small) uses smaller chips, a slimmer PLAY bar and less empty space
+        val compact = maxWidth < COMPACT_WIDTH
+
+        HomeHeroBackdrop(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(shape),
             style = style,
-            backgroundShown = backgroundShown
+            backgroundShown = backgroundShown,
+            playVideo = isVisible
         )
 
         //with little height the 3D model would be tiny: show the face instead
-        val showModel = maxHeight >= 250.dp
+        val showModel = maxHeight >= if (compact) 190.dp else 250.dp
         val currentAccount = account
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 14.dp),
+                .padding(
+                    start = if (compact) 10.dp else 16.dp,
+                    end = if (compact) 10.dp else 16.dp,
+                    top = if (compact) 8.dp else 12.dp,
+                    bottom = if (compact) 10.dp else 14.dp
+                ),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 10.dp)
         ) {
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(
+                    space = if (compact) 6.dp else 8.dp,
+                    alignment = Alignment.CenterHorizontally
+                )
             ) {
                 TokitoPlayerChip(
+                    modifier = Modifier.weight(1f, fill = false),
                     account = currentAccount,
+                    compact = compact,
                     onClick = toAccountManageScreen
                 )
                 TokitoModeChip(
                     mode = optimization,
+                    compact = compact,
                     onClick = { showOptimization = true }
                 )
             }
@@ -215,9 +241,24 @@ fun TokitoHero(
                         avatarSize = if (shrink) 52.dp else 72.dp
                     )
                 }
+
+                //the Skin button (change the skin) and the settings of the card (size and backdrop)
+                HeroRoundButton(
+                    modifier = Modifier.align(Alignment.BottomStart),
+                    iconRes = R.drawable.ic_checkroom,
+                    description = stringResource(R.string.tokito_main_item_skins),
+                    onClick = { showSkins = true }
+                )
+                HeroRoundButton(
+                    modifier = Modifier.align(Alignment.BottomEnd),
+                    iconRes = R.drawable.ic_edit_outlined,
+                    description = stringResource(R.string.home_hero_settings_title),
+                    onClick = { showCardSettings = true }
+                )
             }
 
             TokitoLaunchBar(
+                compact = compact,
                 version = version,
                 isRefreshing = isRefreshing,
                 onLaunchGame = onLaunchGame,
@@ -230,6 +271,40 @@ fun TokitoHero(
     if (showOptimization) {
         OptimizationDialog(onDismiss = { showOptimization = false })
     }
+    if (showSkins) {
+        TokitoSkinsDialog(onDismiss = { showSkins = false })
+    }
+    if (showCardSettings) {
+        HomeHeroSettingsDialog(onDismiss = { showCardSettings = false })
+    }
+}
+
+/** Below this width the card uses the compact layout */
+private val COMPACT_WIDTH = 260.dp
+
+/** A small round button over the backdrop (dark glass, white icon) */
+@Composable
+private fun HeroRoundButton(
+    iconRes: Int,
+    description: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .size(36.dp)
+            .clip(CircleShape)
+            .background(Color.Black.copy(alpha = 0.34f))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            modifier = Modifier.size(20.dp),
+            painter = painterResource(iconRes),
+            contentDescription = description,
+            tint = Color.White
+        )
+    }
 }
 
 /** Player name (and account type) shown above the character. Tap to manage the accounts. */
@@ -237,7 +312,8 @@ fun TokitoHero(
 private fun TokitoPlayerChip(
     account: Account?,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    compact: Boolean = false
 ) {
     val shape = MaterialTheme.shapes.large
     Row(
@@ -250,9 +326,9 @@ private fun TokitoPlayerChip(
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f))
             .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 6.dp),
+            .padding(horizontal = if (compact) 8.dp else 14.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp)
     ) {
         if (account != null) {
             PlayerFace(
@@ -268,13 +344,14 @@ private fun TokitoPlayerChip(
             )
         }
         Text(
-            modifier = Modifier.widthIn(max = 180.dp),
+            modifier = Modifier.widthIn(max = if (compact) 84.dp else 180.dp),
             text = account?.username ?: stringResource(R.string.account_add_new_account),
             style = MaterialTheme.typography.titleSmall,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-        if (account != null) {
+        //the type of the account ("Offline", "TokiAuth"...) does not fit in the compact card
+        if (account != null && !compact) {
             Text(
                 text = getAccountTypeName(account),
                 style = MaterialTheme.typography.labelSmall,
@@ -308,7 +385,8 @@ private const val GRID_ROWS = 6
 private fun TokitoModeChip(
     mode: OptimizationMode,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    compact: Boolean = false
 ) {
     val colors = MaterialTheme.colorScheme
     val shape = MaterialTheme.shapes.large
@@ -318,7 +396,7 @@ private fun TokitoModeChip(
             .clip(shape)
             .background(if (enabled) colors.tertiary else colors.surfaceContainerHigh.copy(alpha = 0.85f))
             .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 6.dp),
+            .padding(horizontal = if (compact) 8.dp else 14.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -343,8 +421,11 @@ private fun TokitoLaunchBar(
     onLaunchGame: (Version?) -> Unit,
     toVersionManageScreen: () -> Unit,
     toVersionSettingsScreen: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    compact: Boolean = false
 ) {
+    //the compact bar (narrow card) is a bit slimmer
+    val barHeight = if (compact) 52.dp else 64.dp
     var showList by remember { mutableStateOf(false) }
     val versions by VersionsManager.versions.collectAsStateWithLifecycle()
 
@@ -356,8 +437,8 @@ private fun TokitoLaunchBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(64.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+            .height(barHeight),
+        horizontalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
@@ -380,14 +461,14 @@ private fun TokitoLaunchBar(
                     .weight(1f)
                     .fillMaxHeight()
                     .clickable { onLaunchGame(null) }
-                    .padding(horizontal = 20.dp),
+                    .padding(horizontal = if (compact) 10.dp else 20.dp),
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = stringResource(R.string.tokito_play),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 3.sp,
+                    letterSpacing = if (compact) 2.sp else 3.sp,
                     color = onPrimary,
                     maxLines = 1
                 )
@@ -410,7 +491,7 @@ private fun TokitoLaunchBar(
 
             Box(
                 modifier = Modifier
-                    .width(56.dp)
+                    .width(if (compact) 38.dp else 56.dp)
                     .fillMaxHeight()
                     .background(Color.Black.copy(alpha = 0.14f))
                     .guideNode(
@@ -422,7 +503,7 @@ private fun TokitoLaunchBar(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(if (compact) 28.dp else 32.dp),
                     painter = painterResource(R.drawable.ic_arrow_drop_down_rounded),
                     contentDescription = stringResource(R.string.tokito_rail_versions),
                     tint = onPrimary
@@ -485,7 +566,7 @@ private fun TokitoLaunchBar(
 
         Box(
             modifier = Modifier
-                .size(64.dp)
+                .size(barHeight)
                 .clip(buttonShape)
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                 .clickable(enabled = canOpenSettings, onClick = toVersionSettingsScreen),
@@ -516,7 +597,7 @@ private fun TokitoLaunchBar(
  * home screen is not redrawn on every frame. With the home animations turned off nothing moves at all.
  */
 @Composable
-private fun TokitoGridBackdrop(
+internal fun TokitoGridBackdrop(
     style: LauncherStyle,
     backgroundShown: Boolean,
     modifier: Modifier = Modifier

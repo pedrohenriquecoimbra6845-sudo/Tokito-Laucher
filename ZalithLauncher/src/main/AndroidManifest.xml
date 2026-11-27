@@ -224,6 +224,11 @@
     </application>
     <queries>
         <package android:name="net.kdt.pojavlaunch.ffmpeg"/>
+        <package android:name="com.discord"/>
+        <package android:name="tv.twitch.android.app"/>
+        <package android:name="com.google.android.youtube"/>
+        <package android:name="com.zhiliaoapp.musically"/>
+        <package android:name="com.ss.android.ugc.trill"/>
         <intent>
             <action android:name="android.intent.action.MAIN" />
         </intent>

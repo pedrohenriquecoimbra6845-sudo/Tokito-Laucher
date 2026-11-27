@@ -47,6 +47,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
+import com.movtery.zalithlauncher.ui.components.TokitoStreamGameTab
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -100,7 +103,9 @@ private val controlTabs = listOf(
     //手势控制设置
     IconTab(R.drawable.ic_touch_app_filled),
     //陀螺仪设置
-    IconTab(R.drawable.ic_mobile_rotate_filled)
+    IconTab(R.drawable.ic_mobile_rotate_filled),
+    //Tokito Launcher: stream keys (mute, black screen, Discord)
+    IconTab(R.drawable.ic_stream_bolt)
 )
 
 @Composable
@@ -125,10 +130,23 @@ fun GameMenuSubscreen(
         state = state,
         closeScreen = closeScreen,
         leftMenuContent = {
-            val pagerState = rememberPagerState(pageCount = { controlTabs.size })
+            val pagerState = rememberPagerState(
+                initialPage = controlMenuTabIndex.coerceIn(0, controlTabs.size - 1),
+                pageCount = { controlTabs.size }
+            )
 
             LaunchedEffect(controlMenuTabIndex) {
-                pagerState.animateScrollToPage(controlMenuTabIndex)
+                if (pagerState.currentPage != controlMenuTabIndex) {
+                    pagerState.animateScrollToPage(controlMenuTabIndex)
+                }
+            }
+
+            //Tokito Launcher: the pages can be swiped sideways, and the tab follows the page once the swipe settles
+            val currentTab by rememberUpdatedState(controlMenuTabIndex)
+            LaunchedEffect(pagerState) {
+                snapshotFlow { pagerState.settledPage }.collect { page ->
+                    if (page != currentTab) onControlMenuTabChange(page)
+                }
             }
 
             Column {
@@ -158,7 +176,7 @@ fun GameMenuSubscreen(
 
                 HorizontalPager(
                     state = pagerState,
-                    userScrollEnabled = false,
+                    userScrollEnabled = true,
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f, fill = false)
@@ -181,6 +199,7 @@ fun GameMenuSubscreen(
                         )
                         3 -> ControlGesture(modifier = Modifier.fillMaxSize())
                         4 -> ControlGyroscope(modifier = Modifier.fillMaxSize())
+                        5 -> TokitoStreamGameTab(modifier = Modifier.fillMaxSize())
                     }
                 }
             }

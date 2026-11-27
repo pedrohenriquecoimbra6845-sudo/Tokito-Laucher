@@ -590,7 +590,7 @@ internal fun TokitoBlackScreen(onClose: () -> Unit) {
                 params.screenBrightness = 0.01f
                 window.attributes = params
                 val controller = WindowCompat.getInsetsController(window, view)
-                controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOWN_TRANSIENT_BY_SWIPE
+                controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 controller.hide(WindowInsetsCompat.Type.systemBars())
             }
             onDispose { }

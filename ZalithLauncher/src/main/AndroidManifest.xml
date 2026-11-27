@@ -59,6 +59,20 @@
             </intent-filter>
         </activity>
 
+        <!-- Tokito Launcher: the shop of the TokiAuth Original brings the player back to the game with the signed license -->
+        <activity-alias
+            android:name="com.movtery.activity.TokiAuthLinkActivity"
+            android:exported="true"
+            android:targetActivity=".ui.activities.SplashActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="tokito" android:host="tokiauth" />
+                <data android:scheme="tokitopreview" android:host="tokiauth" />
+            </intent-filter>
+        </activity-alias>
+
         <activity-alias
             android:label="@string/import_modpack"
             android:name="com.movtery.activity.ImportModpackActivity"

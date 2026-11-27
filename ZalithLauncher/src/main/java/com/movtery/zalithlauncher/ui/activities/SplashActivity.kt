@@ -353,8 +353,15 @@ class SplashActivity : BaseAppCompatActivity() {
     }
 
     private fun swapToMain() {
+        //Tokito Launcher: the shop of the TokiAuth Original brings the player back with a link that the MainActivity handles
+        val shopLink = intent?.takeIf { it.action == Intent.ACTION_VIEW }?.data
+            ?.takeIf { it.host == com.movtery.zalithlauncher.tokito.TokiAuthLicense.LINK_HOST }
         val forward = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            if (shopLink != null) {
+                action = Intent.ACTION_VIEW
+                data = shopLink
+            }
         }
         startActivity(forward)
         finish()

@@ -845,7 +845,8 @@ fun LocalLoginDialog(
     //Tokito Launcher: TokiAuth Original needs the license of the typed player name (R$ 3, free for the admin's player)
     var showLicense by remember { mutableStateOf(false) }
     var licenseTick by remember { mutableStateOf(0) }
-    val tokiLicensed = !tokiAuth || (licenseTick >= 0 && TokiAuthLicense.isLicensed(userName))
+    val licenseChanges by TokiAuthLicense.changes.collectAsStateWithLifecycle()
+    val tokiLicensed = !tokiAuth || (licenseTick >= 0 && licenseChanges >= 0 && TokiAuthLicense.isLicensed(userName))
     if (showLicense) {
         TokiAuthLicenseDialog(
             userName = userName,

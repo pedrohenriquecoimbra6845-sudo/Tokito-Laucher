@@ -19,12 +19,19 @@
 
 package com.movtery.zalithlauncher.tokito
 
+import android.net.Uri
 import android.util.Base64
+import com.movtery.zalithlauncher.BuildConfig
 import com.movtery.zalithlauncher.path.PathManager
 import com.movtery.zalithlauncher.utils.logging.Logger
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import org.json.JSONObject
 import java.io.File
 import java.security.KeyFactory
+import java.security.PublicKey
 import java.security.Signature
 import java.security.spec.X509EncodedKeySpec
 import java.util.Locale
@@ -37,21 +44,30 @@ private const val TAG = "TokiAuthLicense"
  * TokiAuth Original is the verified account of the Tokito Launcher. It is **not** a Mojang / Microsoft
  * license: servers that check the login online (premium) still do not accept it.
  *
- * A license is a text key issued by the admin of the launcher after the payment ([PRICE_BRL] reais, one time):
+ * A license is a text key, signed after the payment ([PRICE_BRL] reais, one time):
  *
  *     TKA1.<base64url(payload)>.<base64url(signature)>
  *
  * - the payload is a small JSON `{"n": "<player name in lower case>", "k": "std" | "admin", "i": <unix seconds>}`;
- * - the signature is an ECDSA P-256 / SHA-256 signature (DER) of the payload bytes. Only the admin has the private
- *   key (it lives in a GitHub secret of the workflow `tokiauth-license.yml`), the launcher only has the public key;
+ * - the signature is an ECDSA P-256 / SHA-256 signature of the payload bytes, either in DER (what `openssl` makes)
+ *   or as the raw 64 bytes `r || s` (what the WebCrypto of a browser / Deno makes);
  * - a license works for one player name only, so a key that was shared does not work for another name.
+ *
+ * How a player gets it (no key is handed out by hand):
+ *
+ * 1. the launcher opens the shop of the Tokito ([SHOP_URL], made on Base44) with the player name;
+ * 2. the shop finishes the payment, signs the license on its backend and sends the player back to the game with
+ *    `tokito://tokiauth/activate?license=TKA1...` ([returnUrl]);
+ * 3. the launcher checks the signature on the device ([activateFromLink]) and the account becomes Original.
+ *
+ * Two public keys are accepted. The **shop key** is the one whose private part lives only on the backend of the
+ * shop and it can issue standard licenses only. The **admin key** (the private part lives in the GitHub secret of
+ * the workflow `tokiauth-license.yml`) can also issue the `admin` license of the player of the admin ([ADMIN_NAME]),
+ * who uses it for free. The name itself never unlocks anything (anyone could type it).
  *
  * The check is done on the device (no server). Anyone can change an open source app, so this protects against
  * sharing and casual use, not against someone who edits the launcher; a stronger protection needs a server
  * that checks the account on the game server side.
- *
- * The player of the admin ([ADMIN_NAME]) uses it for free: the admin issues an `admin` license for that name
- * with the same workflow. The name itself never unlocks anything (anyone could type it).
  */
 object TokiAuthLicense {
     const val PRICE_BRL = 3
@@ -62,26 +78,68 @@ object TokiAuthLicense {
     /** The admin of the Tokito Launcher; this player does not pay (the license for it is issued by the admin) */
     const val ADMIN_NAME = "OPedzGoat"
 
-    /** Where a player pays / asks for the key (the admin hands the key out on Discord) */
-    const val PAY_URL = TokitoLinks.DISCORD
+    /** The shop of the Tokito (Base44): the player pays there and the site brings him back to the launcher */
+    const val SHOP_URL = "https://tokitolauncher.base44.app"
 
-    /** Public key (X.509 SubjectPublicKeyInfo, base64) of the ECDSA P-256 key that signs the licenses */
-    private const val PUBLIC_KEY_B64 =
-        "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAENx7CRxvNzVEzmHFhGBb5Emv0J+Q/CiaTJAVQBgKbsWL7FDuYaLVyMm88GCtuL1g0kp72ZqI41jSCqtjZfGxsag=="
+    /** The shop brings the player back with `<scheme>://tokiauth/activate?license=TKA1...` */
+    const val LINK_HOST = "tokiauth"
+    const val LINK_PATH = "/activate"
+    const val LINK_SCHEME_STABLE = "tokito"
+
+    /** The Tokito Preview uses its own scheme, so a phone that has both apps does not ask which one to open */
+    const val LINK_SCHEME_PREVIEW = "tokitopreview"
+
+    val linkScheme: String
+        get() = if (BuildConfig.APPLICATION_ID.endsWith(".preview")) LINK_SCHEME_PREVIEW else LINK_SCHEME_STABLE
+
+    /** Where the shop must send the player after the payment (the launcher also tells it as the `return` parameter) */
+    val returnUrl: String
+        get() = "$linkScheme://$LINK_HOST$LINK_PATH"
+
+    /** The page of the shop for [player]: `?player=<name>&return=<returnUrl>&price=<reais>` */
+    fun buyUrl(player: String): String =
+        "$SHOP_URL/?player=${Uri.encode(player.trim())}&return=${Uri.encode(returnUrl)}&price=$PRICE_BRL"
+
+    /** A public key that is accepted to check licenses */
+    private class SigningKey(base64: String, val mayIssueAdmin: Boolean) {
+        val publicKey: PublicKey by lazy {
+            KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(Base64.decode(base64, Base64.DEFAULT)))
+        }
+    }
+
+    /** X.509 SubjectPublicKeyInfo (base64) of the ECDSA P-256 keys that sign the licenses */
+    private val signingKeys = listOf(
+        //admin key
+        SigningKey(
+            "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAENx7CRxvNzVEzmHFhGBb5Emv0J+Q/CiaTJAVQBgKbsWL7FDuYaLVyMm88GCtuL1g0kp72ZqI41jSCqtjZfGxsag==",
+            mayIssueAdmin = true
+        ),
+        //shop key (standard licenses only)
+        SigningKey(
+            "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAECHV4CkUQs5yn3g2iXgoLUVIQMMbjOLvB2CqYVFMmiMM2EbSzfcO/NZPa6cvWNJv5RBW3qk7njXroFavYSeEC4Q==",
+            mayIssueAdmin = false
+        )
+    )
 
     /** What a license says (only trustworthy after the signature was checked) */
     data class Info(val name: String, val kind: String, val issuedAt: Long) {
         val isAdmin: Boolean get() = kind == KIND_ADMIN
     }
 
+    /** What happened with a link that the shop opened in the launcher */
+    sealed interface LinkResult {
+        data class Activated(val name: String) : LinkResult
+        data object Invalid : LinkResult
+        data object SaveFailed : LinkResult
+    }
+
     private val file: File
         get() = File(PathManager.DIR_FILES_PRIVATE, "tokito_licenses.json")
 
-    private val publicKey by lazy {
-        KeyFactory.getInstance("EC").generatePublic(
-            X509EncodedKeySpec(Base64.decode(PUBLIC_KEY_B64, Base64.DEFAULT))
-        )
-    }
+    private val _changes = MutableStateFlow(0)
+
+    /** Goes up every time a license is saved or removed, so the screens that show it refresh by themselves */
+    val changes: StateFlow<Int> = _changes.asStateFlow()
 
     /** token -> checked result, so the chat can check many messages without repeating the math */
     private val checked = HashMap<String, Info?>()
@@ -95,6 +153,34 @@ object TokiAuthLicense {
 
     /** Removes spaces and line breaks that appear when a key is copied from a chat */
     fun clean(token: String): String = token.filterNot { it.isWhitespace() }
+
+    /** The raw signature `r || s` (what WebCrypto makes) as the DER sequence that [Signature] checks */
+    private fun rawToDer(raw: ByteArray): ByteArray {
+        fun integer(part: ByteArray): ByteArray {
+            var start = 0
+            while (start < part.size - 1 && part[start] == 0.toByte()) start++
+            var body = part.copyOfRange(start, part.size)
+            if (body[0] < 0) body = byteArrayOf(0) + body //keeps the number positive
+            return byteArrayOf(0x02, body.size.toByte()) + body
+        }
+
+        val half = raw.size / 2
+        val r = integer(raw.copyOfRange(0, half))
+        val s = integer(raw.copyOfRange(half, raw.size))
+        return byteArrayOf(0x30, (r.size + s.size).toByte()) + r + s
+    }
+
+    private fun signedBy(signer: SigningKey, payload: ByteArray, signature: ByteArray): Boolean {
+        fun attempt(sig: ByteArray): Boolean = try {
+            val verifier = Signature.getInstance("SHA256withECDSA")
+            verifier.initVerify(signer.publicKey)
+            verifier.update(payload)
+            verifier.verify(sig)
+        } catch (_: Exception) {
+            false
+        }
+        return attempt(signature) || (signature.size == 64 && attempt(rawToDer(signature)))
+    }
 
     /**
      * Checks the signature of [token] and returns what it says, or null when it is not a real license.
@@ -111,16 +197,18 @@ object TokiAuthLicense {
             } else {
                 val payload = decode(parts[1])
                 val signature = decode(parts[2])
-                val verifier = Signature.getInstance("SHA256withECDSA")
-                verifier.initVerify(publicKey)
-                verifier.update(payload)
-                if (!verifier.verify(signature)) {
+                val json = JSONObject(String(payload, Charsets.UTF_8))
+                val kind = json.optString("k", KIND_STANDARD)
+                //the signature protects the payload, so the kind that is read here is the one that was signed
+                val signer = signingKeys.firstOrNull {
+                    (it.mayIssueAdmin || kind != KIND_ADMIN) && signedBy(it, payload, signature)
+                }
+                if (signer == null) {
                     null
                 } else {
-                    val json = JSONObject(String(payload, Charsets.UTF_8))
                     Info(
-                        name = json.getString("n"),
-                        kind = json.optString("k", KIND_STANDARD),
+                        name = normalize(json.getString("n")),
+                        kind = kind,
                         issuedAt = json.optLong("i", 0L)
                     )
                 }
@@ -196,7 +284,19 @@ object TokiAuthLicense {
         if (!verify(name, key)) return false
         val json = read()
         json.put(normalize(name), key)
-        return write(json)
+        val saved = write(json)
+        if (saved) _changes.update { it + 1 }
+        return saved
+    }
+
+    /**
+     * The shop opened `<scheme>://tokiauth/activate?license=TKA1...` in the launcher: checks the license
+     * and, when it is real, saves it for the player that is written in it.
+     */
+    fun activateFromLink(uri: Uri): LinkResult {
+        val token = uri.getQueryParameter("license") ?: uri.getQueryParameter("key") ?: return LinkResult.Invalid
+        val info = check(token) ?: return LinkResult.Invalid
+        return if (activate(info.name, token)) LinkResult.Activated(info.name) else LinkResult.SaveFailed
     }
 
     @Synchronized
@@ -204,7 +304,7 @@ object TokiAuthLicense {
         val json = read()
         if (json.has(normalize(name))) {
             json.remove(normalize(name))
-            write(json)
+            if (write(json)) _changes.update { it + 1 }
         }
     }
 }

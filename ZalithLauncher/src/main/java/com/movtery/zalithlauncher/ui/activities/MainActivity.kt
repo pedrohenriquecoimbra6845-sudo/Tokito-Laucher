@@ -41,6 +41,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.movtery.guide.GuideHost
 import com.movtery.petlib.PetGazeRouter
 import com.movtery.zalithlauncher.R
+import com.movtery.zalithlauncher.tokito.TokiAuthLicense
 import com.movtery.zalithlauncher.context.COPY_LABEL_LINK
 import com.movtery.zalithlauncher.coroutine.Task
 import com.movtery.zalithlauncher.coroutine.TaskSystem
@@ -218,6 +219,8 @@ class MainActivity : BaseAppCompatActivity() {
         window.attributes = window.attributes.apply { preferredRefreshRate = 60f }
         //处理外部导入
         val isImporting = handleImportIfNeeded(intent)
+        //Tokito Launcher: the shop of the TokiAuth Original brings the player back with the license
+        handleTokiAuthLink(intent)
 
         //加载渲染器
         Renderers.init()
@@ -590,6 +593,7 @@ class MainActivity : BaseAppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        if (handleTokiAuthLink(intent)) return
         handleImportIfNeeded(intent)
         // 重载渲染器
         Renderers.init(true)
@@ -826,6 +830,25 @@ class MainActivity : BaseAppCompatActivity() {
             importControlFiles(listOf(uri))
         }
         return uri != null
+    }
+
+    /**
+     * Tokito Launcher: the shop of the TokiAuth Original brings the player back to the game with the signed license
+     * (`tokito://tokiauth/activate?license=...`). The signature is checked on the device and, when it is real,
+     * the account of that player becomes Original.
+     * @return true when [intent] was a link of the shop (it is not handled again)
+     */
+    private fun handleTokiAuthLink(intent: Intent?): Boolean {
+        val link = intent?.data ?: return false
+        if (intent.action != Intent.ACTION_VIEW || link.host != TokiAuthLicense.LINK_HOST) return false
+        intent.data = null //so the same link is not handled twice
+        val message = when (val result = TokiAuthLicense.activateFromLink(link)) {
+            is TokiAuthLicense.LinkResult.Activated -> getString(R.string.tokiauth_license_link_done, result.name)
+            TokiAuthLicense.LinkResult.Invalid -> getString(R.string.tokiauth_license_link_invalid)
+            TokiAuthLicense.LinkResult.SaveFailed -> getString(R.string.tokiauth_license_link_failed)
+        }
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+        return true
     }
 
     override fun onResume() {

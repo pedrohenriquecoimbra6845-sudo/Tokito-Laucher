@@ -54,7 +54,11 @@ object TokitoHomeMedia {
     /** Biggest video that is accepted, in megabytes */
     const val MAX_VIDEO_MB = 60
 
+    /** Biggest GIF that is accepted, in megabytes */
+    const val MAX_GIF_MB = 30
+
     private const val MAX_VIDEO_BYTES = MAX_VIDEO_MB * 1024L * 1024L
+    private const val MAX_GIF_BYTES = MAX_GIF_MB * 1024L * 1024L
     private const val HERO_MAX_SIDE = 1280
     private const val WALL_MAX_SIDE = 1600
 
@@ -181,6 +185,69 @@ object TokitoHomeMedia {
             out.delete()
             Logger.warning(TAG, "Failed to import the video", e)
             Imported(Status.FAILED)
+        }
+    }
+
+    /** Copies a GIF that the player picked (up to [MAX_GIF_MB] MB) and returns its new name */
+    suspend fun importGif(context: Context, uri: Uri, slot: String): Imported = withContext(Dispatchers.IO) {
+        dir.mkdirs()
+        val name = "${slot}_${System.currentTimeMillis()}.gif"
+        val out = File(dir, name)
+        try {
+            val input = context.contentResolver.openInputStream(uri)
+                ?: return@withContext Imported(Status.FAILED)
+            var tooBig = false
+            input.use { source ->
+                out.outputStream().use { sink ->
+                    val buffer = ByteArray(64 * 1024)
+                    var total = 0L
+                    while (true) {
+                        val read = source.read(buffer)
+                        if (read < 0) break
+                        total += read
+                        if (total > MAX_GIF_BYTES) {
+                            tooBig = true
+                            break
+                        }
+                        sink.write(buffer, 0, read)
+                    }
+                }
+            }
+            if (tooBig) {
+                out.delete()
+                return@withContext Imported(Status.TOO_BIG)
+            }
+
+            //a file that is not a GIF must not be kept: every GIF starts with GIF87a or GIF89a
+            val header = ByteArray(6)
+            val read = out.inputStream().use { it.read(header) }
+            val magic = if (read == header.size) String(header, Charsets.US_ASCII) else ""
+            if (magic != "GIF87a" && magic != "GIF89a") {
+                out.delete()
+                return@withContext Imported(Status.FAILED)
+            }
+
+            removeOld(slot, keep = name)
+            Imported(Status.OK, name)
+        } catch (e: CancellationException) {
+            out.delete()
+            throw e
+        } catch (e: Throwable) {
+            out.delete()
+            Logger.warning(TAG, "Failed to import the GIF", e)
+            Imported(Status.FAILED)
+        }
+    }
+
+    /** Copies what the player picked, whatever it is: a GIF, a video or a photo */
+    suspend fun importAny(context: Context, uri: Uri, slot: String): Imported {
+        val type = context.contentResolver.getType(uri).orEmpty().lowercase()
+        val path = uri.lastPathSegment.orEmpty().lowercase()
+        return when {
+            type == "image/gif" || path.endsWith(".gif") -> importGif(context, uri, slot)
+            type.startsWith("video/") || path.endsWith(".mp4") || path.endsWith(".webm") || path.endsWith(".mkv") ->
+                importVideo(context, uri, slot)
+            else -> importPhoto(context, uri, slot)
         }
     }
 

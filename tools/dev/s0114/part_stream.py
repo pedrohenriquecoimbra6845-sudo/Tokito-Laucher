@@ -13,7 +13,7 @@ S = [
  ('stream_key_discord', 'Discord', 'Discord'),
  ('stream_key_mic_denied', 'Your phone did not let the launcher mute the microphone. Use the mute button of Discord or of the live app.', 'O seu celular não deixou o launcher mutar o microfone. Use o botão de mudo do Discord ou do app da live.'),
  ('stream_black_hint', 'Tap twice to bring the screen back', 'Toque duas vezes para a tela voltar'),
- ('stream_keys_hint', 'Also with a keyboard: M mic · S sound · B black screen · L Live mode · D Discord. The black screen is all dark with the lowest brightness; a live that captures the screen shows it black too.', 'Também no teclado: M mic · S som · B tela preta · L Modo Live · D Discord. A tela preta fica toda escura com o brilho mínimo; uma live que captura a tela também mostra ela preta.'),
+ ('stream_keys_hint', 'Also with a keyboard: %1$s', 'Também com o teclado: %1$s'),
  ('stream_live_title', 'Live mode', 'Modo Live'),
  ('stream_live_on', 'Live mode is on', 'Modo Live ligado'),
  ('stream_live_off', 'Live mode is off', 'Modo Live desligado'),
@@ -44,6 +44,5 @@ S = [
  ('stream_mic_allow', 'Allow the microphone', 'Liberar o microfone'),
  ('stream_voice_ingame', 'Voice in the game: voice chat mods (like Simple Voice Chat) need the mod in the game and on the server, and the microphone of the phone has to work inside the game. It depends on the mod and on your phone, so test before the live.', 'Voz no jogo: mods de chat de voz (como o Simple Voice Chat) precisam do mod no jogo e no servidor, e o microfone do celular precisa funcionar dentro do jogo. Isso depende do mod e do seu celular, então teste antes da live.'),
  ('stream_find_voice_mod', 'Look for a voice mod', 'Procurar um mod de voz'),
- ('stream_keys_hint_game', 'Also with a keyboard: M mic · S sound · B black screen · D Discord. The black screen is all dark with the lowest brightness; two taps bring it back.', 'Também no teclado: M mic · S som · B tela preta · D Discord. A tela preta fica toda escura com o brilho mínimo; dois toques fazem ela voltar.'),
  ('stream_game_note', 'To talk while you play, join a Discord call before you open the game, or use a voice mod. The Live mode is chosen in the Stream panel of the home screen, before the game opens.', 'Para falar enquanto joga, entre numa call do Discord antes de abrir o jogo, ou use um mod de voz. O Modo Live se escolhe no painel de Stream da tela inicial, antes de abrir o jogo.'),
 ]

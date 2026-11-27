@@ -23,6 +23,12 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import android.net.Uri
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Surface
+import coil3.compose.AsyncImage
+import com.movtery.zalithlauncher.ui.components.VideoPlayer
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -98,11 +104,15 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.random.Random
 
-/** The picture of the Mini Wallpaper is shown in a frame with this width / height */
-private const val FRAME_ASPECT = 1.6f
+/** A horizontal (wide) Mini Wallpaper is shown in a frame with this width / height */
+private const val ASPECT_WIDE = 1.6f
+
+/** A vertical (tall) Mini Wallpaper is the same frame turned around */
+private const val ASPECT_TALL = 0.625f
 
 /** The frame is never wider than this */
-private val FRAME_MAX_WIDTH = 440.dp
+private val WIDE_MAX_WIDTH = 440.dp
+private val TALL_MAX_WIDTH = 280.dp
 
 /** How long the flower takes to blow the bubbles until the picture is formed */
 private const val INTRO_MS = 2300f
@@ -120,10 +130,14 @@ private object MiniWallpaperIntro {
 }
 
 /**
- * Tokito Launcher: the Mini Wallpaper. One still picture, chosen by the player, near the middle of the home screen.
+ * Tokito Launcher: the Mini Wallpaper. One picture, GIF or video chosen by the player, near the middle of the home
+ * screen, in a horizontal (wide) or a vertical (tall) frame.
  *
- * When the app opens, the flower in the middle blows bubbles that grow and merge until the picture is formed (about
- * two seconds, at most 50 frames per second). After that nothing moves and the picture costs nothing.
+ * A photo shows up with a flower animation: when the app opens, the flower in the middle blows bubbles that grow and
+ * merge until the picture is formed (about two seconds, at most 50 frames per second); after that nothing moves and
+ * the picture costs nothing. A GIF and a video just play (muted, in a loop, and a video only while the home screen is
+ * the one on the screen). Over any of them the greeting talks to the player: Welcome, the time of the day and a
+ * warrior phrase.
  *
  * @param visible whether the home screen is the one that the player is looking at
  * @param onClick tapping the picture opens its settings
@@ -136,24 +150,38 @@ fun HomeMiniWallpaper(
 ) {
     if (!AllSettings.homeMiniWallpaperOn.state) return
 
+    val tall = AllSettings.homeMiniWallpaperShape.state == 1
+    val aspect = if (tall) ASPECT_TALL else ASPECT_WIDE
+    val fileName = AllSettings.homeMiniWallpaperFile.state
+    val custom = remember(fileName) { TokitoHomeMedia.fileOf(fileName) }
+    val kind = remember(custom) { wallpaperKindOf(custom) }
+
     BoxWithConstraints(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        val frameWidth = minOf(maxWidth * 0.94f, maxHeight * 0.86f * FRAME_ASPECT, FRAME_MAX_WIDTH)
-        if (frameWidth < 120.dp) return@BoxWithConstraints
-        val frameHeight = frameWidth / FRAME_ASPECT
+        val frameWidth = minOf(
+            maxWidth * 0.94f,
+            maxHeight * 0.86f * aspect,
+            if (tall) TALL_MAX_WIDTH else WIDE_MAX_WIDTH
+        )
+        if (frameWidth < (if (tall) 90.dp else 120.dp)) return@BoxWithConstraints
+        val frameHeight = frameWidth / aspect
 
         val density = LocalDensity.current
         val frameWidthPx = with(density) { frameWidth.toPx() }
         val frameHeightPx = with(density) { frameHeight.toPx() }
         val shape = RoundedCornerShape(24.dp)
 
-        val bitmap by rememberMiniWallpaperBitmap(maxSidePx = (frameWidthPx * 1.1f).roundToInt().coerceIn(256, 1600))
+        val isPhoto = kind == WallpaperKind.PHOTO
+        val bitmap by rememberMiniWallpaperBitmap(
+            maxSidePx = (max(frameWidthPx, frameHeightPx) * 1.1f).roundToInt().coerceIn(256, 1600),
+            enabled = isPhoto
+        )
         val bubbles = remember(frameWidthPx, frameHeightPx) { makeBubbles(frameWidthPx, frameHeightPx) }
 
-        val wantsIntro = AllSettings.homeMiniWallpaperIntro.state && !MiniWallpaperIntro.played
-        var progress by remember { mutableFloatStateOf(if (wantsIntro) 0f else 1f) }
+        val wantsIntro = isPhoto && AllSettings.homeMiniWallpaperIntro.state && !MiniWallpaperIntro.played
+        var progress by remember(isPhoto) { mutableFloatStateOf(if (wantsIntro) 0f else 1f) }
         val running by remember { derivedStateOf { progress < 1f } }
 
         LaunchedEffect(bitmap != null, visible) {
@@ -184,69 +212,117 @@ fun HomeMiniWallpaper(
                 .border(1.dp, Color.White.copy(alpha = 0.22f), shape)
                 .clickable(onClick = onClick)
         ) {
-            Canvas(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer {
-                        //the bubbles are a mask for the picture: it needs its own layer, but only while the animation runs
-                        compositingStrategy = if (running) CompositingStrategy.Offscreen else CompositingStrategy.Auto
+            when (kind) {
+                WallpaperKind.PHOTO -> Canvas(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            //the bubbles are a mask for the picture: it needs its own layer, but only while the animation runs
+                            compositingStrategy = if (running) CompositingStrategy.Offscreen else CompositingStrategy.Auto
+                        }
+                ) {
+                    val image = bitmap ?: return@Canvas
+                    val p = progress
+                    if (p >= 1f) {
+                        drawCover(image)
+                        return@Canvas
                     }
-            ) {
-                val image = bitmap ?: return@Canvas
-                val p = progress
-                if (p >= 1f) {
-                    drawCover(image)
-                    return@Canvas
-                }
 
-                //1. the bubbles (white) are the mask, 2. the picture is drawn only where the bubbles are
-                val center = Offset(size.width / 2f, size.height / 2f)
-                bubbles.forEach { bubble ->
-                    val t = bubble.localProgress(p)
-                    if (t > 0f) {
-                        val e = easeOutCubic(t)
-                        val wobble = 1f + 0.06f * sin(p * 18f + bubble.phase) * (1f - t)
-                        drawCircle(
-                            color = Color.White,
-                            radius = bubble.radius * e * wobble,
-                            center = Offset(
-                                x = center.x + (bubble.cx - center.x) * e,
-                                y = center.y + (bubble.cy - center.y) * e
+                    //1. the bubbles (white) are the mask, 2. the picture is drawn only where the bubbles are
+                    val center = Offset(size.width / 2f, size.height / 2f)
+                    bubbles.forEach { bubble ->
+                        val t = bubble.localProgress(p)
+                        if (t > 0f) {
+                            val e = easeOutCubic(t)
+                            val wobble = 1f + 0.06f * sin(p * 18f + bubble.phase) * (1f - t)
+                            drawCircle(
+                                color = Color.White,
+                                radius = bubble.radius * e * wobble,
+                                center = Offset(
+                                    x = center.x + (bubble.cx - center.x) * e,
+                                    y = center.y + (bubble.cy - center.y) * e
+                                )
                             )
-                        )
+                        }
                     }
-                }
-                drawCover(image, blendMode = BlendMode.SrcIn)
+                    drawCover(image, blendMode = BlendMode.SrcIn)
 
-                //3. thin shining rings of the bubbles that are still growing
-                bubbles.forEach { bubble ->
-                    val t = bubble.localProgress(p)
-                    if (t > 0f && t < 1f) {
-                        val e = easeOutCubic(t)
-                        drawCircle(
-                            color = Color.White.copy(alpha = 0.5f * (1f - t)),
-                            radius = bubble.radius * e,
-                            center = Offset(
-                                x = center.x + (bubble.cx - center.x) * e,
-                                y = center.y + (bubble.cy - center.y) * e
-                            ),
-                            style = Stroke(width = ringWidth)
-                        )
+                    //3. thin shining rings of the bubbles that are still growing
+                    bubbles.forEach { bubble ->
+                        val t = bubble.localProgress(p)
+                        if (t > 0f && t < 1f) {
+                            val e = easeOutCubic(t)
+                            drawCircle(
+                                color = Color.White.copy(alpha = 0.5f * (1f - t)),
+                                radius = bubble.radius * e,
+                                center = Offset(
+                                    x = center.x + (bubble.cx - center.x) * e,
+                                    y = center.y + (bubble.cy - center.y) * e
+                                ),
+                                style = Stroke(width = ringWidth)
+                            )
+                        }
                     }
+
+                    //4. the flower in the middle, blowing: it turns and fades away while the picture forms
+                    val fade = 1f - smoothStep(0.35f, 0.8f, p)
+                    drawFlower(
+                        center = center,
+                        radius = size.minDimension * 0.16f * (1f + 0.4f * p),
+                        rotationDeg = p * 220f,
+                        alpha = fade,
+                        color = flowerColor
+                    )
                 }
 
-                //4. the flower in the middle, blowing: it turns and fades away while the picture forms
-                val fade = 1f - smoothStep(0.35f, 0.8f, p)
-                drawFlower(
-                    center = center,
-                    radius = size.minDimension * 0.16f * (1f + 0.4f * p),
-                    rotationDeg = p * 220f,
-                    alpha = fade,
-                    color = flowerColor
+                WallpaperKind.GIF -> if (custom != null) {
+                    //the GIF decoder of Coil is registered for the whole app, so this plays
+                    AsyncImage(
+                        model = custom,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+
+                WallpaperKind.VIDEO -> if (custom != null && visible) {
+                    VideoPlayer(
+                        videoUri = Uri.fromFile(custom),
+                        modifier = Modifier.fillMaxSize(),
+                        autoPlay = true,
+                        loop = true,
+                        muted = true
+                    )
+                }
+            }
+
+            if (!isPhoto) {
+                //a transparent layer above the player: the tap always reaches the frame
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable(onClick = onClick)
+                )
+            }
+
+            if (AllSettings.homeGreeting.state) {
+                MiniWallpaperGreeting(
+                    visible = visible,
+                    modifier = Modifier.align(Alignment.BottomCenter)
                 )
             }
         }
     }
+}
+
+/** What the Mini Wallpaper shows: a still photo (with the flower animation), a GIF or a video */
+private enum class WallpaperKind { PHOTO, GIF, VIDEO }
+
+/** The kind comes from the name of the file that was saved when the player chose it */
+private fun wallpaperKindOf(file: File?): WallpaperKind = when (file?.extension?.lowercase()) {
+    "gif" -> WallpaperKind.GIF
+    "mp4" -> WallpaperKind.VIDEO
+    else -> WallpaperKind.PHOTO
 }
 
 /** A bubble of the animation: where it ends up, when it starts and how big it gets */
@@ -354,12 +430,13 @@ private fun DrawScope.drawFlower(
 
 /** The picture of the Mini Wallpaper (the player's photo or the ready-made one), decoded at the size that is needed */
 @Composable
-private fun rememberMiniWallpaperBitmap(maxSidePx: Int): State<ImageBitmap?> {
+private fun rememberMiniWallpaperBitmap(maxSidePx: Int, enabled: Boolean): State<ImageBitmap?> {
     val context = LocalContext.current
     val fileName = AllSettings.homeMiniWallpaperFile.state
     val id = AllSettings.homeMiniWallpaper.state
-    return produceState<ImageBitmap?>(initialValue = null, fileName, id, maxSidePx) {
-        value = withContext(Dispatchers.IO) { loadMiniWallpaper(context, fileName, id, maxSidePx) }
+    return produceState<ImageBitmap?>(initialValue = null, fileName, id, maxSidePx, enabled) {
+        //a GIF and a video are played by their own players, they need no bitmap
+        value = if (enabled) withContext(Dispatchers.IO) { loadMiniWallpaper(context, fileName, id, maxSidePx) } else null
     }
 }
 
@@ -387,8 +464,8 @@ private fun openWallpaper(context: Context, custom: File?, ready: LauncherWallpa
     if (custom != null) custom.inputStream() else context.resources.openRawResource(ready.rawRes)
 
 /**
- * Tokito Launcher: settings of the Mini Wallpaper. Show or hide it, turn the animation on or off,
- * choose one of the ready-made pictures or a photo of the gallery.
+ * Tokito Launcher: settings of the Mini Wallpaper. Show or hide it, turn the animation on or off, choose the shape
+ * (horizontal or vertical), the greeting, one of the ready-made pictures or a photo, GIF or video of the gallery.
  */
 @Composable
 fun HomeMiniWallpaperDialog(onDismiss: () -> Unit) {
@@ -396,6 +473,9 @@ fun HomeMiniWallpaperDialog(onDismiss: () -> Unit) {
     val scope = rememberCoroutineScope()
     val shown = AllSettings.homeMiniWallpaperOn.state
     val intro = AllSettings.homeMiniWallpaperIntro.state
+    val tall = AllSettings.homeMiniWallpaperShape.state == 1
+    val greeting = AllSettings.homeGreeting.state
+    val voice = AllSettings.homeGreetingVoice.state
     val fileName = AllSettings.homeMiniWallpaperFile.state
     val readyId = AllSettings.homeMiniWallpaper.state
     var busy by remember { mutableStateOf(false) }
@@ -406,14 +486,20 @@ fun HomeMiniWallpaperDialog(onDismiss: () -> Unit) {
             busy = true
             message = null
             scope.launch {
-                val result = TokitoHomeMedia.importPhoto(context, uri, TokitoHomeMedia.SLOT_WALL)
+                val result = TokitoHomeMedia.importAny(context, uri, TokitoHomeMedia.SLOT_WALL)
                 val name = result.name
-                if (result.status == TokitoHomeMedia.Status.OK && name != null) {
-                    AllSettings.homeMiniWallpaperFile.save(name)
-                    AllSettings.homeMiniWallpaperOn.save(true)
-                    message = context.getString(R.string.home_pick_done)
-                } else {
-                    message = context.getString(R.string.home_pick_failed)
+                message = when {
+                    result.status == TokitoHomeMedia.Status.OK && name != null -> {
+                        AllSettings.homeMiniWallpaperFile.save(name)
+                        AllSettings.homeMiniWallpaperOn.save(true)
+                        context.getString(R.string.home_pick_done)
+                    }
+                    result.status == TokitoHomeMedia.Status.TOO_BIG -> context.getString(
+                        R.string.home_pick_big,
+                        TokitoHomeMedia.MAX_GIF_MB,
+                        TokitoHomeMedia.MAX_VIDEO_MB
+                    )
+                    else -> context.getString(R.string.home_pick_failed)
                 }
                 busy = false
             }
@@ -440,6 +526,40 @@ fun HomeMiniWallpaperDialog(onDismiss: () -> Unit) {
                     checked = intro,
                     onChange = { AllSettings.homeMiniWallpaperIntro.save(it) }
                 )
+
+                Text(
+                    text = stringResource(R.string.home_wall_shape),
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    ShapeChoice(
+                        modifier = Modifier.weight(1f),
+                        label = stringResource(R.string.home_wall_wide),
+                        tall = false,
+                        selected = !tall,
+                        onClick = { AllSettings.homeMiniWallpaperShape.save(0) }
+                    )
+                    ShapeChoice(
+                        modifier = Modifier.weight(1f),
+                        label = stringResource(R.string.home_wall_tall),
+                        tall = true,
+                        selected = tall,
+                        onClick = { AllSettings.homeMiniWallpaperShape.save(1) }
+                    )
+                }
+
+                SwitchRow(
+                    label = stringResource(R.string.home_wall_greeting),
+                    checked = greeting,
+                    onChange = { AllSettings.homeGreeting.save(it) }
+                )
+                if (greeting) {
+                    SwitchRow(
+                        label = stringResource(R.string.home_wall_voice),
+                        checked = voice,
+                        onChange = { AllSettings.homeGreetingVoice.save(it) }
+                    )
+                }
 
                 Text(
                     text = stringResource(R.string.home_wall_ready),
@@ -477,7 +597,7 @@ fun HomeMiniWallpaperDialog(onDismiss: () -> Unit) {
                 }
 
                 IconTextButton(
-                    onClick = { picker.launch(arrayOf("image/*")) },
+                    onClick = { picker.launch(arrayOf("image/*", "video/*")) },
                     painter = painterResource(R.drawable.ic_image_outlined),
                     text = stringResource(R.string.home_wall_gallery),
                     enabled = !busy
@@ -496,6 +616,38 @@ fun HomeMiniWallpaperDialog(onDismiss: () -> Unit) {
         },
         onDismiss = onDismiss
     )
+}
+
+/** One of the two shapes of the frame, with a small drawing of it (wide or tall) */
+@Composable
+private fun ShapeChoice(
+    label: String,
+    tall: Boolean,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+    Surface(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(14.dp),
+        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest,
+        border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(width = if (tall) 14.dp else 24.dp, height = if (tall) 24.dp else 14.dp)
+                    .border(2.dp, tint, RoundedCornerShape(3.dp))
+            )
+            Text(text = label, style = MaterialTheme.typography.titleSmall)
+        }
+    }
 }
 
 /** A line with a text and a switch */

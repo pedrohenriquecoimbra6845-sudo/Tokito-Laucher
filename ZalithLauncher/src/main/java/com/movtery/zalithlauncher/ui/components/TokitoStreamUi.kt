@@ -32,9 +32,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
@@ -74,6 +72,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.runtime.mutableFloatStateOf
+import com.movtery.zalithlauncher.tokito.StreamKeyConfig
+import com.movtery.zalithlauncher.tokito.StreamKeyId
+import com.movtery.zalithlauncher.tokito.StreamKeyPrefs
+import com.movtery.zalithlauncher.ui.components.chat.TokitoChatDialog
+import java.time.LocalTime
+import java.util.Locale
+import kotlin.random.Random
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -394,10 +403,26 @@ private fun VoiceCard(onOpenMods: () -> Unit) {
     }
 }
 
+/** How many keys fit in a row before the next row starts (so the keys never get too small) */
+private const val KEYS_PER_ROW = 5
+
+/** The backdrops of the black screen: all very dark, so the screen stays comfortable and cheap on an OLED */
+internal val BlackColors = listOf(
+    Color(0xFF000000),
+    Color(0xFF12001C),
+    Color(0xFF00091C),
+    Color(0xFF001409),
+    Color(0xFF1C0008),
+    Color(0xFF111111)
+)
+
 /**
- * Tokito Launcher: the keys of the Stream panel. Big buttons for what the player needs while the live is on:
- * mute the microphone, mute the sound, close the screen (all black), the Live mode and Discord. Each key also
- * answers to a letter of a physical keyboard (M, S, B, L, D) while it is on the screen.
+ * Tokito Launcher: the keys of the Stream panel. Big buttons for what the player needs while the live is on: mute the
+ * microphone, mute the sound, close the screen (all dark), the Live mode, Discord, the Chat and the apps of the
+ * platforms. The player chooses which keys show up, their order and the letter of each one (the letters also work on a
+ * physical keyboard while the keys are on the screen); the pencil opens the editor.
+ *
+ * @param showLive false inside the game (the Live mode is chosen before the game opens)
  */
 @Composable
 fun TokitoStreamKeys(modifier: Modifier = Modifier, showLive: Boolean = true) {
@@ -406,6 +431,16 @@ fun TokitoStreamKeys(modifier: Modifier = Modifier, showLive: Boolean = true) {
     var micMuted by remember { mutableStateOf(TokitoStream.isMicMuted(context)) }
     var soundMuted by remember { mutableStateOf(TokitoStream.isSoundMuted(context)) }
     var blackScreen by remember { mutableStateOf(false) }
+    var showChat by remember { mutableStateOf(false) }
+    var showEditor by remember { mutableStateOf(false) }
+
+    val saved = AllSettings.tokitoStreamKeys.state
+    val keys = remember(saved, showLive) {
+        StreamKeyPrefs.parse(saved).filter { it.enabled && (showLive || it.id.inGame) }
+    }
+    val keyboardHint = remember(keys) {
+        keys.joinToString(" · ") { "${it.letter} ${context.getString(it.id.labelRes)}" }
+    }
 
     val toggleMic = {
         val target = !micMuted
@@ -422,6 +457,28 @@ fun TokitoStreamKeys(modifier: Modifier = Modifier, showLive: Boolean = true) {
     }
     val toggleLive = { TokitoStream.setLive(!liveOn) }
     val openDiscord = { TokitoStream.openDiscord(context) }
+    val openPlatform = { platform: StreamPlatform ->
+        if (!TokitoStream.openApp(context, platform.packages)) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.stream_key_app_missing, context.getString(platform.labelRes)),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+    val press: (StreamKeyId) -> Unit = { id ->
+        when (id) {
+            StreamKeyId.MIC -> toggleMic()
+            StreamKeyId.SOUND -> toggleSound()
+            StreamKeyId.BLACK -> blackScreen = true
+            StreamKeyId.LIVE -> toggleLive()
+            StreamKeyId.DISCORD -> openDiscord()
+            StreamKeyId.CHAT -> showChat = true
+            StreamKeyId.TWITCH -> openPlatform(StreamPlatform.TWITCH)
+            StreamKeyId.YOUTUBE -> openPlatform(StreamPlatform.YOUTUBE)
+            StreamKeyId.TIKTOK -> openPlatform(StreamPlatform.TIKTOK)
+        }
+    }
 
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) {
@@ -439,86 +496,92 @@ fun TokitoStreamKeys(modifier: Modifier = Modifier, showLive: Boolean = true) {
             .focusable()
             .onPreviewKeyEvent { event ->
                 if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-                when (event.key) {
-                    Key.M -> {
-                        toggleMic()
-                        true
-                    }
-                    Key.S -> {
-                        toggleSound()
-                        true
-                    }
-                    Key.B -> {
-                        blackScreen = true
-                        true
-                    }
-                    Key.L -> {
-                        if (showLive) toggleLive()
-                        showLive
-                    }
-                    Key.D -> {
-                        openDiscord()
-                        true
-                    }
-                    else -> false
+                val code = event.nativeKeyEvent.keyCode
+                if (code < android.view.KeyEvent.KEYCODE_A || code > android.view.KeyEvent.KEYCODE_Z) {
+                    return@onPreviewKeyEvent false
                 }
+                val letter = 'A' + (code - android.view.KeyEvent.KEYCODE_A)
+                val key = keys.firstOrNull { it.letter == letter } ?: return@onPreviewKeyEvent false
+                press(key.id)
+                true
             },
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            StreamKey(
-                modifier = Modifier.weight(1f),
-                label = stringResource(if (micMuted) R.string.stream_key_mic_off else R.string.stream_key_mic),
-                hint = "M",
-                painter = painterResource(if (micMuted) R.drawable.ic_stream_mic_off else R.drawable.ic_stream_mic),
-                active = micMuted,
-                onClick = toggleMic
+        if (keys.isEmpty()) {
+            Text(
+                text = stringResource(R.string.stream_keys_none),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            StreamKey(
+        } else {
+            //rows of the same size: 7 keys are shown as 4 + 3, not 5 + 2
+            val rows = (keys.size + KEYS_PER_ROW - 1) / KEYS_PER_ROW
+            val perRow = (keys.size + rows - 1) / rows
+            keys.chunked(perRow).forEach { rowKeys ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    rowKeys.forEach { StreamKeyButton(it, micMuted, soundMuted, liveOn, press) }
+                    repeat(perRow - rowKeys.size) { Spacer(modifier = Modifier.weight(1f)) }
+                }
+            }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
                 modifier = Modifier.weight(1f),
-                label = stringResource(if (soundMuted) R.string.stream_key_sound_off else R.string.stream_key_sound),
-                hint = "S",
-                painter = painterResource(
-                    if (soundMuted) R.drawable.ic_stream_volume_off else R.drawable.ic_stream_volume
-                ),
-                active = soundMuted,
-                onClick = toggleSound
+                text = if (keys.isEmpty()) "" else stringResource(R.string.stream_keys_hint, keyboardHint),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            StreamKey(
-                modifier = Modifier.weight(1f),
-                label = stringResource(R.string.stream_key_black),
-                hint = "B",
-                painter = painterResource(R.drawable.ic_stream_screen),
-                active = false,
-                onClick = { blackScreen = true }
-            )
-            if (showLive) {
-                StreamKey(
-                    modifier = Modifier.weight(1f),
-                    label = stringResource(R.string.stream_key_live),
-                    hint = "L",
-                    painter = painterResource(R.drawable.ic_stream_bolt),
-                    active = liveOn,
-                    onClick = toggleLive
+            IconButton(onClick = { showEditor = true }) {
+                Icon(
+                    modifier = Modifier.size(20.dp),
+                    painter = painterResource(R.drawable.ic_edit_outlined),
+                    contentDescription = stringResource(R.string.stream_keys_edit)
                 )
             }
-            StreamKey(
-                modifier = Modifier.weight(1f),
-                label = stringResource(R.string.stream_key_discord),
-                hint = "D",
-                painter = painterResource(R.drawable.ic_chat_info),
-                active = false,
-                onClick = openDiscord
-            )
         }
-        Text(
-            text = stringResource(if (showLive) R.string.stream_keys_hint else R.string.stream_keys_hint_game),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
 
     if (blackScreen) TokitoBlackScreen(onClose = { blackScreen = false })
+    if (showChat) TokitoChatDialog(onDismiss = { showChat = false })
+    if (showEditor) TokitoStreamKeysDialog(showLive = showLive, onDismiss = { showEditor = false })
+}
+
+/** One key of the row: the icon and the name depend on what the key does right now (muted or not, live or not) */
+@Composable
+private fun RowScope.StreamKeyButton(
+    config: StreamKeyConfig,
+    micMuted: Boolean,
+    soundMuted: Boolean,
+    liveOn: Boolean,
+    onPress: (StreamKeyId) -> Unit
+) {
+    val id = config.id
+    val label = stringResource(
+        when (id) {
+            StreamKeyId.MIC -> if (micMuted) R.string.stream_key_mic_off else R.string.stream_key_mic
+            StreamKeyId.SOUND -> if (soundMuted) R.string.stream_key_sound_off else R.string.stream_key_sound
+            else -> id.labelRes
+        }
+    )
+    val icon = when (id) {
+        StreamKeyId.MIC -> if (micMuted) R.drawable.ic_stream_mic_off else R.drawable.ic_stream_mic
+        StreamKeyId.SOUND -> if (soundMuted) R.drawable.ic_stream_volume_off else R.drawable.ic_stream_volume
+        else -> id.iconRes
+    }
+    val active = when (id) {
+        StreamKeyId.MIC -> micMuted
+        StreamKeyId.SOUND -> soundMuted
+        StreamKeyId.LIVE -> liveOn
+        else -> false
+    }
+    StreamKey(
+        modifier = Modifier.weight(1f),
+        label = label,
+        hint = config.letter.toString(),
+        painter = painterResource(icon),
+        active = active,
+        onClick = { onPress(id) }
+    )
 }
 
 /** One key: a rounded button with an icon, a short name and, in the corner, the letter of the physical keyboard */
@@ -571,23 +634,29 @@ private fun StreamKey(
 }
 
 /**
- * "Close the screen": everything black, the lowest brightness, and the screen stays on (so the live keeps running).
- * Two taps (or the back button) bring it back. The launcher only covers its own screen: a live that captures the
- * whole screen shows it black too.
+ * "Close the screen": everything dark, the lowest brightness, and the screen stays on (so the live keeps running).
+ * Two taps (or the back button) bring it back. The player customizes it (color, clock, message, brightness) in the
+ * editor of the Stream keys. The clock and the message move around every minute, so no pixel stays lit.
+ * The launcher only covers its own screen: a live that captures the whole screen shows it dark too.
  */
 @Composable
 internal fun TokitoBlackScreen(onClose: () -> Unit) {
+    val backdrop = BlackColors[AllSettings.tokitoBlackColor.state.coerceIn(0, BlackColors.lastIndex)]
+    val showClock = AllSettings.tokitoBlackClock.state
+    val message = AllSettings.tokitoBlackText.state.trim()
+    val brightness = AllSettings.tokitoBlackBrightness.state.coerceIn(1, 40)
+
     Dialog(
         onDismissRequest = onClose,
         properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
     ) {
         val view = LocalView.current
-        DisposableEffect(view) {
+        DisposableEffect(view, brightness) {
             val window = (view.parent as? DialogWindowProvider)?.window
             if (window != null) {
                 window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 val params = window.attributes
-                params.screenBrightness = 0.01f
+                params.screenBrightness = brightness / 100f
                 window.attributes = params
                 val controller = WindowCompat.getInsetsController(window, view)
                 controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -602,17 +671,59 @@ internal fun TokitoBlackScreen(onClose: () -> Unit) {
             hint = false
         }
 
+        //the clock and the message change place every minute
+        var horizontal by remember { mutableFloatStateOf(0f) }
+        var vertical by remember { mutableFloatStateOf(0f) }
+        var now by remember { mutableStateOf(LocalTime.now()) }
+        LaunchedEffect(Unit) {
+            var tick = 0
+            while (true) {
+                now = LocalTime.now()
+                if (tick % 4 == 3) {
+                    horizontal = Random.nextFloat() * 1.2f - 0.6f
+                    vertical = Random.nextFloat() * 1.2f - 0.6f
+                }
+                tick++
+                delay(15_000)
+            }
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black)
+                .background(backdrop)
                 .pointerInput(Unit) {
                     detectTapGestures(onDoubleTap = { onClose() })
-                },
-            contentAlignment = Alignment.Center
+                }
         ) {
+            if (showClock || message.isNotEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = BiasAlignment(horizontal, vertical)
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        if (showClock) {
+                            Text(
+                                text = String.format(Locale.ROOT, "%02d:%02d", now.hour, now.minute),
+                                style = MaterialTheme.typography.displayMedium,
+                                color = Color(0xFF3C3C3C)
+                            )
+                        }
+                        if (message.isNotEmpty()) {
+                            Text(
+                                text = message,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color(0xFF353535)
+                            )
+                        }
+                    }
+                }
+            }
             if (hint) {
                 Text(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 24.dp),
                     text = stringResource(R.string.stream_black_hint),
                     style = MaterialTheme.typography.labelMedium,
                     color = Color(0xFF3A3A3A)

@@ -553,6 +553,47 @@ object AllSettings : SettingsRegistry() {
     val homeMiniWallpaperIntro = boolSetting("homeMiniWallpaperIntro", true)
 
     /**
+     * Tokito Launcher: shape of the Mini Wallpaper. 0: horizontal (wide), 1: vertical (tall)
+     */
+    val homeMiniWallpaperShape = intSetting("homeMiniWallpaperShape", 0, 0, 1)
+
+    /**
+     * Tokito Launcher: the Mini Wallpaper greets the player ("Bem-vindo", the time of the day and a warrior phrase)
+     */
+    val homeGreeting = boolSetting("homeGreeting", true)
+
+    /**
+     * Tokito Launcher: the greeting is also read out loud by the voice of the phone (off by default)
+     */
+    val homeGreetingVoice = boolSetting("homeGreetingVoice", false)
+
+    /**
+     * Tokito Launcher: the keys of the Stream panel the way the player customized them
+     * ("ID:LETTER:1" or "ID:LETTER:0" separated by commas, in the order they are shown). Empty: the default keys
+     */
+    val tokitoStreamKeys = stringSetting("tokitoStreamKeys", "")
+
+    /**
+     * Tokito Launcher: color of the black screen of the Stream panel (0 black, 1 purple, 2 blue, 3 green, 4 wine, 5 gray)
+     */
+    val tokitoBlackColor = intSetting("tokitoBlackColor", 0, 0, 5)
+
+    /**
+     * Tokito Launcher: the black screen shows a clock that moves around now and then (so no pixel stays lit)
+     */
+    val tokitoBlackClock = boolSetting("tokitoBlackClock", true)
+
+    /**
+     * Tokito Launcher: a short message on the black screen (empty: none)
+     */
+    val tokitoBlackText = stringSetting("tokitoBlackText", "")
+
+    /**
+     * Tokito Launcher: brightness of the black screen, in percent of the maximum (1 to 40)
+     */
+    val tokitoBlackBrightness = intSetting("tokitoBlackBrightness", 1, 1, 40)
+
+    /**
      * 自定义颜色主题色
      */
     val launcherCustomColor = intSetting("launcherCustomColor", Color.Blue.toArgb())

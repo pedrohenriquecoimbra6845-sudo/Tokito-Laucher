@@ -27,7 +27,7 @@ S = [
  ('home_wall_shape', 'Shape', 'Formato'),
  ('home_wall_wide', 'Horizontal', 'Horizontal'),
  ('home_wall_tall', 'Vertical', 'Vertical'),
- ('home_wall_greeting', 'Greeting: Welcome, the time of the day and a warrior phrase', 'Saudação: Bem-vindo, o horário e uma frase de guerreiro'),
+ ('home_wall_greeting', 'Message on the horizontal one: Welcome, the time of the day and a warrior phrase', 'Mensagem no horizontal: Bem-vindo, o horário e uma frase de guerreiro'),
  ('home_wall_voice', 'Read the greeting out loud (uses the voice of the phone)', 'Falar a saudação em voz alta (usa a voz do celular)'),
  ('home_greet_player', 'player', 'jogador'),
  ('home_greet_morning', 'Good morning', 'Bom dia'),

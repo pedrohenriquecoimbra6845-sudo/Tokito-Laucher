@@ -48,8 +48,11 @@ object TokitoHomeMedia {
     /** Slot of the background of the PLAY card */
     const val SLOT_HERO = "hero"
 
-    /** Slot of the Mini Wallpaper */
+    /** Slot of the horizontal Mini Wallpaper (the one with the greeting) */
     const val SLOT_WALL = "wall"
+
+    /** Slot of the vertical Mini Wallpaper ("wallv_" never matches the files of "wall_") */
+    const val SLOT_WALL_TALL = "wallv"
 
     /** Biggest video that is accepted, in megabytes */
     const val MAX_VIDEO_MB = 60

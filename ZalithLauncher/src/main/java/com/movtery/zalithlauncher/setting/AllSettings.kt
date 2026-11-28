@@ -553,9 +553,19 @@ object AllSettings : SettingsRegistry() {
     val homeMiniWallpaperIntro = boolSetting("homeMiniWallpaperIntro", true)
 
     /**
-     * Tokito Launcher: shape of the Mini Wallpaper. 0: horizontal (wide), 1: vertical (tall)
+     * Tokito Launcher: the second Mini Wallpaper, the vertical (tall) one, is shown next to the horizontal one
      */
-    val homeMiniWallpaperShape = intSetting("homeMiniWallpaperShape", 0, 0, 1)
+    val homeMiniWallpaperTallOn = boolSetting("homeMiniWallpaperTallOn", true)
+
+    /**
+     * Tokito Launcher: id of the ready-made picture of the vertical Mini Wallpaper (empty: the default one)
+     */
+    val homeMiniWallpaperTall = stringSetting("homeMiniWallpaperTall", "")
+
+    /**
+     * Tokito Launcher: name of the photo, GIF or video that the player chose for the vertical Mini Wallpaper
+     */
+    val homeMiniWallpaperTallFile = stringSetting("homeMiniWallpaperTallFile", "")
 
     /**
      * Tokito Launcher: the Mini Wallpaper greets the player ("Bem-vindo", the time of the day and a warrior phrase)

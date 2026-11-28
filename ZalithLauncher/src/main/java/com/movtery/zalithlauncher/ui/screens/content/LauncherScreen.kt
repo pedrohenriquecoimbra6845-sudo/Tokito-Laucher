@@ -74,7 +74,7 @@ import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.content.home.HomeGrid
 import com.movtery.zalithlauncher.ui.screens.content.home.HomeLibraryCategory
 import com.movtery.zalithlauncher.ui.screens.content.home.HomeMainStrip
-import com.movtery.zalithlauncher.ui.screens.content.home.HomeMiniWallpaper
+import com.movtery.zalithlauncher.ui.screens.content.home.HomeMiniWallpapers
 import com.movtery.zalithlauncher.ui.screens.content.home.HomeMiniWallpaperDialog
 import com.movtery.zalithlauncher.ui.screens.content.home.LocalHomeLibraryOpener
 import com.movtery.zalithlauncher.ui.screens.content.home.LocalHomeLinkOpener
@@ -213,13 +213,13 @@ fun LauncherScreen(
                             modifier = Modifier.fillMaxSize(),
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            //Mini Wallpaper: near the middle, in the space that the PLAY card leaves
+                            //the two Mini Wallpapers (vertical and horizontal): near the middle, in the space that the PLAY card leaves
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
                                     .fillMaxHeight()
                             ) {
-                                HomeMiniWallpaper(
+                                HomeMiniWallpapers(
                                     visible = isVisible,
                                     onClick = { showWallpaper = true }
                                 )

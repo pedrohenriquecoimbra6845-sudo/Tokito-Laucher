@@ -112,6 +112,8 @@ object HomeCards {
                 HomeMainItem.SKINS -> add(SystemCard(id = "system_tokito_skins") { TokitoSkinsCard() })
                 HomeMainItem.POPUPS -> add(SystemCard(id = "system_tokito_popups") { TokitoPopupsCard() })
                 HomeMainItem.NEWS -> add(SystemCard(id = "system_tokito_news") { TokitoNewsCard() })
+                //the other things of the strip (notices, stream, chat...) have no card in this old grid
+                else -> Unit
             }
         }
         add(prestigieInfoCard())

@@ -152,29 +152,31 @@ fun HomeMainStrip(
     }
 
     val tiles = buildList {
-        add(
-            StripTile(
-                key = "notices",
-                iconRes = R.drawable.ic_chat_info,
-                label = stringResource(R.string.home_notices),
-                onClick = { dialog = StripDialog.NOTICES },
-                dot = latestNotice?.let { it.id > lastSeenNotice } == true,
-                highlight = latestNotice?.let { it.id > lastSeenNotice } == true
-            )
-        )
-        add(
-            StripTile(
-                key = "updates",
-                iconRes = R.drawable.ic_update,
-                label = stringResource(R.string.home_modpacks_updated),
-                onClick = { dialog = StripDialog.UPDATES },
-                badge = updates.updateCount,
-                highlight = updates.updateCount > 0
-            )
-        )
         entries.forEach { entry ->
             if (!entry.visible) return@forEach
             when (entry.item) {
+                HomeMainItem.NOTICES -> add(
+                    StripTile(
+                        key = "notices",
+                        iconRes = R.drawable.ic_chat_info,
+                        label = stringResource(R.string.home_notices),
+                        onClick = { dialog = StripDialog.NOTICES },
+                        dot = latestNotice?.let { it.id > lastSeenNotice } == true,
+                        highlight = latestNotice?.let { it.id > lastSeenNotice } == true
+                    )
+                )
+
+                HomeMainItem.UPDATES -> add(
+                    StripTile(
+                        key = "updates",
+                        iconRes = R.drawable.ic_update,
+                        label = stringResource(R.string.home_modpacks_updated),
+                        onClick = { dialog = StripDialog.UPDATES },
+                        badge = updates.updateCount,
+                        highlight = updates.updateCount > 0
+                    )
+                )
+
                 HomeMainItem.LIBRARY -> {
                     add(libraryTile("lib_mods", R.drawable.ic_extension_outlined, stringResource(R.string.tokito_rail_mods)) { onOpenLibrary(HomeLibraryCategory.MODS) })
                     add(libraryTile("lib_textures", R.drawable.ic_format_paint_outlined, stringResource(R.string.tokito_rail_textures)) { onOpenLibrary(HomeLibraryCategory.RESOURCE_PACKS) })
@@ -220,34 +222,46 @@ fun HomeMainStrip(
                         onClick = { dialog = StripDialog.NEWS }
                     )
                 )
+
+                HomeMainItem.STREAM -> add(
+                    StripTile(
+                        key = "stream",
+                        iconRes = R.drawable.ic_video_settings,
+                        label = stringResource(R.string.home_stream),
+                        onClick = { dialog = StripDialog.STREAM },
+                        highlight = mode == com.movtery.zalithlauncher.setting.enums.OptimizationMode.LIVE
+                    )
+                )
+
+                HomeMainItem.CHAT -> add(
+                    StripTile(
+                        key = "chat",
+                        iconRes = R.drawable.ic_stream_chat,
+                        label = stringResource(R.string.home_chat),
+                        onClick = { dialog = StripDialog.CHAT },
+                        badge = chatUnread
+                    )
+                )
+
+                HomeMainItem.DISCORD -> add(
+                    StripTile(
+                        key = "discord",
+                        iconRes = R.drawable.ic_link,
+                        label = stringResource(R.string.home_discord),
+                        onClick = { openLink(TokitoLinks.DISCORD) }
+                    )
+                )
+
+                HomeMainItem.CARDS -> add(
+                    StripTile(
+                        key = "cards",
+                        iconRes = R.drawable.ic_dashboard_outlined,
+                        label = stringResource(R.string.home_cards),
+                        onClick = onOpenAllCards
+                    )
+                )
             }
         }
-        add(
-            StripTile(
-                key = "stream",
-                iconRes = R.drawable.ic_video_settings,
-                label = stringResource(R.string.home_stream),
-                onClick = { dialog = StripDialog.STREAM },
-                highlight = mode == com.movtery.zalithlauncher.setting.enums.OptimizationMode.LIVE
-            )
-        )
-        add(
-            StripTile(
-                key = "chat",
-                iconRes = R.drawable.ic_chat_info,
-                label = stringResource(R.string.home_chat),
-                onClick = { dialog = StripDialog.CHAT },
-                badge = chatUnread
-            )
-        )
-        add(
-            StripTile(
-                key = "discord",
-                iconRes = R.drawable.ic_link,
-                label = stringResource(R.string.home_discord),
-                onClick = { openLink(TokitoLinks.DISCORD) }
-            )
-        )
         if (account?.isTokiAuthAccount() == true) {
             add(
                 StripTile(
@@ -258,14 +272,6 @@ fun HomeMainStrip(
                 )
             )
         }
-        add(
-            StripTile(
-                key = "cards",
-                iconRes = R.drawable.ic_dashboard_outlined,
-                label = stringResource(R.string.home_cards),
-                onClick = onOpenAllCards
-            )
-        )
         //the notice "Unofficial Modified Version" that the license asks for is always one tap away (and always on the screen too)
         add(
             StripTile(
@@ -343,30 +349,21 @@ fun HomeMainStrip(
 private fun libraryTile(key: String, iconRes: Int, label: String, onClick: () -> Unit) =
     StripTile(key = key, iconRes = iconRes, label = label, onClick = onClick)
 
-/** The categories of the strip: each one has a name above its tiles */
-private enum class StripGroup(val labelRes: Int) {
-    UPDATES(R.string.home_cat_updates),
-    LIBRARY(R.string.home_cat_library),
-    GAME(R.string.home_cat_game),
-    LIVE(R.string.home_cat_live),
-    MORE(R.string.home_cat_more)
-}
-
 /** A run of tiles of the same category */
-private class StripSection(val group: StripGroup, val tiles: List<StripTile>)
+private class StripSection(val group: HomeMainGroup, val tiles: List<StripTile>)
 
-private fun groupOf(key: String): StripGroup = when {
-    key == "notices" || key == "updates" -> StripGroup.UPDATES
-    key.startsWith("lib_") -> StripGroup.LIBRARY
-    key == "modes" || key == "skins" || key == "wallpaper" || key == "news" -> StripGroup.GAME
-    key == "stream" || key == "chat" || key == "discord" -> StripGroup.LIVE
-    else -> StripGroup.MORE
+private fun groupOf(key: String): HomeMainGroup = when {
+    key == "notices" || key == "updates" -> HomeMainGroup.UPDATES
+    key.startsWith("lib_") -> HomeMainGroup.LIBRARY
+    key == "modes" || key == "skins" || key == "wallpaper" || key == "news" -> HomeMainGroup.GAME
+    key == "stream" || key == "chat" || key == "discord" -> HomeMainGroup.LIVE
+    else -> HomeMainGroup.MORE
 }
 
 /** Splits the tiles in runs of the same category, so the order that the player chose is never changed */
 private fun sectionsOf(tiles: List<StripTile>): List<StripSection> {
     val result = ArrayList<StripSection>()
-    var group: StripGroup? = null
+    var group: HomeMainGroup? = null
     var current = ArrayList<StripTile>()
     for (tile in tiles) {
         val next = groupOf(tile.key)

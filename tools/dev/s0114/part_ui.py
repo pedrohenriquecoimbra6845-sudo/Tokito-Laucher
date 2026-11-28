@@ -4,11 +4,11 @@ REMOVE = ['tokito_news_title']
 S = [
  # panel
  ('tokito_main_title', 'Main things', 'Principais coisas'),
- ('tokito_main_customize', 'Customize', 'Personalizar'),
- ('tokito_main_customize_title', 'Customize Main things', 'Personalizar Principais coisas'),
+ ('tokito_main_customize', 'Edit menus', 'Editar menus'),
+ ('tokito_main_customize_title', 'Edit menus', 'Editar menus'),
  ('tokito_main_customize_summary',
-  'Choose what shows in this panel and in which order. The unofficial version notice always stays at the end.',
-  'Escolha o que aparece neste painel e a ordem. O aviso de versão não oficial sempre fica no fim.'),
+  'Choose what shows in the strip at the top: one tab for each category. Use the arrows to change the order inside a category.',
+  'Escolha o que aparece na faixa do topo: uma aba para cada categoria. Use as setas para mudar a ordem dentro da categoria.'),
  ('tokito_main_customize_reset', 'Restore default', 'Restaurar o padrão'),
  ('tokito_main_item_library', 'Library (mods, textures, modpacks)', 'Biblioteca (mods, texturas, modpacks)'),
  ('tokito_main_item_modes', 'Optimization modes', 'Modos de otimização'),

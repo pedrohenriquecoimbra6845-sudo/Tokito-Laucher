@@ -50,6 +50,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import com.movtery.zalithlauncher.ui.components.TokitoStreamGameTab
+import com.movtery.zalithlauncher.ui.components.chat.TokitoChatGameTab
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -91,21 +92,24 @@ import com.movtery.zalithlauncher.utils.ensureCustomResolutionInitialized
 import com.movtery.zalithlauncher.utils.getRealScreenSize
 import com.movtery.zalithlauncher.viewmodel.GamepadViewModel
 
-private data class IconTab(val iconRes: Int, val iconSize: Dp = 18.dp)
+/** A tab of the control menu: its icon and its name (Tokito Launcher: every category shows its name too) */
+private data class IconTab(val iconRes: Int, val labelRes: Int, val iconSize: Dp = 18.dp)
 
 private val controlTabs = listOf(
     //概览
-    IconTab(R.drawable.ic_dashboard_filled),
+    IconTab(R.drawable.ic_dashboard_filled, R.string.game_tab_overview),
     //虚拟鼠标设置
-    IconTab(R.drawable.ic_mouse_filled, iconSize = 16.dp),
+    IconTab(R.drawable.ic_mouse_filled, R.string.game_tab_mouse, iconSize = 16.dp),
     //手柄设置
-    IconTab(R.drawable.ic_sports_esports_filled),
+    IconTab(R.drawable.ic_sports_esports_filled, R.string.game_tab_gamepad),
     //手势控制设置
-    IconTab(R.drawable.ic_touch_app_filled),
+    IconTab(R.drawable.ic_touch_app_filled, R.string.game_tab_gesture),
     //陀螺仪设置
-    IconTab(R.drawable.ic_mobile_rotate_filled),
+    IconTab(R.drawable.ic_mobile_rotate_filled, R.string.game_tab_gyroscope),
     //Tokito Launcher: stream keys (mute, black screen, Discord)
-    IconTab(R.drawable.ic_stream_bolt)
+    IconTab(R.drawable.ic_stream_bolt, R.string.game_tab_stream),
+    //Tokito Launcher: the chat with the friends
+    IconTab(R.drawable.ic_stream_chat, R.string.game_tab_chat)
 )
 
 @Composable
@@ -154,7 +158,7 @@ fun GameMenuSubscreen(
                 SecondaryScrollableTabRow(
                     selectedTabIndex = controlMenuTabIndex,
                     edgePadding = 0.dp,
-                    minTabWidth = 58.dp,
+                    minTabWidth = 64.dp,
                     containerColor = cardTitleColor(),
                 ) {
                     controlTabs.forEachIndexed { index, iconTab ->
@@ -163,12 +167,23 @@ fun GameMenuSubscreen(
                             onClick = {
                                 onControlMenuTabChange(index)
                             },
-                            icon = {
-                                Icon(
-                                    modifier = Modifier.size(iconTab.iconSize),
-                                    painter = painterResource(iconTab.iconRes),
-                                    contentDescription = null
-                                )
+                            //icon and name side by side, so the tab row keeps its low height
+                            text = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                ) {
+                                    Icon(
+                                        modifier = Modifier.size(iconTab.iconSize),
+                                        painter = painterResource(iconTab.iconRes),
+                                        contentDescription = null
+                                    )
+                                    Text(
+                                        text = stringResource(iconTab.labelRes),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        maxLines = 1
+                                    )
+                                }
                             }
                         )
                     }
@@ -200,6 +215,7 @@ fun GameMenuSubscreen(
                         3 -> ControlGesture(modifier = Modifier.fillMaxSize())
                         4 -> ControlGyroscope(modifier = Modifier.fillMaxSize())
                         5 -> TokitoStreamGameTab(modifier = Modifier.fillMaxSize())
+                        6 -> TokitoChatGameTab(modifier = Modifier.fillMaxSize())
                     }
                 }
             }

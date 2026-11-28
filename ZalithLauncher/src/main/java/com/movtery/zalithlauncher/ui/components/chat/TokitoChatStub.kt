@@ -18,12 +18,18 @@
 
 package com.movtery.zalithlauncher.ui.components.chat
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 
@@ -35,6 +41,14 @@ import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 /** How many messages of friends were not read yet (the badge of the Chat tile) */
 @Composable
 fun rememberTokitoChatUnread(): State<Int> = remember { mutableIntStateOf(0) }
+
+/** The chat as a tab of the menu inside the game */
+@Composable
+fun TokitoChatGameTab(modifier: Modifier = Modifier) {
+    Box(modifier = modifier.padding(16.dp), contentAlignment = Alignment.Center) {
+        Text(text = stringResource(R.string.home_chat_soon), style = MaterialTheme.typography.bodyMedium)
+    }
+}
 
 /** The window of the friends chat */
 @Composable

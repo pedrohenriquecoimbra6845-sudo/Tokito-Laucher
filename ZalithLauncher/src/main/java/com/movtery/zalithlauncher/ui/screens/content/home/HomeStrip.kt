@@ -24,15 +24,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -49,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -106,6 +109,10 @@ private val TileHeight = 66.dp
  * ("Modpacks atualizados", with the number in the corner), so updating is one tap away. After them come the library
  * (mods, textures, modpacks, shaders, worlds), the modes, the skins, the Mini Wallpaper and the news, in the order that
  * the player chose, and then the stream panel, the chat, Discord, the old grid of cards and the notice of the license.
+ *
+ * The tiles are grouped in categories: notices and updates, library, game and looks, live and friends, account and
+ * more. Every category has its name above its tiles and a divider between it and the next one, so they are clearly
+ * separated while the whole strip still moves sideways with one finger.
  *
  * @param onOpenLibrary opens a category of the download screen
  * @param onOpenModpackPage opens the page of a modpack of Modrinth, where it can be installed again (updated)
@@ -278,13 +285,15 @@ fun HomeMainStrip(
         )
     }
 
+    //one section for each run of tiles of the same category (the order that the player chose is kept)
+    val sections = sectionsOf(tiles)
     LazyRow(
         modifier = modifier,
         contentPadding = PaddingValues(horizontal = 2.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        items(items = tiles, key = { it.key }) { tile ->
-            StripTileView(tile = tile)
+        itemsIndexed(items = sections, key = { _, section -> section.tiles.first().key }) { index, section ->
+            StripSectionView(section = section, showDivider = index > 0)
         }
     }
 
@@ -333,6 +342,75 @@ fun HomeMainStrip(
 
 private fun libraryTile(key: String, iconRes: Int, label: String, onClick: () -> Unit) =
     StripTile(key = key, iconRes = iconRes, label = label, onClick = onClick)
+
+/** The categories of the strip: each one has a name above its tiles */
+private enum class StripGroup(val labelRes: Int) {
+    UPDATES(R.string.home_cat_updates),
+    LIBRARY(R.string.home_cat_library),
+    GAME(R.string.home_cat_game),
+    LIVE(R.string.home_cat_live),
+    MORE(R.string.home_cat_more)
+}
+
+/** A run of tiles of the same category */
+private class StripSection(val group: StripGroup, val tiles: List<StripTile>)
+
+private fun groupOf(key: String): StripGroup = when {
+    key == "notices" || key == "updates" -> StripGroup.UPDATES
+    key.startsWith("lib_") -> StripGroup.LIBRARY
+    key == "modes" || key == "skins" || key == "wallpaper" || key == "news" -> StripGroup.GAME
+    key == "stream" || key == "chat" || key == "discord" -> StripGroup.LIVE
+    else -> StripGroup.MORE
+}
+
+/** Splits the tiles in runs of the same category, so the order that the player chose is never changed */
+private fun sectionsOf(tiles: List<StripTile>): List<StripSection> {
+    val result = ArrayList<StripSection>()
+    var group: StripGroup? = null
+    var current = ArrayList<StripTile>()
+    for (tile in tiles) {
+        val next = groupOf(tile.key)
+        val previous = group
+        if (previous != null && next != previous) {
+            result += StripSection(previous, current)
+            current = ArrayList()
+        }
+        group = next
+        current += tile
+    }
+    val last = group
+    if (last != null && current.isNotEmpty()) result += StripSection(last, current)
+    return result
+}
+
+/** The name of a category, its tiles and (except for the first one) a divider before it */
+@Composable
+private fun StripSectionView(section: StripSection, showDivider: Boolean) {
+    Row(verticalAlignment = Alignment.Bottom) {
+        if (showDivider) {
+            Box(
+                modifier = Modifier
+                    .padding(end = 10.dp)
+                    .width(1.dp)
+                    .height(TileHeight)
+                    .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f))
+            )
+        }
+        Column {
+            Text(
+                modifier = Modifier.padding(start = 4.dp, bottom = 3.dp),
+                text = stringResource(section.group.labelRes),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
+                maxLines = 1
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                section.tiles.forEach { StripTileView(tile = it) }
+            }
+        }
+    }
+}
 
 @Composable
 private fun StripTileView(tile: StripTile) {

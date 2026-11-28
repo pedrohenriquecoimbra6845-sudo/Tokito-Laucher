@@ -55,4 +55,18 @@ S = [
  ('home_greet_p17', 'A good warrior knows when to fight and when to rest.', 'O bom guerreiro sabe a hora de lutar e a hora de descansar.'),
  ('home_greet_p18', 'The greatest legends begin with a single step.', 'As maiores lendas começam com um único passo.'),
  ('home_greet_p19', 'Today you fight. Tomorrow, you are a legend.', 'Hoje você luta. Amanhã, você é lenda.'),
+ # ---- categories of the strip
+ ('home_cat_updates', 'Notices and updates', 'Avisos e atualizações'),
+ ('home_cat_library', 'Library', 'Biblioteca'),
+ ('home_cat_game', 'Game and looks', 'Jogo e visual'),
+ ('home_cat_live', 'Live and friends', 'Ao vivo e amigos'),
+ ('home_cat_more', 'Account and more', 'Conta e mais'),
+ # ---- tabs of the menu inside the game
+ ('game_tab_overview', 'Overview', 'Geral'),
+ ('game_tab_mouse', 'Mouse', 'Mouse'),
+ ('game_tab_gamepad', 'Gamepad', 'Controle'),
+ ('game_tab_gesture', 'Gestures', 'Gestos'),
+ ('game_tab_gyroscope', 'Gyroscope', 'Giroscópio'),
+ ('game_tab_stream', 'Stream', 'Stream'),
+ ('game_tab_chat', 'Chat', 'Chat'),
 ]
